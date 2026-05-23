@@ -104,6 +104,10 @@ typedef struct State State;
 Returns a pointer to a correctly initialised State.
 */
 State *init_state();
+/*
+Frees the memory attached to state
+*/
+void destroy_state(State *state);
 
 /*
 For all the following functions, it is the responsibility of the CALLER to ensure that they call the correct 64-bit or 32-bit function.
@@ -114,13 +118,17 @@ If the register stores signed data, this conversion must be done elsewhere.
 /*
 PC and ZR cannot be modified by write functions.
 */
-void write_reg_64(State *state, Register register, uint64 value);
-void write_register_32(State *state, Register register, uint32 value);
+void write_reg_64(State *state, Register reg, uint64 val);
+void write_reg_32(State *state, Register reg, uint32 val);
 
-uint64 read_register_64(State *state, Register register);
-uint32 read_register_32(State *state, Register register);
+uint64 read_reg_64(State *state, Register reg);
+uint32 read_reg_32(State *state, Register reg);
 
 void offset_pc(State *state, uint64 offset);
-void inc_pc(State *state, uint64 offset);
+void inc_pc(State *state);
 
-// Unsure whether to handle signed to unsigned / int and long to uint conversion here - to discuss in review
+/*
+Debug
+*/
+
+void print_all_registers(State *state, char* strbuf);
