@@ -131,4 +131,4 @@ void inc_pc(State *state);
 Debug
 */
 
-void print_all_registers(State *state, char* strbuf);
+void print_all_registers(State *state);

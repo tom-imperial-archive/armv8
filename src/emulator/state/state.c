@@ -77,6 +77,11 @@ void destroy_state(State *state)
     free(state);
 }
 
+void offset_pc(State *state, uint64 offset)
+{
+    state->PC = state->PC + offset;
+}
+
 void inc_pc(State *state)
 {
     state->PC = state->PC + 4;
