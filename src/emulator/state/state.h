@@ -107,7 +107,7 @@ State *init_state();
 
 /*
 For all the following functions, it is the responsibility of the CALLER to ensure that they call the correct 64-bit or 32-bit function.
-Only unsigned in types are used, which represent the raw bytes in the register.
+Only unsigned int types are used in C, which represent the raw bits in the register, even if the actual number saved is stored in 2s-complement.
 If the register stores signed data, this conversion must be done elsewhere.
 */
 
