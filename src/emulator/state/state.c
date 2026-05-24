@@ -6,6 +6,7 @@ State *init_state()
 {
     State *state = malloc(sizeof(State));
 
+    state->m = init_mem();
     // Clear all registers except PSTATE
     for (int r = 0; r <= SP; r++)
     {
@@ -79,6 +80,7 @@ uint32 read_reg_32(State *state, Register reg)
 
 void destroy_state(State *state)
 {
+    destroy_mem(state->m);
     free(state);
 }
 

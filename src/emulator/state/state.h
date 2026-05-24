@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include "common/util.h"
+#include "emulator/state/memory.h"
 /*
 This includes all registers including the special registers, excluding PSTATE which is handled separately.
 Instructions cannot modify PSTATE so we implement the fields separately.
@@ -97,6 +98,7 @@ struct State
     bool Z;
     bool C;
     bool V;
+    Memory m;
 };
 typedef struct State State;
 
