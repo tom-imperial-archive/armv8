@@ -1,8 +1,9 @@
-#include <stdlib.h>
 #include "state.h"
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #define CAT strcat(out, new);
+#define ONES_32BIT (uint32) 0xFFFFFFFFUL
 
 State *init_state()
 {
@@ -56,10 +57,7 @@ void write_reg_64(State *state, Register reg, uint64 val)
 
 void write_reg_32(State *state, Register reg, uint32 val)
 {
-    check_writeable_register(reg);
-    // We have a writable register
-    uint64 *rp = get_register(state, reg);
-    *rp = (uint64)val;
+    write_reg_64(state, reg, (uint64)val);
 }
 
 uint64 read_reg_64(State *state, Register reg)
@@ -77,7 +75,7 @@ uint32 read_reg_32(State *state, Register reg)
         // todo error handling
     }
 
-    return (uint32)*get_register(state, reg);
+    return read_reg_64(state, reg) & ONES_32BIT;
 }
 
 void destroy_state(State *state)
