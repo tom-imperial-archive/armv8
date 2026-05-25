@@ -1,20 +1,21 @@
 #include "decode.h"
 #include "util.h"
 
+// TODO: check if simm and imm need to be handled differently when extracting them.
 
-DecodeResult decode(char* input, int input_size, Instruction* result) {
-    // Instruction* result = malloc(sizeof(Instruction) * input_size);
-    for (int i = 0; i < input_size; i += 4) {
-        uint32 value = ((uint32)input[i    ] << 24) | ((uint32)input[i + 1] << 16)
-                     | ((uint32)input[i + 2] << 8 ) | ((uint32)input[i + 3]);
-        if (value & 0x1C000000 == 0x10000000) { // is dp_imm
+DecodeResult decode(uint32* input, int input_size, Instruction* result) {
+    for (int i = 0; i < input_size; i++) {
+        uint32 value = input[i];
+        Instruction instruction;
+
+        if (value & 0x1C000000 == 0x10000000) { // Data Processing Instruction (Immediate)
             bool sf  = value & 0x80000000 == 0x80000000;
-            int opc = (value & 0x60000000) >> 28; // TODO: check if shift is correct
+            int opc = (value & 0x60000000) >> 28;
             int opi = (value & 0x03800000) >> 22;
             int operand = value & 0x007FFFF0;
             int rd = value & 0x0000000F;
 
-            if (opi == 0b0010) { // arithmetic
+            if (opi == 0b0010) { // Immediate Arithmetic
                 OpType op_type;
                 switch (opc) {
                     case 0b00: op_type =  OP_TYPE_ADD; break;
@@ -29,7 +30,7 @@ DecodeResult decode(char* input, int input_size, Instruction* result) {
                 int sh = (operand & MASK_SH) >> 22;
                 int imm12 = (operand & MASK_IMM12) >> 10;
 
-                Instruction instruction = {
+                instruction = (Instruction) {
                     .op_type = op_type,
                     .data.immediate_arithmetic = {
                         .imm12 = imm12,
@@ -39,8 +40,7 @@ DecodeResult decode(char* input, int input_size, Instruction* result) {
                         .sh = sh,
                     }
                 };
-                // TODO: add instruction to result
-            } else if (opi == 0b0101) { // wide move
+            } else if (opi == 0b0101) { // Immediate Wide Move
                 OpType op_type;
                 switch (opc) {
                     case 0b00: op_type =  OP_TYPE_MOVN; break;
@@ -54,7 +54,7 @@ DecodeResult decode(char* input, int input_size, Instruction* result) {
                 int imm16 = (operand & MASK_IMM16) >> 5;
 
                 // TODO: do I shift imm16 by hw straight away or should this be in EXECUTE
-                Instruction instruction = {
+                instruction = (Instruction) {
                     .op_type = op_type,
                     .data.wide_move = {
                         .hw = hw,
@@ -63,24 +63,21 @@ DecodeResult decode(char* input, int input_size, Instruction* result) {
                         .sf = sf,
                     }
                 };
-                // TODO: add instruction to result
-            } else { // error: undefined opi
+            } else {
                 return DECODE_UNDEFINED_OPCODE;
             }
-        } else if (input[i] & 0b00001110 == 0b00001010) { // dp_reg
-            const uint32 MASK_SF = 0x80000000; // (1U << 31)
-            const uint32 MASK_OPC = 0x60000000; // (3U << 29)
-            const uint32 MASK_M = 0x10000000; // (1U << 28)
-            const uint32 MASK_FIXED = 0x0E000000; // (7U << 25) -> checks the "101" identifier
-            const uint32 MASK_OPR = 0x01E00000; // (0xFU << 21)
-            const uint32 MASK_RM = 0x001F0000; // (0x1FU << 16)
-            const uint32 MASK_OPERAND = 0x0000FC00; // (0x3FU << 10)
-            const uint32 MASK_RN = 0x000003E0; // (0x1FU << 5)
+        } else if (input[i] & 0b00001110 == 0b00001010) { // Data Processing Instruction (Register)
+            const uint32 MASK_SF = 0x80000000;
+            const uint32 MASK_OPC = 0x60000000;
+            const uint32 MASK_M = 0x10000000;
+            const uint32 MASK_OPR = 0x01E00000;
+            const uint32 MASK_RM = 0x001F0000;
+            const uint32 MASK_OPERAND = 0x0000FC00;
+            const uint32 MASK_RN = 0x000003E0;
             const uint32 MASK_RD = 0x0000001F;
             bool sf = (value & MASK_SF) >> 31;
             int opc = (value & MASK_OPC) >> 29;
             bool m = (value & MASK_M) >> 28;
-            // int fixed = (value & MASK_FIXED) >> 25;
             int opr = (value & MASK_OPR) >> 21;
             int rm = (value & MASK_RM) >> 16;
             int operand = (value & MASK_OPERAND) >> 10;
@@ -89,34 +86,53 @@ DecodeResult decode(char* input, int input_size, Instruction* result) {
 
             if (m) { // Multiply
                 if ((opr & 0x8) != 0x8) return DECODE_UNDEFINED_OPCODE;
-                bool x = operand & 0b100000; // TODO: convert to hex?
+                bool x = operand & 0b100000;
                 int ra = operand & 0b011111;
                 OpType op_type = x ? OP_TYPE_MSUB : OP_TYPE_MADD;
-                Instruction instruction = {
+                instruction = (Instruction) {
                     .op_type = op_type,
-                    // TODO: fill out .data
+                    .data.multiply = {
+                        .sf = sf,
+                        .ra = ra,
+                        .rd = rd,
+                        .rm = rm,
+                        .rn = rn,
+                    }
                 };
             } else { // Arithmetic and logic instructions
-                int shift = (opr & 0x6) >> 1;
-                if ((opr & 0x9) == 0x8) { // arithmetic
-                    if ((opr & 0x1) != 0) return DECODE_UNDEFINED_OPCODE;
-                    // TODO: finish rest of all this
+                int shift_bits = (opr & 0x6) >> 1;
+                ShiftType shift_type;
+                switch (shift_bits) {
+                    case 0b00: shift_type = SHIFT_LSL; break;
+                    case 0b01: shift_type = SHIFT_LSR; break;
+                    case 0b10: shift_type = SHIFT_ASR; break;
+                    case 0b11: shift_type = SHIFT_ROR; break;
+                }
 
-                    OpType op_type;
+                OpType op_type;
+                if ((opr & 0x9) == 0x8) { // Arithmetic instruction
+                    if ((opr & 0x1) != 0) {
+                        return DECODE_UNDEFINED_OPCODE;
+                    }
                     switch (opc) {
-                        case 0b00: op_type =  OP_TYPE_ADD; break;
+                        case 0b00: op_type = OP_TYPE_ADD; break;
                         case 0b01: op_type = OP_TYPE_ADDS; break;
                         case 0b10: op_type = OP_TYPE_SUB; break;
                         case 0b11: op_type = OP_TYPE_SUBS; break;
                     }
-                    Instruction instruction = {
+                    instruction = (Instruction) {
                         .op_type = op_type,
-                        // TODO: fill out .data
+                        .data.register_arithmetic_logic = {
+                            .operand = operand,
+                            .rd = rd,
+                            .rm = rm,
+                            .rn = rn,
+                            .sf = sf,
+                            .shift = shift_type,
+                        }
                     };
-                } else { // bit-logic
+                } else { // Logic instruction
                     bool n = opr & 0x1;
-
-                    OpType op_type;
                     if (n) {
                         switch (opc) {
                             case 0b00: op_type = OP_TYPE_AND; break;
@@ -133,6 +149,17 @@ DecodeResult decode(char* input, int input_size, Instruction* result) {
                         }
                     }
                 }
+                instruction = (Instruction) {
+                    .op_type = op_type,
+                    .data.register_arithmetic_logic = {
+                        .operand = operand,
+                        .rd = rd,
+                        .rm = rm,
+                        .rn = rn,
+                        .sf = sf,
+                        .shift = shift_type,
+                    }
+                };
             }
         } else if (input[i] & 0b00001010 == 0b00001000) { // load/store
 
@@ -141,8 +168,7 @@ DecodeResult decode(char* input, int input_size, Instruction* result) {
         } else { // error
             return DECODE_UNDEFINED_OPCODE;
         }
+        result[i] = instruction;
     }
-
-
     return DECODE_SUCCESS;
 }

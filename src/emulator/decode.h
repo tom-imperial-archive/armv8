@@ -7,7 +7,6 @@
 typedef enum DecodeResult {
     DECODE_SUCCESS,
     DECODE_UNDEFINED_OPCODE, // OPI, OPC, OPR are not supported in the emulator
-    DECODE_UNEXPECTED_END_OF_FILE,
 } DecodeResult;
 
 DecodeResult decode(char* input, int input_size, Instruction* result);
@@ -27,7 +26,7 @@ typedef enum OpType {
     OP_TYPE_MOVZ,
     OP_TYPE_MOVK,
 
-    // Data processing instruction (register). Correspond to `RegisterArithmeticInstruction`
+    // Data processing instruction (register). Correspond to `RegisterArithmeticLogicInstruction`
 
     // Arithmetic
     OP_TYPE_REG_ADD,
@@ -94,15 +93,21 @@ typedef struct RegisterMultiplyInstruction {
     bool sf;
 } RegisterMultiplyInstruction;
 
-typedef struct RegisterArithmeticInstruction {
+typedef enum ShiftType {
+    SHIFT_LSL,
+    SHIFT_LSR,
+    SHIFT_ASR,
+    SHIFT_ROR,
+} ShiftType;
+
+typedef struct RegisterArithmeticLogicInstruction {
     int rd;
     int rn;
     int rm;
-    int shift;
+    int operand;
+    ShiftType shift;
     bool sf;
-    bool sh;
-    bool n;
-} RegisterArithmeticInstruction;
+} RegisterArithmeticLogicInstruction;
 
 typedef struct Instruction {
     OpType op_type;
@@ -110,12 +115,7 @@ typedef struct Instruction {
         ImmediateArithmeticInstruction immediate_arithmetic;
         WideMoveInstruction wide_move;
         RegisterMultiplyInstruction multiply;
-        struct DataProcessingInstructionRegister {
-            int rd;
-            int ra;
-            int rn;
-            int rm;
-        } data_processing_instruction_register;
+        RegisterArithmeticLogicInstruction register_arithmetic_logic;
         struct SingleDataTransfer {
             bool sf;
             bool U;
