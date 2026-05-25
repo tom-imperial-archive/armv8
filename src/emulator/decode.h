@@ -15,6 +15,9 @@ DecodeResult decode(char* input, int input_size, Instruction* result);
 typedef enum OpType {
     // Data processing instruction (immediate). Correspond to `ImmediateArithmeticInstruction`.
 
+    // Halt
+    OP_TYPE_HALT,
+
     // Arithmetic
     OP_TYPE_ADD,
     OP_TYPE_ADDS,
@@ -109,12 +112,37 @@ typedef struct RegisterArithmeticLogicInstruction {
     bool sf;
 } RegisterArithmeticLogicInstruction;
 
+typedef struct UnconditionalBranchInstruction {
+    int simm26;
+} UnconditionalBranchInstruction;
+typedef struct RegisterBranchInstruction {
+    int xn;
+} RegisterBranchInstruction;
+typedef struct ConditionalBranchInstruction {
+    int simm19;
+} ConditionalBranchInstruction;
+
+typedef struct SingleDataTransfer {
+    bool sf;
+    bool U;
+    bool L;
+    int offset;
+    int xn;
+    int rt;
+} SingleDataTransfer;
+typedef struct LoadLiteral {
+    bool sf;
+    int simm19;
+    int rt;
+} LoadLiteral;
+
 typedef struct Instruction {
     OpType op_type;
     union InstructionData {
         ImmediateArithmeticInstruction immediate_arithmetic;
         WideMoveInstruction wide_move;
         RegisterMultiplyInstruction multiply;
+<<<<<<< HEAD
         RegisterArithmeticLogicInstruction register_arithmetic_logic;
         struct SingleDataTransfer {
             bool sf;
@@ -139,6 +167,21 @@ typedef struct Instruction {
             int simm19;
             int cond;
         } conditional_branch;
+=======
+        UnconditionalBranchInstruction uncond_branch;
+        RegisterBranchInstruction reg_branch;
+        ConditionalBranchInstruction cond_branch;
+        SingleDataTransfer single_data_transfer;
+        LoadLiteral load_literal;
+        struct DataProcessingInstructionRegister {
+            int rd;
+            int ra;
+            int rn;
+            int rm;
+        } data_processing_instruction_register;
+        
+        
+>>>>>>> 5201fa94740f2900a7f3c312fc2d2a216d0c2477
     } data;
 } Instruction;
 

@@ -3,12 +3,31 @@
 
 // TODO: check if simm and imm need to be handled differently when extracting them.
 
+<<<<<<< HEAD
 DecodeResult decode(uint32* input, int input_size, Instruction* result) {
     for (int i = 0; i < input_size; i++) {
         uint32 value = input[i];
         Instruction instruction;
 
         if (value & 0x1C000000 == 0x10000000) { // Data Processing Instruction (Immediate)
+=======
+DecodeResult decode(char* input, int input_size, Instruction* result) {
+    // Instruction* result = malloc(sizeof(Instruction) * input_size);
+    for (int i = 0; i < input_size; i += 4) {
+        uint32 value = ((uint32)input[i    ] << 24) | ((uint32)input[i + 1] << 16)
+                     | ((uint32)input[i + 2] << 8 ) | ((uint32)input[i + 3]);
+
+
+        if (value == 0x8A000000) {
+            // HALT
+            OpType op_type = OP_TYPE_HALT;
+            Instruction instruction = {
+                .op_type = op_type
+            };
+        }
+
+        if (value & 0x1C000000 == 0x10000000) { // is dp_imm
+>>>>>>> 5201fa94740f2900a7f3c312fc2d2a216d0c2477
             bool sf  = value & 0x80000000 == 0x80000000;
             int opc = (value & 0x60000000) >> 28;
             int opi = (value & 0x03800000) >> 22;
@@ -161,10 +180,102 @@ DecodeResult decode(uint32* input, int input_size, Instruction* result) {
                     }
                 };
             }
-        } else if (input[i] & 0b00001010 == 0b00001000) { // load/store
+        } else if (input[i] & 0b00001010 == 0b00001000) { 
+            // load/store
+            if ((value & 0x80000000) == 0x80000000) {
+                // Single Data Transfer: bit 31 = 1
+                int sf     = (value & 0x40000000) >> 30;
+                int U      = (value & 0x01000000) >> 24;
+                int L      = (value & 0x00400000) >> 22;
+                int offset = (value & 0x003FFC00) >> 10;
+                int xn     = (value & 0x000003E0) >> 5;
+                int rt     = (value & 0x0000001F);
 
-        } else if (input[i] & 0b00011100 == 0b00010100) { // branch
+                OpType op_type = OP_TYPE_SINGLE_DATA_TRANSFER;
 
+                Instruction instruction = {
+                    .op_type = op_type,
+                    .data.single_data_transfer = {
+                        .sf     = sf,
+                        .U      = U,
+                        .L      = L,
+                        .offset = offset,
+                        .xn     = xn,
+                        .rt     = rt,
+                    }
+                };
+
+            } else {
+                // Load Literal: bit 31 = 0
+                int sf     = (value & 0x40000000) >> 30;
+                int simm19 = (value & 0x00FFFFE0) >> 5;  // sign-extend after
+                int rt     = (value & 0x0000001F);
+
+                OpType op_type = OP_TYPE_LOAD_LITERAL;
+
+                Instruction instruction = {
+                    .op_type = op_type,
+                    .data.load_literal = {
+                        .simm19 = simm19,
+                        .rt     = rt,
+                        .sf     = sf,
+                    }
+                };
+            }
+
+        } else if (input[i] & 0b00011100 == 0b00010100) { 
+            // branch
+
+            if ((value & 0xFF000000) == 0xD6000000) {
+                // Register
+                int xn     = (value & 0x000003E0) >> 5;
+
+                OpType op_type = OP_TYPE_AL;
+
+                Instruction instruction = {
+                    .op_type = op_type,
+                    .data.reg_branch.xn = xn,
+                };
+
+            } else if ((value & 0xFF000000) == 0x54000000) {
+                // Conditional
+                int opcode = (value & 0xFF000000) >> 24;
+                int simm19 = (value & 0x00FFFFE0) >> 5;  // sign-extend after
+                int cond   = (value & 0x0000000F);
+                
+                OpType op_type;
+
+                switch (cond) {
+                    case 0b0000: op_type = OP_TYPE_EQ; break;
+                    case 0b0001: op_type = OP_TYPE_NE; break;
+                    case 0b1010: op_type = OP_TYPE_GE; break;
+                    case 0b1011: op_type = OP_TYPE_LT; break;
+                    case 0b1100: op_type = OP_TYPE_GT; break;
+                    case 0b1101: op_type = OP_TYPE_LE; break;
+                    case 0b1110: op_type = OP_TYPE_AL; break;
+                }
+
+                Instruction instruction = {
+                    .op_type = op_type,
+                    .data.cond_branch.simm19 = simm19,
+                };
+
+            } else if ((value & 0xFC000000) == 0x14000000) {
+                // Unconditional
+                int opcode = (value & 0xFC000000) >> 26;
+                int simm26 = (value & 0x03FFFFFF); 
+                
+                OpType op_type = OP_TYPE_AL;// sign-extend after
+
+                Instruction instruction = {
+                    .op_type = op_type,
+                    .data.uncond_branch.simm26 = simm26,
+                };
+            }
+           
+
+        
+            
         } else { // error
             return DECODE_UNDEFINED_OPCODE;
         }
