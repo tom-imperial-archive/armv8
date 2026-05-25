@@ -65,7 +65,7 @@ typedef enum OpType {
 
 //
 typedef struct ImmediateArithmeticInstruction {
-    int imm12;
+    uint16 imm12;
     int rd;
     int rn;
     bool sf;
