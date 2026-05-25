@@ -62,7 +62,7 @@ void execute_arithmetic_register(State *state, Instruction *i) {
     }
     result = sf ? result : (uint32)result;
 
-    //Storing
+    // Storing
     if (sf) {
         write_reg_64(state, rd, result);
     }
@@ -155,7 +155,7 @@ void execute_logical_register(State *state, Instruction *i) {
     }
     result = sf ? result : (uint32)result;
 
-    //Storing
+    // Storing
     if (sf) {
         write_reg_64(state, rd, result);
     }
@@ -181,6 +181,42 @@ void execute_logical_register(State *state, Instruction *i) {
         write_pstate_flag(state, Z, z_flag);
         write_pstate_flag(state, C, c_flag);
         write_pstate_flag(state, V, v_flag);
+    }
+}
+
+void execute_multiply_register(State *state, Instruction *i) {
+    // Unpack
+    bool sf = i-> data.multiply.sf;
+    Register rm = (Register)i->data.multiply.rm;
+    Register rn = (Register)i->data.multiply.rn;
+    Register rd = (Register)i->data.multiply.rd;
+    Register ra = (Register)i->data.multiply.ra;
+    OpType op = i->op_type;
+
+    // Initial values
+    uint64 val_m = sf ? read_reg_64(state, rm) : (uint64)read_reg_32(state, rm);
+    uint64 val_n = sf ? read_reg_64(state, rn) : (uint64)read_reg_32(state, rn);
+    uint64 val_a = sf ? read_reg_64(state, ra) : (uint64)read_reg_32(state, ra);
+
+    // Multiplication
+    uint64 result = 0;
+    switch (op) {
+        case OP_TYPE_MADD:
+            result = val_a + (val_n * val_m);
+            break;
+        case OP_TYPE_MSUB:
+            result = val_a - (val_n * val_m);
+        default:
+            break;
+    }
+    result = sf ? result : (uint32)result;
+
+    // Storing
+    if (sf) {
+        write_reg_64(state, rd, result);
+    }
+    else {
+        write_reg_32(state, rd, result);
     }
 }
 
