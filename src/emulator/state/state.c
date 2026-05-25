@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#define CAT strcat(out, new);
 #define ONES_32BIT (uint32) 0xFFFFFFFFUL
 
 typedef enum {REG_NOT_EXISTS, WRITE_NOT_ALLOWED, READ_32_FROM_PC, FLAG_NOT_EXISTS} StateError;
@@ -163,28 +162,28 @@ void sprint_all_registers(State *state, char *out)
     {
         uint64 val = read_reg_64(state, r);
         sprintf(new, "X%.2d = %lx\n", r, val);
-        CAT;
+        strcat(out, new);
     }
 
     // Special
     sprintf(new, "ZR = %lx\n", read_reg_64(state, ZR));
-    CAT;
+    strcat(out, new);
 
     sprintf(new, "PC = %lx\n", read_reg_64(state, PC));
-    CAT;
+    strcat(out, new);
 
     sprintf(new, "SP = %lx\n", read_reg_64(state, SP));
-    CAT;
+    strcat(out, new);
 
     //PSTATE
     sprintf(new, "PSTATE : %c", pstate_flag_to_char(N, state));
-    CAT;
+    strcat(out, new);
     sprintf(new, "%c", pstate_flag_to_char(Z, state));
-    CAT;
+    strcat(out, new);
     sprintf(new, "%c", pstate_flag_to_char(C, state));
-    CAT;
+    strcat(out, new);
     sprintf(new, "%c\n", pstate_flag_to_char(V, state));
-    CAT;
+    strcat(out, new);
 }
 
 void sprint_nonzero_memory(State *state, char *out)
@@ -200,13 +199,13 @@ void sprint_nonzero_memory(State *state, char *out)
     }
 
     sprintf(new, "Non-zero memory:\n");
-    CAT;
+    strcat(out, new);
 
     for (int i = 0; i < nonzero_count; i++) {
         // 0x%08lx formats the 64-bit address has an 8-character zero-padded hex value
         // 0x%08x formats the 32-bit chunk of data as an 8-character zero-added hex value
         sprintf(new, "0x%08lx: 0x%08x\n", memory_data[i].address, memory_data[i].value);
-        CAT;
+        strcat(out, new);
     }
     free(memory_data);
 }
