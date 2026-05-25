@@ -104,7 +104,7 @@ DecodeResult decode(char* input, int input_size, Instruction* result) {
 
                     OpType op_type;
                     switch (opc) {
-                        case 0b00: op_type =  OP_TYPE_ADD; break;
+                        case 0b00: op_type = OP_TYPE_ADD; break;
                         case 0b01: op_type = OP_TYPE_ADDS; break;
                         case 0b10: op_type = OP_TYPE_SUB; break;
                         case 0b11: op_type = OP_TYPE_SUBS; break;
@@ -136,8 +136,35 @@ DecodeResult decode(char* input, int input_size, Instruction* result) {
             }
         } else if (input[i] & 0b00001010 == 0b00001000) { // load/store
 
-        } else if (input[i] & 0b00011100 == 0b00010100) { // branch
+        } else if (input[i] & 0b00011100 == 0b00010100) { 
+            // branch
 
+            if ((value & 0xFF000000) == 0xD6000000) {
+                // Register
+                int xn     = (value & 0x000003E0) >> 5;
+            } else if ((value & 0xFF000000) == 0x54000000) {
+                // Conditional
+                int opcode = (value & 0xFF000000) >> 24;
+                int simm19 = (value & 0x00FFFFE0) >> 5;  // sign-extend after
+                int cond   = (value & 0x0000000F);
+
+                int offset = simm19*4;
+            } else if ((value & 0xFC000000) == 0x14000000) {
+                // Unconditional
+                int opcode = (value & 0xFC000000) >> 26;
+                int simm26 = (value & 0x03FFFFFF); 
+                
+                OpType optype = OP_TYPE_AL;// sign-extend after
+
+                Instruction instruction = {
+                    .op_type = optype,
+                    .data.uncond_branch.simm26 = simm26,
+                };
+            }
+           
+
+        
+            
         } else { // error
             return DECODE_UNDEFINED_OPCODE;
         }

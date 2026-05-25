@@ -104,12 +104,26 @@ typedef struct RegisterArithmeticInstruction {
     bool n;
 } RegisterArithmeticInstruction;
 
+typedef struct UnconditionalBranchInstruction {
+    int simm26;
+} UnconditionalBranchInstruction;
+typedef struct RegisterBranchInstruction {
+    int xn;
+} RegisterBranchInstruction;
+typedef struct ConditionalBranchInstruction {
+    int simm19;
+    int cond;
+} ConditionalBranchInstruction;
+
 typedef struct Instruction {
     OpType op_type;
     union InstructionData {
         ImmediateArithmeticInstruction immediate_arithmetic;
         WideMoveInstruction wide_move;
         RegisterMultiplyInstruction multiply;
+        UnconditionalBranchInstruction uncond_branch;
+        RegisterBranchInstruction reg_branch;
+        ConditionalBranchInstruction cond_branch;
         struct DataProcessingInstructionRegister {
             int rd;
             int ra;
@@ -129,16 +143,7 @@ typedef struct Instruction {
             int simm19;
             int rt;
         } load_literal;
-        struct UnconditionalBranchInstruction {
-            int simm26;
-        } unconditional_branch;
-        struct RegisterBranchInstruction {
-            int xn;
-        } register_branch;
-        struct ConditionalBranchInstruction {
-            int simm19;
-            int cond;
-        } conditional_branch;
+        
     } data;
 } Instruction;
 
