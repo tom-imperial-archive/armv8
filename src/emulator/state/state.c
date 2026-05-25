@@ -2,17 +2,18 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#define ONES_32BIT (uint32) 0xFFFFFFFFUL
+#define PRINT_LINE_LENGTH 25
+#define MASK_LOWER_32BITS (uint32) 0xFFFFFFFFUL
 
-typedef enum {REG_NOT_EXISTS, WRITE_NOT_ALLOWED, READ_32_FROM_PC, FLAG_NOT_EXISTS} StateError;
+typedef enum {STATE_REG_NOT_EXISTS, STATE_WRITE_NOT_ALLOWED, STATE_READ_32_FROM_PC, STATE_FLAG_NOT_EXISTS} StateError;
 
 //todo refactor errors accross the project
 void error(StateError error) {
     switch(error) {
-        case REG_NOT_EXISTS: printf("Register does not exist"); break;
-        case WRITE_NOT_ALLOWED: printf("Illegal write to register"); break;
-        case READ_32_FROM_PC: printf("Illegal 32-bit read from PC"); break;
-        case FLAG_NOT_EXISTS: printf("PSTATE flag does not exist"); break;
+        case STATE_REG_NOT_EXISTS: printf("Register does not exist"); break;
+        case STATE_WRITE_NOT_ALLOWED: printf("Illegal write to register"); break;
+        case STATE_READ_32_FROM_PC: printf("Illegal 32-bit read from PC"); break;
+        case STATE_FLAG_NOT_EXISTS: printf("PSTATE flag does not exist"); break;
         default: printf("Unknown error accessing registers");
     }
     exit(1);
@@ -52,7 +53,7 @@ void check_register(Register reg)
 {
     if ((reg < R0) || (reg > SP))
     {
-        error(REG_NOT_EXISTS);
+        error(STATE_REG_NOT_EXISTS);
     }
 }
 
@@ -62,7 +63,7 @@ void check_writeable_register(Register reg)
     if (reg == ZR || reg == PC)
     {
         printf("%d", reg);
-        error(WRITE_NOT_ALLOWED);
+        error(STATE_WRITE_NOT_ALLOWED);
     }
 }
 
@@ -88,10 +89,10 @@ uint32 read_reg_32(State *state, Register reg)
 {
     if (reg == PC)
     {
-        error(READ_32_FROM_PC);
+        error(STATE_READ_32_FROM_PC);
     }
 
-    return read_reg_64(state, reg) & ONES_32BIT;
+    return read_reg_64(state, reg) & MASK_LOWER_32BITS;
 }
 
 void destroy_state(State *state)
@@ -102,38 +103,35 @@ void destroy_state(State *state)
 
 void offset_pc(State *state, uint64 offset)
 {
-    state->PC = state->PC + offset;
+    state->PC += offset;
 }
 
 void inc_pc(State *state)
 {
-    state->PC = state->PC + 4;
+    state->PC += 4;
 }
 
 bool *get_pstate_flag(State *state, PSTATE_flag pstate)
 {
-    return (bool *) &(state->N) + pstate;
+    return &(state->N) + pstate;
 }
 
 void check_valid_flag(State *state, PSTATE_flag pstate) {
     if (pstate < 0 || pstate > V)
     {
-        error(FLAG_NOT_EXISTS);
+        error(STATE_FLAG_NOT_EXISTS);
     }
 }
 
-void write_pstate_flag(State *state, PSTATE_flag pstate, bool val)
+void write_pstate_flag(State *state, PSTATE_flag flag, bool val)
 {
-
-
-    bool *flag = get_pstate_flag(state, pstate);
-    *flag = val;
+    check_valid_flag(state, flag);
+    *get_pstate_flag(state, flag) = val;
 }
 
 bool read_pstate_flag(State *state, PSTATE_flag flag)
 {
     check_valid_flag(state, flag);
-
     return *get_pstate_flag(state, flag);
 }
 
@@ -155,35 +153,35 @@ char pstate_flag_to_char(PSTATE_flag flag, State *state) {
 void sprint_all_registers(State *state, char *out)
 {
     // Assume 25 chars per line. 38 lines so 950 chars of space required
-    char new[25];
+    char nextLine[PRINT_LINE_LENGTH];
 
     // General purpose
     for (int r = R0; r <= R30; r++)
     {
         uint64 val = read_reg_64(state, r);
-        sprintf(new, "X%.2d = %lx\n", r, val);
-        strcat(out, new);
+        sprintf(nextLine, "X%.2d = %lx\n", r, val);
+        strcat(out, nextLine);
     }
 
     // Special
-    sprintf(new, "ZR = %lx\n", read_reg_64(state, ZR));
-    strcat(out, new);
+    sprintf(nextLine, "ZR = %lx\n", read_reg_64(state, ZR));
+    strcat(out, nextLine);
 
-    sprintf(new, "PC = %lx\n", read_reg_64(state, PC));
-    strcat(out, new);
+    sprintf(nextLine, "PC = %lx\n", read_reg_64(state, PC));
+    strcat(out, nextLine);
 
-    sprintf(new, "SP = %lx\n", read_reg_64(state, SP));
-    strcat(out, new);
+    sprintf(nextLine, "SP = %lx\n", read_reg_64(state, SP));
+    strcat(out, nextLine);
 
     //PSTATE
-    sprintf(new, "PSTATE : %c", pstate_flag_to_char(N, state));
-    strcat(out, new);
-    sprintf(new, "%c", pstate_flag_to_char(Z, state));
-    strcat(out, new);
-    sprintf(new, "%c", pstate_flag_to_char(C, state));
-    strcat(out, new);
-    sprintf(new, "%c\n", pstate_flag_to_char(V, state));
-    strcat(out, new);
+    sprintf(nextLine, "PSTATE : %c", pstate_flag_to_char(N, state));
+    strcat(out, nextLine);
+    sprintf(nextLine, "%c", pstate_flag_to_char(Z, state));
+    strcat(out, nextLine);
+    sprintf(nextLine, "%c", pstate_flag_to_char(C, state));
+    strcat(out, nextLine);
+    sprintf(nextLine, "%c\n", pstate_flag_to_char(V, state));
+    strcat(out, nextLine);
 }
 
 void sprint_nonzero_memory(State *state, char *out)
