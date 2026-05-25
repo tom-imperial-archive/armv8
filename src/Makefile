@@ -5,13 +5,17 @@ CFLAGS  ?= -std=c17 -g\
 
 .SUFFIXES: .c .o
 
-.PHONY: all clean
+.PHONY: all clean test
 
 all: assemble emulate
 
 assemble: assemble.o
-emulate: emulate.o
+emulate: emulate.o hashset.o
+
+test:
+	$(CC) $(CFLAGS) ../tests/test_hashset.c common/hashset.c -o test_runner
+	./test_runner
 
 clean:
 	$(RM) *.o assemble emulate
-	
+
