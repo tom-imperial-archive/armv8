@@ -7,8 +7,9 @@
 // TEMP FOR TESTS TO WORK EASILY WITHOUT HAVING TO REFACTOR STUFF
 void execute_arithmetic_register(State *state, Instruction *i);
 void execute_logical_register(State *state, Instruction *i);
+void execute_multiply_register(State *state, Instruction *i);
 
-// Instruction builder helper
+// Instruction builder helper for arithmetic
 Instruction create_arithmetic_inst(OpType op, bool sf, Register rd, Register rn, Register rm, ShiftType shift, int operand) {
     Instruction i = { .op_type = op };
     i.data.register_arithmetic_logic.sf = sf;
@@ -17,6 +18,17 @@ Instruction create_arithmetic_inst(OpType op, bool sf, Register rd, Register rn,
     i.data.register_arithmetic_logic.rm = rm;
     i.data.register_arithmetic_logic.shift = shift;
     i.data.register_arithmetic_logic.operand = operand;
+    return i;
+}
+
+// Instruction builder helper for multiplication
+Instruction create_multiply_inst(OpType op, bool sf, Register rd, Register rn, Register rm, Register ra) {
+    Instruction i = { .op_type = op };
+    i.data.multiply.sf = sf;
+    i.data.multiply.rd = rd;
+    i.data.multiply.rn = rn;
+    i.data.multiply.rm = rm;
+    i.data.multiply.ra = ra;
     return i;
 }
 
@@ -236,11 +248,53 @@ void test_logical_ands_flags() {
     printf("test_logical_ands_flags: OK\n");
 }
 
+void test_multiply_madd() {
+    State state = {0};
+
+    // Set initial values: X1 (rn) = 5, X2 (rm) = 6, X3 (ra) = 10
+    write_reg_64(&state, R1, 5);
+    write_reg_64(&state, R2, 6);
+    write_reg_64(&state, R3, 10);
+
+    // Build: MADD X0, X1, X2, X3 (sf=true)
+    // Formula: X0 = X3 + (X1 * X2)
+    Instruction i = create_multiply_inst(OP_TYPE_MADD, true, R0, R1, R2, R3);
+
+    execute_multiply_register(&state, &i);
+
+    // Verify: 10 + (5 * 6) = 40
+    assert(read_reg_64(&state, R0) == 40);
+    printf("test_multiply_madd: OK\n");
+}
+
+void test_multiply_msub_32bit() {
+    State state = {0};
+
+    // Set initial values: W1 (rn) = 3, W2 (rm) = 4, W3 (ra) = 20
+    write_reg_32(&state, R1, 3);
+    write_reg_32(&state, R2, 4);
+    write_reg_32(&state, R3, 20);
+
+    // Build: MSUB W0, W1, W2, W3 (sf=false)
+    // Formula: W0 = W3 - (W1 * W2)
+    Instruction i = create_multiply_inst(OP_TYPE_MSUB, false, R0, R1, R2, R3);
+
+    execute_multiply_register(&state, &i);
+
+    // Verify: 20 - (3 * 4) = 8
+    assert(read_reg_32(&state, R0) == 8);
+
+    // Ensure the top 32 bits of the 64-bit register are zero
+    assert(read_reg_64(&state, R0) == 8);
+
+    printf("test_multiply_msub_32bit: OK\n");
+}
+
 int main(void) {
     printf("Data Processing Instruction (Register) Tests\n");
     printf("--------------------------------------------\n");
 
-    // Arithmetic tests
+    // Arithmetic Operation Tests
     test_standard_add();
     test_edge_case_32bit_asr();
     test_flags_subs_borrow();
@@ -248,10 +302,14 @@ int main(void) {
     test_flags_signed_overflow_add();
     test_flags_signed_underflow_sub();
 
-    // Logical tests
+    // Logical Operation Tests
     test_logical_orr();
     test_logical_bic_32bit();
     test_logical_ands_flags();
+
+    // Multiply Operation Tests
+    test_multiply_madd();
+    test_multiply_msub_32bit();
 
     printf("--------------------------------------------\n");
     printf("All tests passed\n");
