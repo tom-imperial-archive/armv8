@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../../common/util.h"
+#include "common/util.h"
 
 uint32 *readfile(const char *path, size_t *count) {
     FILE *f = fopen(path, "rb");
