@@ -9,11 +9,11 @@
 
 
 void pstate_n_64(State *state, uint64 res) {
-    write_pstate_flag(state, N, res & BIT_63_MASK);
+    write_pstate_flag(state, N, res >> 63);
 }
 
 void pstate_n_32(State *state, uint32 res) {
-    write_pstate_flag(state, N, res & BIT_31_MASK);
+    write_pstate_flag(state, N, res >> 31);
 }
 
 void pstate_z_eq_zero(State *state, uint64 res) {
@@ -21,12 +21,17 @@ void pstate_z_eq_zero(State *state, uint64 res) {
 }
 
 void pstate_c(State *state, uint64 res, uint64 original) {
-    write_pstate_flag(state, Z, res < original);
+    write_pstate_flag(state, C, res < original);
 }
 
-void pstate_v(State *state, uint64 res, uint64 original, uint64 imm) {
-    write_pstate_flag(state, Z, (original ^ res) >> 63 && (imm ^ res) >> 63);
+void pstate_v_64(State *state, uint64 res, uint64 original, uint64 imm) {
+    write_pstate_flag(state, V, (original ^ res) >> 63 && (imm ^ res) >> 63);
 }
+
+void pstate_v_32(State *state, uint32 res, uint32 original, uint32 imm) {
+    write_pstate_flag(state, V, (original ^ res) >> 31 && (imm ^ res) >> 31);
+}
+
 void add_imm(State *state, Instruction *i)
 {
     ImmediateArithmeticInstruction iai = i->data.immediate_arithmetic;
@@ -65,16 +70,18 @@ void adds_imm(State *state, Instruction *i)
         pstate_n_64(state, res);
         pstate_z_eq_zero(state, res);
         pstate_c(state, res, valXn);
+        pstate_v_64(state, res, valXn, imm);
     }
     else
     {
         uint32 valWn = read_reg_32(state, iai.rn);
         uint32 res = imm + valWn;
         write_reg_32(state, iai.rd, res);
+        printf("Setting n with %x\n", res);
         pstate_n_32(state, res);
         pstate_z_eq_zero(state, res);
         pstate_c(state, res, valWn);
-
+        pstate_v_32(state, res, valWn, imm);
     }
 }
 
