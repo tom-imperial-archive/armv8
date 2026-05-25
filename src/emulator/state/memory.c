@@ -4,10 +4,8 @@
 #define MEM_SIZE (1 << 20)
 
 /*
-Memory is stored as little-endian. MSB is at the highest memory address, LSB is at the lowest memory address.
-It expects data to contain the MSB first such that.
-
-THIS CODE ONLY WORKS ON LITTLE ENDIAN machines ie. x86 and ARM.
+Memory is stored in little-endian. MSB is at the highest memory address, LSB is at the lowest memory address.
+It expects data to contain the LSB at byte 0.
 */
 
 void check_mem_addr(Memory m, long addr, long n)
@@ -18,13 +16,6 @@ void check_mem_addr(Memory m, long addr, long n)
         // todo handle error
     }
 }
-
-/*
-For both write and read:
-
-We store the LSB at the lowest address. We reuquire this code to be run on a little endian machine.
-On a little endian machine, the LSB is stored at the lowest address so our pointer arithmetic works. On a big endian machine, the logic would break as we would then store the MSB at the lowest address, meaning our emulation fails.
-*/
 
 void write(Memory m, long addr, char *data, long n)
 {

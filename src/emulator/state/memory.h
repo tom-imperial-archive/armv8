@@ -3,6 +3,10 @@
 typedef char* Memory;
 
 /*
+For both reading and writing, data must be in little-endian format, ie. the LSB is at index 0.
+*/
+
+/*
 Write the first n bytes of data to memory starting from base addr
 */
 void write(Memory m, long addr, char *data, long n);
