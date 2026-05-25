@@ -1,7 +1,7 @@
 #include "memory.h"
 #include <stdlib.h>
 #include <stdio.h>
-#define MEM_SIZE (1 << 20)
+#define MEM_SIZE (2 << 20)
 
 /*
 Memory is stored in little-endian. MSB is at the highest memory address, LSB is at the lowest memory address.
