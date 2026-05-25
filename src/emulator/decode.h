@@ -112,7 +112,6 @@ typedef struct RegisterBranchInstruction {
 } RegisterBranchInstruction;
 typedef struct ConditionalBranchInstruction {
     int simm19;
-    int cond;
 } ConditionalBranchInstruction;
 
 typedef struct Instruction {

@@ -142,22 +142,46 @@ DecodeResult decode(char* input, int input_size, Instruction* result) {
             if ((value & 0xFF000000) == 0xD6000000) {
                 // Register
                 int xn     = (value & 0x000003E0) >> 5;
+
+                OpType op_type = OP_TYPE_AL;
+
+                Instruction instruction = {
+                    .op_type = op_type,
+                    .data.reg_branch.xn = xn,
+                };
+                
             } else if ((value & 0xFF000000) == 0x54000000) {
                 // Conditional
                 int opcode = (value & 0xFF000000) >> 24;
                 int simm19 = (value & 0x00FFFFE0) >> 5;  // sign-extend after
                 int cond   = (value & 0x0000000F);
+                
+                OpType op_type;
 
-                int offset = simm19*4;
+                switch (cond) {
+                    case 0b0000: op_type = OP_TYPE_EQ; break;
+                    case 0b0001: op_type = OP_TYPE_NE; break;
+                    case 0b1010: op_type = OP_TYPE_GE; break;
+                    case 0b1011: op_type = OP_TYPE_LT; break;
+                    case 0b1100: op_type = OP_TYPE_GT; break;
+                    case 0b1101: op_type = OP_TYPE_LE; break;
+                    case 0b1110: op_type = OP_TYPE_AL; break;
+                }
+
+                Instruction instruction = {
+                    .op_type = op_type,
+                    .data.cond_branch.simm19 = simm19,
+                };
+
             } else if ((value & 0xFC000000) == 0x14000000) {
                 // Unconditional
                 int opcode = (value & 0xFC000000) >> 26;
                 int simm26 = (value & 0x03FFFFFF); 
                 
-                OpType optype = OP_TYPE_AL;// sign-extend after
+                OpType op_type = OP_TYPE_AL;// sign-extend after
 
                 Instruction instruction = {
-                    .op_type = optype,
+                    .op_type = op_type,
                     .data.uncond_branch.simm26 = simm26,
                 };
             }
