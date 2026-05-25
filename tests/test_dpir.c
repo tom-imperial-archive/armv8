@@ -6,6 +6,7 @@
 
 // TEMP FOR TESTS TO WORK EASILY WITHOUT HAVING TO REFACTOR STUFF
 void execute_arithmetic_register(State *state, Instruction *i);
+void execute_logical_register(State *state, Instruction *i);
 
 // Instruction builder helper
 Instruction create_arithmetic_inst(OpType op, bool sf, Register rd, Register rn, Register rm, ShiftType shift, int operand) {
@@ -173,16 +174,84 @@ void test_flags_signed_underflow_sub() {
     printf("test_flags_signed_underflow_sub: OK\n");
 }
 
+void test_logical_orr() {
+    State state = {0};
+
+    // X1 = 10101010, X2 = 01010101
+    write_reg_64(&state, R1, 0xAAAAAAAAAAAAAAAAULL);
+    write_reg_64(&state, R2, 0x5555555555555555ULL);
+
+    // Build: ORR X0, X1, X2
+    Instruction i = create_arithmetic_inst(OP_TYPE_ORR, true, R0, R1, R2, SHIFT_LSL, 0);
+
+    execute_logical_register(&state, &i);
+
+    // Verify: 1010 | 0101 = 1111 (All 1s)
+    assert(read_reg_64(&state, R0) == 0xFFFFFFFFFFFFFFFFULL);
+    printf("test_logical_orr: OK\n");
+}
+
+void test_logical_bic_32bit() {
+    State state = {0};
+
+    // W1 = All 1s, W2 = Bottom half 1s, Top half 0s
+    write_reg_32(&state, R1, 0xFFFFFFFF);
+    write_reg_32(&state, R2, 0x0000FFFF);
+
+    // Build: BIC W0, W1, W2 (Bitwise Clear: W1 AND NOT W2)
+    Instruction i = create_arithmetic_inst(OP_TYPE_BIC, false, R0, R1, R2, SHIFT_LSL, 0);
+
+    execute_logical_register(&state, &i);
+
+    // Verify: W2 inverted is 0xFFFF0000.
+    // 0xFFFFFFFF & 0xFFFF0000 = 0xFFFF0000.
+    assert(read_reg_32(&state, R0) == 0xFFFF0000);
+
+    // CRITICAL: Ensure the top 32 bits of the 64-bit register are completely zero!
+    assert(read_reg_64(&state, R0) == 0x00000000FFFF0000ULL);
+    printf("test_logical_bic_32bit: OK\n");
+}
+
+void test_logical_ands_flags() {
+    State state = {0};
+
+    // Set both to just the 64-bit sign bit
+    write_reg_64(&state, R1, 0x8000000000000000ULL);
+    write_reg_64(&state, R2, 0x8000000000000000ULL);
+
+    // Build: ANDS X0, X1, X2
+    Instruction i = create_arithmetic_inst(OP_TYPE_ANDS, true, R0, R1, R2, SHIFT_LSL, 0);
+
+    execute_logical_register(&state, &i);
+
+    // Verify Math
+    assert(read_reg_64(&state, R0) == 0x8000000000000000ULL);
+
+    // Verify Flags
+    assert(read_pstate_flag(&state, N) == true);   // Sign bit is 1
+    assert(read_pstate_flag(&state, Z) == false);  // Result is not zero
+    assert(read_pstate_flag(&state, C) == false);  // Always 0 for logic
+    assert(read_pstate_flag(&state, V) == false);  // Always 0 for logic
+
+    printf("test_logical_ands_flags: OK\n");
+}
+
 int main(void) {
     printf("Data Processing Instruction (Register) Tests\n");
     printf("--------------------------------------------\n");
 
+    // Arithmetic tests
     test_standard_add();
     test_edge_case_32bit_asr();
     test_flags_subs_borrow();
     test_flags_unsigned_overflow();
     test_flags_signed_overflow_add();
     test_flags_signed_underflow_sub();
+
+    // Logical tests
+    test_logical_orr();
+    test_logical_bic_32bit();
+    test_logical_ands_flags();
 
     printf("--------------------------------------------\n");
     printf("All tests passed\n");

@@ -70,12 +70,12 @@ void execute_arithmetic_register(State *state, Instruction *i) {
         write_reg_32(state, rd, result);
     }
 
-    // PSTATE FLAGS
+    // PSTATE Flags
     if (op == OP_TYPE_REG_ADDS || op == OP_TYPE_REG_SUBS) {
         // Store the sign bit to use as a mask later
         uint64 sign_bit = 1ULL << (sf ? 63 : 31);
 
-        // N Flag: true if sign bit is a 1
+        // N flag: true if sign bit is a 1
         bool n_flag = (result & sign_bit) != 0;
 
         // Z flag: true if the result is exactly 0
@@ -99,6 +99,82 @@ void execute_arithmetic_register(State *state, Instruction *i) {
             // and sign of result is different from val_n
             v_flag = ((~(val_n ^ op2) & sign_bit) && ((val_n ^ result) & sign_bit)) != 0;
         }
+
+        // Write flags
+        write_pstate_flag(state, N, n_flag);
+        write_pstate_flag(state, Z, z_flag);
+        write_pstate_flag(state, C, c_flag);
+        write_pstate_flag(state, V, v_flag);
+    }
+}
+
+void execute_logical_register(State *state, Instruction *i) {
+    // Unpack
+    bool sf = i->data.register_arithmetic_logic.sf;
+    Register rd = (Register)i->data.register_arithmetic_logic.rd;
+    Register rn = (Register)i->data.register_arithmetic_logic.rn;
+    Register rm = (Register)i->data.register_arithmetic_logic.rm;
+
+    int shift_amount = i->data.register_arithmetic_logic.operand;
+    ShiftType shift_type = i->data.register_arithmetic_logic.shift;
+    OpType op = i->op_type;
+
+    // Initial values
+    uint64 val_n = sf ? read_reg_64(state, rn) : (uint64)read_reg_32(state, rn);
+    uint64 val_m = sf ? read_reg_64(state, rm) : (uint64)read_reg_32(state, rm);
+
+    // Shifting
+    uint64 op2 = shift_value(val_m, shift_type, shift_amount, sf);
+
+    // Negating
+    if (op == OP_TYPE_BIC || op == OP_TYPE_BICS || op == OP_TYPE_ORN || op == OP_TYPE_EON) {
+        op2 = ~op2;
+    }
+    // This would flip the top 32 bits in 32-bit registers to 1s, so we cast
+    op2 = sf ? op2 : (uint32)op2;
+
+    // Logic
+    uint64 result = 0;
+    switch (op) {
+        case OP_TYPE_AND:
+        case OP_TYPE_ANDS:
+        case OP_TYPE_BIC:
+        case OP_TYPE_BICS:
+            result = val_n & op2;
+            break;
+        case OP_TYPE_ORR:
+        case OP_TYPE_ORN:
+            result = val_n | op2;
+            break;
+        case OP_TYPE_EOR:
+        case OP_TYPE_EON:
+            result = val_n ^ op2;
+            break;
+        default:
+            break;
+    }
+    result = sf ? result : (uint32)result;
+
+    //Storing
+    if (sf) {
+        write_reg_64(state, rd, result);
+    }
+    else {
+        write_reg_32(state, rd, result);
+    }
+
+    // PSTATE Flags
+    if (op == OP_TYPE_ANDS || op == OP_TYPE_BICS) {
+        uint64 sign_bit = 1ULL << (sf ? 63 : 31);
+        // N flag: true if sign bit is a 1
+        bool n_flag = (result & sign_bit) != 0;
+
+        // Z flag: true if the result is exactly 0
+        bool z_flag = (result == 0);
+
+        // C and V flags: always 0
+        bool c_flag = 0;
+        bool v_flag = 0;
 
         // Write flags
         write_pstate_flag(state, N, n_flag);
