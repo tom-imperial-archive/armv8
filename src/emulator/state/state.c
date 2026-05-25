@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include "state.h"
 #include <stdio.h>
+#include <string.h>
+#define CAT strcat(out, new);
 
 State *init_state()
 {
@@ -96,7 +98,7 @@ void inc_pc(State *state)
 
 bool *get_pstate_flag(State *state, PSTATE_flag pstate)
 {
-    return (bool *)state + pstate;
+    return (bool *) &(state->N) + pstate;
 }
 
 void write_pstate_flag(State *state, PSTATE_flag pstate, bool val)
@@ -111,26 +113,62 @@ void write_pstate_flag(State *state, PSTATE_flag pstate, bool val)
     *flag = val;
 }
 
-bool read_pstate_flag(State *state, PSTATE_flag pstate)
+bool read_pstate_flag(State *state, PSTATE_flag flag)
 {
-    if (pstate < 0 || pstate > V)
+    if (flag < 0 || flag > V)
     {
         // Invalid register. Handle error
     }
 
-    return *get_pstate_flag(state, pstate);
+    return *get_pstate_flag(state, flag);
 }
 
-void print_all_registers(State *state)
+/*
+Pre: flag is a valid PSTATE_flag value
+*/
+char pstate_flag_to_char(PSTATE_flag flag, State *state) {
+    if (read_pstate_flag(state, flag)) {
+        printf("Flag %d %d", flag, read_pstate_flag(state, flag));
+        switch(flag) {
+            case N: return 'N';
+            case Z: return 'Z';
+            case C: return 'C';
+            case V: return 'V';
+        }
+    }
+    return '-';
+}
+
+void sprint_all_registers(State *state, char *out)
 {
-    for (int r = 0; r <= SP; r++)
+    // Assume 25 chars per line. 38 lines so 950 chars of space required
+    char new[25];
+
+    // General purpose
+    for (int r = R0; r <= R30; r++)
     {
         uint64 val = read_reg_64(state, r);
-        printf("R%d: %ld\n", r, val);
+        sprintf(new, "X%d = %ld\n", r, val);
+        CAT;
     }
-    for (int p = 0; p <= V; p++)
-    {
-        bool val = read_pstate_flag(state, p);
-        printf("P%d: %d\n", p, val);
-    }
+
+    // Special
+    sprintf(new, "ZR = %ld\n", read_reg_64(state, ZR));
+    CAT;
+
+    sprintf(new, "PC = %ld\n", read_reg_64(state, PC));
+    CAT;
+
+    sprintf(new, "SP = %ld\n", read_reg_64(state, SP));
+    CAT;
+
+    //PSTATE
+    sprintf(new, "PSTATE : %c", pstate_flag_to_char(N, state));
+    CAT;
+    sprintf(new, "%c", pstate_flag_to_char(Z, state));
+    CAT;
+    sprintf(new, "%c", pstate_flag_to_char(C, state));
+    CAT;
+    sprintf(new, "%c\n", pstate_flag_to_char(V, state));
+    CAT;
 }

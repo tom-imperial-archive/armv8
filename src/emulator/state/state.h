@@ -132,8 +132,4 @@ void inc_pc(State *state);
 void write_pstate_flag(State *state, PSTATE_flag pstate, bool val);
 bool read_pstate_flag(State *state, PSTATE_flag pstate);
 
-/*
-Debug
-*/
-
-void print_all_registers(State *state);
+void sprint_all_registers(State *state, char *out);
