@@ -126,7 +126,6 @@ Pre: flag is a valid PSTATE_flag value
 */
 char pstate_flag_to_char(PSTATE_flag flag, State *state) {
     if (read_pstate_flag(state, flag)) {
-        printf("Flag %d %d", flag, read_pstate_flag(state, flag));
         switch(flag) {
             case N: return 'N';
             case Z: return 'Z';
