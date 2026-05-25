@@ -1,9 +1,38 @@
 #include "common/util.h"
+#include "common/hashset.h"
+
+typedef struct {
+    char* data;
+    AddressSet *accessed;
+} MemoryState;
+
+typedef MemoryState* Memory;
+
+typedef struct {
+    uint64 address;
+    uint32 value;
+} NonZeroMemory;
+
+/*
+For both reading and writing, data must be in little-endian format, ie. the LSB is at index 0.
+*/
+
 /*
 Write the first n bytes of data to memory starting from base addr
 */
-void write(long addr, char *data, long n);
+void write(Memory m, uint64 addr, char *data, long n);
 /*
 Read the first n bytes in memory starting from base addr and write these to data.
+Pre: sizeof(*data) = n
 */
-void read(long addr, char *data, long n);
+void read(Memory m, uint64 addr, char *data, long n);
+
+/*
+Returns the 4 byte chunks of memory that are non-zero, and their values
+and fills in `out_size` with the count.
+The caller is responsible for freeing the returned array.
+*/
+NonZeroMemory* get_non_zero_memory(Memory m, int *out_size);
+
+Memory init_mem();
+void destroy_mem(Memory m);

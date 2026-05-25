@@ -66,7 +66,7 @@ void test_get_all_addresses() {
     printf("Test get all addresses: OK\n");
 }
 
-int main(void) {
+int test_hashset(void) {
     printf("Hashset Tests\n");
     printf("-------------\n");
     test_creation();
