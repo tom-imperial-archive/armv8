@@ -75,6 +75,7 @@ void test_dpi_imm() {
     assert(read_pstate_flag(state, Z) == false);
     assert(read_pstate_flag(state, C) == true);
     assert(read_pstate_flag(state, V) == false);
+    printf("Test add adds sub subs: OK\n");
 }
 
 void test_execute(void)
