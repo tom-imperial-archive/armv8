@@ -146,18 +146,18 @@ void sprint_all_registers(State *state, char *out)
     for (int r = R0; r <= R30; r++)
     {
         uint64 val = read_reg_64(state, r);
-        sprintf(new, "X%d = %ld\n", r, val);
+        sprintf(new, "X%.2d = %lx\n", r, val);
         CAT;
     }
 
     // Special
-    sprintf(new, "ZR = %ld\n", read_reg_64(state, ZR));
+    sprintf(new, "ZR = %lx\n", read_reg_64(state, ZR));
     CAT;
 
-    sprintf(new, "PC = %ld\n", read_reg_64(state, PC));
+    sprintf(new, "PC = %lx\n", read_reg_64(state, PC));
     CAT;
 
-    sprintf(new, "SP = %ld\n", read_reg_64(state, SP));
+    sprintf(new, "SP = %lx\n", read_reg_64(state, SP));
     CAT;
 
     //PSTATE
