@@ -3,11 +3,13 @@
 #include "util.h"
 
 #define BIG_PRIME 26544357617u
+#define INITIAL_CAPACITY 1024
 
-AddressSet* create_set(int initial_capacity) {
+
+AddressSet* create_set(void) {
     AddressSet *set = malloc(sizeof(AddressSet));
 
-    set->capacity = initial_capacity;
+    set->capacity = INITIAL_CAPACITY;
     set->size = 0;
 
     set->entries = calloc(set->capacity, sizeof(char *));
