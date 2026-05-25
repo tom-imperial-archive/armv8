@@ -8,6 +8,11 @@ typedef struct {
 
 typedef MemoryState* Memory;
 
+typedef struct {
+    uint64 address;
+    uint32 value;
+} NonZeroMemory;
+
 /*
 For both reading and writing, data must be in little-endian format, ie. the LSB is at index 0.
 */
@@ -23,10 +28,11 @@ Pre: sizeof(*data) = n
 void read(Memory m, uint64 addr, char *data, long n);
 
 /*
-Returns an array of accessed memory addresses, and fills in `out_size` with the count
+Returns the 4 byte chunks of memory that are non-zero, and their values
+and fills in `out_size` with the count.
 The caller is responsible for freeing the returned array.
 */
-char** get_accessed_memory(Memory m, int *out_size);
+NonZeroMemory* get_non_zero_memory(Memory m, int *out_size);
 
 Memory init_mem();
 void destroy_mem(Memory m);
