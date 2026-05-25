@@ -10,7 +10,7 @@ CFLAGS  ?= -std=c17 -g\
 all: assemble emulate
 
 assemble: assemble.o
-emulate: emulate.o hashset.o
+emulate: emulate.o hashset.o readfile.o
 
 test:
 	$(CC) $(CFLAGS) ../tests/test_hashset.c common/hashset.c -o test_runner
