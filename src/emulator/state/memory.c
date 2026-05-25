@@ -1,6 +1,7 @@
 #include "memory.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include "common/util.h"
 #define MEM_SIZE (2 << 20)
 
 /*
@@ -8,7 +9,7 @@ Memory is stored in little-endian. MSB is at the highest memory address, LSB is 
 It expects data to contain the LSB at byte 0.
 */
 
-void check_mem_addr(Memory m, long addr, long n)
+void check_mem_addr(Memory m, uint64 addr, long n)
 {
     if (addr < 0 || n <= 0 || addr + n >= MEM_SIZE)
     {
@@ -17,7 +18,7 @@ void check_mem_addr(Memory m, long addr, long n)
     }
 }
 
-void write(Memory m, long addr, char *data, long n)
+void write(Memory m, uint64 addr, char *data, long n)
 {
     check_mem_addr(m, addr, n);
     for (int i = 0; i < n; i++)
@@ -26,7 +27,7 @@ void write(Memory m, long addr, char *data, long n)
     }
 }
 
-void read(Memory m, long addr, char *data, long n)
+void read(Memory m, uint64 addr, char *data, long n)
 {
     check_mem_addr(m, addr, n);
     for (int i = 0; i < n; i++)
