@@ -169,3 +169,27 @@ void sprint_all_registers(State *state, char *out)
     sprintf(new, "%c\n", pstate_flag_to_char(V, state));
     CAT;
 }
+
+void sprint_nonzero_memory(State *state, char *out)
+{
+    // As before, 25 chars per line.
+    char new[25];
+    int nonzero_count = 0;
+
+    NonZeroMemory *memory_data = get_non_zero_memory(state->m, &nonzero_count);
+
+    if (memory_data == NULL) {
+        return;
+    }
+
+    sprintf(new, "Non-zero memory:\n");
+    CAT;
+
+    for (int i = 0; i < nonzero_count; i++) {
+        // 0x%08lx formats the 64-bit address has an 8-character zero-padded hex value
+        // 0x%08x formats the 32-bit chunk of data as an 8-character zero-added hex value
+        sprintf(new, "0x%08lx: 0x%08x\n", memory_data[i].address, memory_data[i].value);
+        CAT;
+    }
+    free(memory_data);
+}
