@@ -48,7 +48,6 @@ void test_dpi_imm() {
     i.data.immediate_arithmetic.rd = R3;
     i.data.immediate_arithmetic.imm12 = 0;
     execute_instruction(state, OP_TYPE_ADDS, &i);
-    printf("Actual: %x %d\n", read_reg_32(state, R3), read_reg_32(state, R3) >> 31);
     assert(read_pstate_flag(state, N) == true);
 
     uint32 val4 = 0x7FFFFFFF;
@@ -62,11 +61,20 @@ void test_dpi_imm() {
     assert(read_pstate_flag(state, C) == true);
     assert(read_pstate_flag(state, V) == false);
 
-    /*
-    Tests to run:
-    sub bit shift
-    subs w/wo
-    */
+    write_reg_64(state, R0, val2);
+    i.op_type = OP_TYPE_SUB;
+    i.data.immediate_arithmetic.imm12 = val1;
+    i.data.immediate_arithmetic.sf = 1;
+    execute_instruction(state, OP_TYPE_SUB, &i);
+    assert(read_reg_64(state, R3) == val2-val1);
+
+    i.op_type = OP_TYPE_SUBS;
+    execute_instruction(state, OP_TYPE_SUBS, &i);
+    assert(read_reg_64(state, R3) == val2-val1);
+    assert(read_pstate_flag(state, N) == true);
+    assert(read_pstate_flag(state, Z) == false);
+    assert(read_pstate_flag(state, C) == true);
+    assert(read_pstate_flag(state, V) == false);
 }
 
 void test_execute(void)

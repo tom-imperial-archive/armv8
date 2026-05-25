@@ -3,10 +3,6 @@
 #include "emulator/state/state.h"
 #include "emulator/decode.h"
 #include <stdio.h>
-#define BIT_63_MASK 1UL << 63
-#define BIT_31_MASK 1UL << 31
-
-
 
 void pstate_n_64(State *state, uint64 res) {
     write_pstate_flag(state, N, res >> 63);
@@ -85,6 +81,58 @@ void adds_imm(State *state, Instruction *i)
     }
 }
 
+void sub_imm(State *state, Instruction *i)
+{
+    ImmediateArithmeticInstruction iai = i->data.immediate_arithmetic;
+    uint64 imm = iai.imm12;
+    if (iai.sh)
+    {
+        imm = imm << 12;
+    }
+
+    if (iai.sf)
+    {
+        uint64 valRn = read_reg_64(state, iai.rn);
+        write_reg_64(state, iai.rd, valRn - imm);
+    }
+    else
+    {
+        uint32 valRn = read_reg_32(state, iai.rn);
+        write_reg_32(state, iai.rd, valRn - imm);
+    }
+}
+
+void subs_imm(State *state, Instruction *i)
+{
+    ImmediateArithmeticInstruction iai = i->data.immediate_arithmetic;
+    uint32 imm = iai.imm12;
+    if (iai.sh)
+    {
+        imm = imm << 12;
+    }
+
+    if (iai.sf)
+    {
+        uint64 valXn = read_reg_64(state, iai.rn);
+        uint64 res = valXn - imm;
+        write_reg_64(state, iai.rd, res);
+        pstate_n_64(state, res);
+        pstate_z_eq_zero(state, res);
+        pstate_c(state, res, valXn);
+        pstate_v_64(state, res, valXn, imm);
+    }
+    else
+    {
+        uint32 valWn = read_reg_32(state, iai.rn);
+        uint32 res = valWn - imm;
+        write_reg_32(state, iai.rd, res);
+        printf("Setting n with %x\n", res);
+        pstate_n_32(state, res);
+        pstate_z_eq_zero(state, res);
+        pstate_c(state, res, valWn);
+        pstate_v_32(state, res, valWn, imm);
+    }
+}
 
 /*
     Executes the given instruction.
@@ -104,8 +152,10 @@ bool execute_instruction(State *state, OpType op, Instruction *i)
         adds_imm(state, i);
         break;
     case OP_TYPE_SUB:
+        sub_imm(state, i);
         break;
     case OP_TYPE_SUBS:
+        subs_imm(state, i);
         break;
     default: break;
         // Data processing instruction (register)
