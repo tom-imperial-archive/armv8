@@ -3,6 +3,111 @@
 #include "emulator/state/state.h"
 #include "emulator/decode.h"
 
+uint64 shift_value(uint64 val, ShiftType type, int amount, bool sf) {
+    if (amount == 0) return val;
+
+    switch (type) {
+        case SHIFT_LSL:
+            val = val << amount;
+            break;
+        case SHIFT_LSR:
+            val = val >> amount;
+            break;
+        case SHIFT_ASR:
+            // Cast to signed for an arithmetic shift
+            if (sf) val = (uint64)(((int64) val) >> amount);
+            else val = (uint64)(((int32)val) >> amount);
+            break;
+        case SHIFT_ROR:
+            // Use bitwise OR and normal shifts to simulate a rotate
+            if (sf) val = (val >> amount) | (val << (64 - amount));
+            else val = (val >> amount) | ((val & 0xFFFFFFFF) << (32 - amount));
+            break;
+    }
+    // Zero-extension neccessary here, since shifts can overwrite top half.
+    return sf ? val : (uint32)val;
+}
+
+void execute_arithmetic_register(State *state, Instruction *i) {
+    // Unpack
+    bool sf = i->data.register_arithmetic_logic.sf;
+    Register rd = (Register)i->data.register_arithmetic_logic.rd;
+    Register rn = (Register)i->data.register_arithmetic_logic.rn;
+    Register rm = (Register)i->data.register_arithmetic_logic.rm;
+
+    int shift_amount = i->data.register_arithmetic_logic.operand;
+    ShiftType shift_type = i->data.register_arithmetic_logic.shift;
+    OpType op = i->op_type;
+
+    // Initial values
+    uint64 val_n = sf ? read_reg_64(state, rn) : (uint64)read_reg_32(state, rn);
+    uint64 val_m = sf ? read_reg_64(state, rm) : (uint64)read_reg_32(state, rm);
+
+    // Shifting
+    uint64 op2 = shift_value(val_m, shift_type, shift_amount, sf);
+
+    // Maths
+    uint64 result = 0;
+    switch (op) {
+        case OP_TYPE_REG_SUB:
+        case OP_TYPE_REG_SUBS:
+            result = val_n - op2;
+            break;
+        case OP_TYPE_REG_ADD:
+        case OP_TYPE_REG_ADDS:
+            result = val_n + op2;
+            break;
+        default:
+            break;
+    }
+    result = sf ? result : (uint32)result;
+
+    //Storing
+    if (sf) {
+        write_reg_64(state, rd, result);
+    }
+    else {
+        write_reg_32(state, rd, result);
+    }
+
+    // PSTATE FLAGS
+    if (op == OP_TYPE_REG_ADDS || op == OP_TYPE_REG_SUBS) {
+        // Store the sign bit to use as a mask later
+        uint64 sign_bit = 1ULL << (sf ? 63 : 31);
+
+        // N Flag: true if sign bit is a 1
+        bool n_flag = (result & sign_bit) != 0;
+
+        // Z flag: true if the result is exactly 0
+        bool z_flag = (result == 0);
+
+        bool c_flag;
+        bool v_flag;
+
+        if (op == OP_TYPE_REG_SUBS) {
+            // C flag: true if no borrow occured
+            c_flag = (val_n >= op2);
+
+            // V flag: true if signs of operands are different,
+            // and sign of result is different from val_n
+            v_flag = (((val_n ^ op2) & sign_bit) && ((val_n ^ result) & sign_bit)) != 0;
+            // XOR checks if bits are different
+        } else {
+            // C flag: true if unsigned overflow
+            c_flag = (result < val_n);
+            // V flag: true if signs of operands are same,
+            // and sign of result is different from val_n
+            v_flag = ((~(val_n ^ op2) & sign_bit) && ((val_n ^ result) & sign_bit)) != 0;
+        }
+
+        // Write flags
+        write_pstate_flag(state, N, n_flag);
+        write_pstate_flag(state, Z, z_flag);
+        write_pstate_flag(state, C, c_flag);
+        write_pstate_flag(state, V, v_flag);
+    }
+}
+
 /*
     Executes the given instruction.
     If we encounter a halt instruction, we return true, otherwise return false;
@@ -11,10 +116,22 @@ bool execute_instruction(State *state, OpType op, Instruction *i)
 {
     switch (op)
     {
-    case OP_TYPE_HALT:
-        return true;
+        case OP_TYPE_HALT:
+            return true;
         // Data processing instruction (immediate)
+
         // Data processing instruction (register)
+        case OP_TYPE_REG_SUB:
+        case OP_TYPE_REG_SUBS:
+        case OP_TYPE_REG_ADD:
+        case OP_TYPE_REG_ADDS:
+            execute_arithmetic_register(state, i);
+            break;
+
+
+        // TEMP until all instructions have been implemented
+        default:
+            break;
     }
     return false;
 }
