@@ -16,6 +16,9 @@ DecodeResult decode(char* input, int input_size, Instruction* result);
 typedef enum OpType {
     // Data processing instruction (immediate). Correspond to `ImmediateArithmeticInstruction`.
 
+    // Halt
+    OP_TYPE_HALT,
+
     // Arithmetic
     OP_TYPE_ADD,
     OP_TYPE_ADDS,

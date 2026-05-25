@@ -7,6 +7,16 @@ DecodeResult decode(char* input, int input_size, Instruction* result) {
     for (int i = 0; i < input_size; i += 4) {
         uint32 value = ((uint32)input[i    ] << 24) | ((uint32)input[i + 1] << 16)
                      | ((uint32)input[i + 2] << 8 ) | ((uint32)input[i + 3]);
+
+
+        if (value == 0x8A000000) {
+            // HALT
+            OpType op_type = OP_TYPE_HALT;
+            Instruction instruction = {
+                .op_type = op_type
+            };
+        }
+
         if (value & 0x1C000000 == 0x10000000) { // is dp_imm
             bool sf  = value & 0x80000000 == 0x80000000;
             int opc = (value & 0x60000000) >> 28; // TODO: check if shift is correct
