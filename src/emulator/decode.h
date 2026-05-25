@@ -114,6 +114,20 @@ typedef struct ConditionalBranchInstruction {
     int simm19;
 } ConditionalBranchInstruction;
 
+typedef struct SingleDataTransfer {
+    bool sf;
+    bool U;
+    bool L;
+    int offset;
+    int xn;
+    int rt;
+} SingleDataTransfer;
+typedef struct LoadLiteral {
+    bool sf;
+    int simm19;
+    int rt;
+} LoadLiteral;
+
 typedef struct Instruction {
     OpType op_type;
     union InstructionData {
@@ -123,25 +137,15 @@ typedef struct Instruction {
         UnconditionalBranchInstruction uncond_branch;
         RegisterBranchInstruction reg_branch;
         ConditionalBranchInstruction cond_branch;
+        SingleDataTransfer single_data_transfer;
+        LoadLiteral load_literal;
         struct DataProcessingInstructionRegister {
             int rd;
             int ra;
             int rn;
             int rm;
         } data_processing_instruction_register;
-        struct SingleDataTransfer {
-            bool sf;
-            bool U;
-            bool L;
-            int offset;
-            int xn;
-            int rt;
-        } single_data_transfer;
-        struct LoadLiteral {
-            bool sf;
-            int simm19;
-            int rt;
-        } load_literal;
+        
         
     } data;
 } Instruction;

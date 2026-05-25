@@ -134,7 +134,48 @@ DecodeResult decode(char* input, int input_size, Instruction* result) {
                     }
                 }
             }
-        } else if (input[i] & 0b00001010 == 0b00001000) { // load/store
+        } else if (input[i] & 0b00001010 == 0b00001000) { 
+            // load/store
+            if ((value & 0x80000000) == 0x80000000) {
+                // Single Data Transfer: bit 31 = 1
+                int sf     = (value & 0x40000000) >> 30;
+                int U      = (value & 0x01000000) >> 24;
+                int L      = (value & 0x00400000) >> 22;
+                int offset = (value & 0x003FFC00) >> 10;
+                int xn     = (value & 0x000003E0) >> 5;
+                int rt     = (value & 0x0000001F);
+
+                OpType op_type = OP_TYPE_SINGLE_DATA_TRANSFER;
+
+                Instruction instruction = {
+                    .op_type = op_type,
+                    .data.single_data_transfer = {
+                        .sf     = sf,
+                        .U      = U,
+                        .L      = L,
+                        .offset = offset,
+                        .xn     = xn,
+                        .rt     = rt,
+                    }
+                };
+
+            } else {
+                // Load Literal: bit 31 = 0
+                int sf     = (value & 0x40000000) >> 30;
+                int simm19 = (value & 0x00FFFFE0) >> 5;  // sign-extend after
+                int rt     = (value & 0x0000001F);
+
+                OpType op_type = OP_TYPE_LOAD_LITERAL;
+
+                Instruction instruction = {
+                    .op_type = op_type,
+                    .data.load_literal = {
+                        .simm19 = simm19,
+                        .rt     = rt,
+                        .sf     = sf,
+                    }
+                };
+            }
 
         } else if (input[i] & 0b00011100 == 0b00010100) { 
             // branch
@@ -149,7 +190,7 @@ DecodeResult decode(char* input, int input_size, Instruction* result) {
                     .op_type = op_type,
                     .data.reg_branch.xn = xn,
                 };
-                
+
             } else if ((value & 0xFF000000) == 0x54000000) {
                 // Conditional
                 int opcode = (value & 0xFF000000) >> 24;
