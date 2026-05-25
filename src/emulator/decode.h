@@ -142,6 +142,6 @@ typedef struct Instruction {
     } data;
 } Instruction;
 
-DecodeResult decode(char* input, int input_size, Instruction* result);
+DecodeResult decode(uint32* input, int input_size, Instruction* result);
 
 #endif
