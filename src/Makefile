@@ -14,7 +14,6 @@ $(objects): %.o: %.c
 
 assemble: assemble.o
 emulate: emulate.o common/hashset.o emulator/decode/readfile.o
-	$(CC) $(CFLAGS) $^ -o $@
 
 test:
 	$(CC) $(CFLAGS) ../tests/test_hashset.c common/hashset.c -o test_runner
