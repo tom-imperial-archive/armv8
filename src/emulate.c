@@ -13,6 +13,5 @@ int main(int argc, char **argv) {
     uint32 *memory = readfile(argv[1], &count);
     if (!memory) return 1;
 
-
     return EXIT_SUCCESS;
 }
