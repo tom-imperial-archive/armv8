@@ -1,6 +1,7 @@
 #include "memory.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include "common/util.h"
 #include "common/hashset.h"
 #define MEM_SIZE (2 << 20)
@@ -22,27 +23,27 @@ void check_mem_addr(Memory m, uint64 addr, long n)
 void write(Memory m, uint64 addr, char *data, long n)
 {
     check_mem_addr(m, addr, n);
-    for (int i = 0; i < n; i++)
-    {
-        uint64 current_offset = addr + i;
 
-        // Calculate 4-byte boundary by ANDing with 11...1100, obtained by negating ..0011
-        uint64 aligned_offset = current_offset & ~0x3ULL;
+    // Write data by copying n bytes
+    memcpy(&(m->data[addr]), data, n);
 
-        char *aligned_address = &(m->data[aligned_offset]);
-        insert_address(m->accessed, aligned_address);
+    // Track the 4-byte blocks that were altered
+    // Calculate 4-byte boundary by ANDing with 11...1100, obtained by negating ..0011
+    uint64 start_aligned = addr & ~0x3ULL;
+    uint64 end_aligned = (addr + n - 1) & ~0x3ULL;
 
-        m->data[current_offset] = data[i];
+    // Loop through blocks, 4 bytes at a time
+    // This loop runs up to 3 times, depending how many bytes are written, and alignment
+    for (uint64 chunk = start_aligned; chunk <= end_aligned; chunk += 4) {
+        insert_address(m->accessed, &(m->data[chunk]));
     }
 }
 
 void read(Memory m, uint64 addr, char *data, long n)
 {
     check_mem_addr(m, addr, n);
-    for (int i = 0; i < n; i++)
-    {
-        data[i] = m->data[addr + i];
-    }
+    // Copy n bytes from the emulated memory to the data buffer
+    memcpy(data, &(m->data[addr]), n);
 }
 
 NonZeroMemory* get_non_zero_memory(Memory m, int *out_size)
