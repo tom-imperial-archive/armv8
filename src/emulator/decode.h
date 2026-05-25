@@ -13,10 +13,10 @@ DecodeResult decode(char* input, int input_size, Instruction* result);
 
 
 typedef enum OpType {
-    // Data processing instruction (immediate). Correspond to `ImmediateArithmeticInstruction`.
-
     // Halt
     OP_TYPE_HALT,
+
+    // Data processing instruction (immediate). Correspond to `ImmediateArithmeticInstruction`.
 
     // Arithmetic
     OP_TYPE_ADD,
@@ -46,12 +46,6 @@ typedef enum OpType {
     OP_TYPE_EON,
     OP_TYPE_ANDS,
     OP_TYPE_BICS,
-
-    // Bitwise shifts
-    OP_TYPE_LSL,
-    OP_TYPE_LSR,
-    OP_TYPE_ASR,
-    OP_TYPE_ROR,
 
     // Multiply. Correspond to `RegisterMultiplyInstruction`
     OP_TYPE_MADD,
@@ -142,46 +136,12 @@ typedef struct Instruction {
         ImmediateArithmeticInstruction immediate_arithmetic;
         WideMoveInstruction wide_move;
         RegisterMultiplyInstruction multiply;
-<<<<<<< HEAD
         RegisterArithmeticLogicInstruction register_arithmetic_logic;
-        struct SingleDataTransfer {
-            bool sf;
-            bool U;
-            bool L;
-            int offset;
-            int xn;
-            int rt;
-        } single_data_transfer;
-        struct LoadLiteral {
-            bool sf;
-            int simm19;
-            int rt;
-        } load_literal;
-        struct UnconditionalBranchInstruction {
-            int simm26;
-        } unconditional_branch;
-        struct RegisterBranchInstruction {
-            int xn;
-        } register_branch;
-        struct ConditionalBranchInstruction {
-            int simm19;
-            int cond;
-        } conditional_branch;
-=======
         UnconditionalBranchInstruction uncond_branch;
         RegisterBranchInstruction reg_branch;
         ConditionalBranchInstruction cond_branch;
         SingleDataTransfer single_data_transfer;
         LoadLiteral load_literal;
-        struct DataProcessingInstructionRegister {
-            int rd;
-            int ra;
-            int rn;
-            int rm;
-        } data_processing_instruction_register;
-        
-        
->>>>>>> 5201fa94740f2900a7f3c312fc2d2a216d0c2477
     } data;
 } Instruction;
 

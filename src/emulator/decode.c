@@ -3,31 +3,17 @@
 
 // TODO: check if simm and imm need to be handled differently when extracting them.
 
-<<<<<<< HEAD
 DecodeResult decode(uint32* input, int input_size, Instruction* result) {
     for (int i = 0; i < input_size; i++) {
         uint32 value = input[i];
         Instruction instruction;
 
-        if (value & 0x1C000000 == 0x10000000) { // Data Processing Instruction (Immediate)
-=======
-DecodeResult decode(char* input, int input_size, Instruction* result) {
-    // Instruction* result = malloc(sizeof(Instruction) * input_size);
-    for (int i = 0; i < input_size; i += 4) {
-        uint32 value = ((uint32)input[i    ] << 24) | ((uint32)input[i + 1] << 16)
-                     | ((uint32)input[i + 2] << 8 ) | ((uint32)input[i + 3]);
-
-
-        if (value == 0x8A000000) {
-            // HALT
+        if (value == 0x8A000000) { // HALT
             OpType op_type = OP_TYPE_HALT;
-            Instruction instruction = {
+            instruction = (Instruction) {
                 .op_type = op_type
             };
-        }
-
-        if (value & 0x1C000000 == 0x10000000) { // is dp_imm
->>>>>>> 5201fa94740f2900a7f3c312fc2d2a216d0c2477
+        } else if (value & 0x1C000000 == 0x10000000) { // Data Processing Instruction (Immediate)
             bool sf  = value & 0x80000000 == 0x80000000;
             int opc = (value & 0x60000000) >> 28;
             int opi = (value & 0x03800000) >> 22;
@@ -180,7 +166,7 @@ DecodeResult decode(char* input, int input_size, Instruction* result) {
                     }
                 };
             }
-        } else if (input[i] & 0b00001010 == 0b00001000) { 
+        } else if (input[i] & 0b00001010 == 0b00001000) {
             // load/store
             if ((value & 0x80000000) == 0x80000000) {
                 // Single Data Transfer: bit 31 = 1
@@ -193,7 +179,7 @@ DecodeResult decode(char* input, int input_size, Instruction* result) {
 
                 OpType op_type = OP_TYPE_SINGLE_DATA_TRANSFER;
 
-                Instruction instruction = {
+                instruction = (Instruction) {
                     .op_type = op_type,
                     .data.single_data_transfer = {
                         .sf     = sf,
@@ -213,7 +199,7 @@ DecodeResult decode(char* input, int input_size, Instruction* result) {
 
                 OpType op_type = OP_TYPE_LOAD_LITERAL;
 
-                Instruction instruction = {
+                instruction = (Instruction) {
                     .op_type = op_type,
                     .data.load_literal = {
                         .simm19 = simm19,
@@ -223,7 +209,7 @@ DecodeResult decode(char* input, int input_size, Instruction* result) {
                 };
             }
 
-        } else if (input[i] & 0b00011100 == 0b00010100) { 
+        } else if (input[i] & 0b00011100 == 0b00010100) {
             // branch
 
             if ((value & 0xFF000000) == 0xD6000000) {
@@ -242,7 +228,7 @@ DecodeResult decode(char* input, int input_size, Instruction* result) {
                 int opcode = (value & 0xFF000000) >> 24;
                 int simm19 = (value & 0x00FFFFE0) >> 5;  // sign-extend after
                 int cond   = (value & 0x0000000F);
-                
+
                 OpType op_type;
 
                 switch (cond) {
@@ -255,7 +241,7 @@ DecodeResult decode(char* input, int input_size, Instruction* result) {
                     case 0b1110: op_type = OP_TYPE_AL; break;
                 }
 
-                Instruction instruction = {
+                instruction = (Instruction) {
                     .op_type = op_type,
                     .data.cond_branch.simm19 = simm19,
                 };
@@ -263,20 +249,16 @@ DecodeResult decode(char* input, int input_size, Instruction* result) {
             } else if ((value & 0xFC000000) == 0x14000000) {
                 // Unconditional
                 int opcode = (value & 0xFC000000) >> 26;
-                int simm26 = (value & 0x03FFFFFF); 
-                
+                int simm26 = (value & 0x03FFFFFF);
+
                 OpType op_type = OP_TYPE_AL;// sign-extend after
 
-                Instruction instruction = {
+                instruction = (Instruction) {
                     .op_type = op_type,
                     .data.uncond_branch.simm26 = simm26,
                 };
             }
-           
-
-        
-            
-        } else { // error
+        } else {
             return DECODE_UNDEFINED_OPCODE;
         }
         result[i] = instruction;
