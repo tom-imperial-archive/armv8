@@ -1,7 +1,8 @@
-#include <stdbool.h>
+x3#include <stdbool.h>
 #include "common/util.h"
 #include "emulator/state/state.h"
 #include "emulator/decode.h"
+#include <stdio.h>
 
 uint64 shift_value(uint64 val, ShiftType type, int amount, bool sf) {
     if (amount == 0) return val;
@@ -28,38 +29,10 @@ uint64 shift_value(uint64 val, ShiftType type, int amount, bool sf) {
     return sf ? val : (uint32)val;
 }
 
-void execute_arithmetic_register(State *state, Instruction *i) {
-    // Unpack
-    bool sf = i->data.register_arithmetic_logic.sf;
-    Register rd = (Register)i->data.register_arithmetic_logic.rd;
-    Register rn = (Register)i->data.register_arithmetic_logic.rn;
-    Register rm = (Register)i->data.register_arithmetic_logic.rm;
-
-    int shift_amount = i->data.register_arithmetic_logic.operand;
-    ShiftType shift_type = i->data.register_arithmetic_logic.shift;
-    OpType op = i->op_type;
-
-    // Initial values
-    uint64 val_n = sf ? read_reg_64(state, rn) : (uint64)read_reg_32(state, rn);
-    uint64 val_m = sf ? read_reg_64(state, rm) : (uint64)read_reg_32(state, rm);
-
-    // Shifting
-    uint64 op2 = shift_value(val_m, shift_type, shift_amount, sf);
-
+// Shared helper function for register and immediate data processing instructions
+void process_arithmetic(State *state, Register rd, uint64 val_n, uint64 op2, bool is_sub, bool set_flags, bool sf) {
     // Maths
-    uint64 result = 0;
-    switch (op) {
-        case OP_TYPE_REG_SUB:
-        case OP_TYPE_REG_SUBS:
-            result = val_n - op2;
-            break;
-        case OP_TYPE_REG_ADD:
-        case OP_TYPE_REG_ADDS:
-            result = val_n + op2;
-            break;
-        default:
-            break;
-    }
+    uint64 result = is_sub ? (val_n - op2) : (val_n + op2);
     result = sf ? result : (uint32)result;
 
     // Storing
@@ -71,7 +44,7 @@ void execute_arithmetic_register(State *state, Instruction *i) {
     }
 
     // PSTATE Flags
-    if (op == OP_TYPE_REG_ADDS || op == OP_TYPE_REG_SUBS) {
+    if (set_flags) {
         // Store the sign bit to use as a mask later
         uint64 sign_bit = 1ULL << (sf ? 63 : 31);
 
@@ -81,13 +54,11 @@ void execute_arithmetic_register(State *state, Instruction *i) {
         // Z flag: true if the result is exactly 0
         bool z_flag = (result == 0);
 
-        bool c_flag;
-        bool v_flag;
+        bool c_flag, v_flag;
 
-        if (op == OP_TYPE_REG_SUBS) {
+        if (is_sub) {
             // C flag: true if no borrow occured
             c_flag = (val_n >= op2);
-
             // V flag: true if signs of operands are different,
             // and sign of result is different from val_n
             v_flag = (((val_n ^ op2) & sign_bit) && ((val_n ^ result) & sign_bit)) != 0;
@@ -106,6 +77,56 @@ void execute_arithmetic_register(State *state, Instruction *i) {
         write_pstate_flag(state, C, c_flag);
         write_pstate_flag(state, V, v_flag);
     }
+}
+
+void execute_arithmetic_register(State *state, Instruction *i) {
+    // Unpack
+    bool sf = i->data.register_arithmetic_logic.sf;
+    Register rd = (Register)i->data.register_arithmetic_logic.rd;
+    Register rn = (Register)i->data.register_arithmetic_logic.rn;
+    Register rm = (Register)i->data.register_arithmetic_logic.rm;
+
+    int shift_amount = i->data.register_arithmetic_logic.operand;
+    ShiftType shift_type = i->data.register_arithmetic_logic.shift;
+
+    // Initial values
+    uint64 val_n = sf ? read_reg_64(state, rn) : (uint64)read_reg_32(state, rn);
+    uint64 val_m = sf ? read_reg_64(state, rm) : (uint64)read_reg_32(state, rm);
+
+    // Shifting
+    uint64 op2 = shift_value(val_m, shift_type, shift_amount, sf);
+
+    // Determine operation
+    OpType op = i->op_type;
+    bool is_sub = (op == OP_TYPE_REG_SUB || op == OP_TYPE_REG_SUBS);
+    bool set_flags = (op == OP_TYPE_REG_ADDS || op == OP_TYPE_REG_SUBS);
+
+    // Call handler
+    process_arithmetic(state, rd, val_n, op2, is_sub, set_flags, sf);
+}
+
+void execute_arithmetic_immediate(State *state, Instruction *i) {
+    // Unpack
+    bool sf = i->data.immediate_arithmetic.sf;
+    Register rd = (Register)i->data.immediate_arithmetic.rd;
+    Register rn = (Register)i->data.immediate_arithmetic.rn;
+    uint64 op2 = i->data.immediate_arithmetic.imm12;
+
+    // Shifting
+    if (i->data.immediate_arithmetic.sh) {
+        op2 = op2 << 12;
+    }
+
+    // Initial value
+    uint64 val_n = sf ? read_reg_64(state, rn) : (uint64)read_reg_32(state, rn);
+
+    // Determine operation
+    OpType op = i->op_type;
+    bool is_sub = (op == OP_TYPE_SUB || op == OP_TYPE_SUBS);
+    bool set_flags = (op == OP_TYPE_ADDS || op == OP_TYPE_SUBS);
+
+    // Call handler
+    process_arithmetic(state, rd, val_n, op2, is_sub, set_flags, sf);
 }
 
 void execute_logical_register(State *state, Instruction *i) {
@@ -220,6 +241,46 @@ void execute_multiply_register(State *state, Instruction *i) {
     }
 }
 
+void execute_wide_move(State *state, Instruction *i) {
+    // Unpack
+    bool sf = i->data.wide_move.sf;
+    Register rd = i->data.wide_move.rd;
+    uint64 imm16 = (uint64)i->data.wide_move.imm16;
+    int shift = i->data.wide_move.hw * 16;
+    OpType op = i->op_type;
+
+    // Compute values
+    uint64 shifted_imm = imm16 << shift;
+
+    // Logic
+    uint64 result = 0;
+    switch (op) {
+        case OP_TYPE_MOVZ:
+            result = shifted_imm;
+            break;
+        case OP_TYPE_MOVN:
+            result = ~shifted_imm;
+            break;
+        case OP_TYPE_MOVK: {
+            uint64 keep_mask = ~(0xFFFFULL << shift);
+            uint64 existing_value = sf ? read_reg_64(state, rd) : (uint64)read_reg_32(state, rd);
+            result = (existing_value & keep_mask) | shifted_imm;
+            break;
+        }
+        default:
+            break;
+    }
+    result = sf ? result : (uint32)result;
+
+    // Storing
+    if (sf) {
+        write_reg_64(state, rd, result);
+    } else {
+        write_reg_32(state, rd, result);
+    }
+
+}
+
 /*
     Executes the given instruction.
     If we encounter a halt instruction, we return true, otherwise return false;
@@ -228,11 +289,24 @@ bool execute_instruction(State *state, OpType op, Instruction *i)
 {
     switch (op)
     {
+        // Halt instruction
         case OP_TYPE_HALT:
             return true;
-        // Data processing instruction (immediate)
 
-        // Data processing instruction (register)
+        // Data processing instructions (immediate)
+        case OP_TYPE_ADD:
+        case OP_TYPE_ADDS:
+        case OP_TYPE_SUB:
+        case OP_TYPE_SUBS:
+            execute_arithmetic_immediate(state, i);
+            break;
+        case OP_TYPE_MOVN:
+        case OP_TYPE_MOVZ:
+        case OP_TYPE_MOVK:
+            execute_wide_move(state, i);
+            break;
+
+        // Data processing instructions (register)
         case OP_TYPE_REG_SUB:
         case OP_TYPE_REG_SUBS:
         case OP_TYPE_REG_ADD:
@@ -304,6 +378,7 @@ bool execute_instruction(State *state, OpType op, Instruction *i)
             state->PC += offset;
             break;
         }
+
 
         // Register branch
         case OP_TYPE_BR:

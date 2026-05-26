@@ -112,7 +112,7 @@ void test_conditional_branch_lt_taken() {
     printf("test_conditional_branch_lt_taken: OK\n");
 }
 
-int main(void) {
+void test_branch(void) {
     printf("Branch Instruction Tests\n");
     printf("--------------------------------------------\n");
 
@@ -124,5 +124,4 @@ int main(void) {
 
     printf("--------------------------------------------\n");
     printf("All branch tests passed\n");
-    return 0;
 }

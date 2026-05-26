@@ -62,7 +62,6 @@ void check_writeable_register(Register reg)
     check_register(reg);
     if (reg == ZR || reg == PC)
     {
-        printf("%d", reg);
         error(STATE_WRITE_NOT_ALLOWED);
     }
 }
