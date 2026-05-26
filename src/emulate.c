@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "emulator/decode/readfile.h"
+#include "emulator/decode/filehandlers.h"
 #include "emulator/decode/execute.h"
 #include <string.h>
 
