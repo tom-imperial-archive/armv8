@@ -1,5 +1,5 @@
 #include "decode.h"
-#include "util.h"
+#include "common/util.h"
 
 // TODO: check if simm and imm need to be handled differently when extracting them.
 
