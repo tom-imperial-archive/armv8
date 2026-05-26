@@ -4,27 +4,33 @@
 #include "emulator/decode.h"
 #include <stdio.h>
 
-void pstate_n_64(State *state, uint64 res) {
+void pstate_n_64(State *state, uint64 res)
+{
     write_pstate_flag(state, N, res >> 63);
 }
 
-void pstate_n_32(State *state, uint32 res) {
+void pstate_n_32(State *state, uint32 res)
+{
     write_pstate_flag(state, N, res >> 31);
 }
 
-void pstate_z_eq_zero(State *state, uint64 res) {
+void pstate_z_eq_zero(State *state, uint64 res)
+{
     write_pstate_flag(state, Z, res == 0);
 }
 
-void pstate_c(State *state, uint64 res, uint64 original) {
+void pstate_c(State *state, uint64 res, uint64 original)
+{
     write_pstate_flag(state, C, res < original);
 }
 
-void pstate_v_64(State *state, uint64 res, uint64 original, uint64 imm) {
+void pstate_v_64(State *state, uint64 res, uint64 original, uint64 imm)
+{
     write_pstate_flag(state, V, (original ^ res) >> 63 && (imm ^ res) >> 63);
 }
 
-void pstate_v_32(State *state, uint32 res, uint32 original, uint32 imm) {
+void pstate_v_32(State *state, uint32 res, uint32 original, uint32 imm)
+{
     write_pstate_flag(state, V, (original ^ res) >> 31 && (imm ^ res) >> 31);
 }
 
@@ -73,7 +79,6 @@ void adds_imm(State *state, Instruction *i)
         uint32 valWn = read_reg_32(state, iai.rn);
         uint32 res = imm + valWn;
         write_reg_32(state, iai.rd, res);
-        printf("Setting n with %x\n", res);
         pstate_n_32(state, res);
         pstate_z_eq_zero(state, res);
         pstate_c(state, res, valWn);
@@ -134,6 +139,50 @@ void subs_imm(State *state, Instruction *i)
     }
 }
 
+void wide_moven_imm(State *state, Instruction *i)
+{
+    WideMoveInstruction iai = i->data.wide_move;
+    int shift = iai.hw * 16;
+    if (iai.sf)
+    {
+        write_reg_64(state, iai.rd, ~(iai.imm16 << shift));
+    }
+    else
+    {
+        write_reg_32(state, iai.rd, ~(iai.imm16 << shift));
+    }
+}
+
+void wide_movez_imm(State *state, Instruction *i)
+{
+    WideMoveInstruction iai = i->data.wide_move;
+    if (iai.sf)
+    {
+        write_reg_64(state, iai.rd, iai.imm16);
+    }
+    else
+    {
+        write_reg_32(state, iai.rd, iai.imm16);
+    }
+}
+
+void wide_movek_imm(State *state, Instruction *i)
+{
+    WideMoveInstruction iai = i->data.wide_move;
+    int shift = iai.hw * 16;
+    if (iai.sf)
+    {
+        uint64 existing = read_reg_64(state, iai.rd);
+        printf("%lx\n", (existing & ~(0xFFFFUL << shift)));
+        write_reg_64(state, iai.rd, ((uint64) iai.imm16 << shift) | (existing & ~(0xFFFFUL << shift)));
+    }
+    else
+    {
+        uint32 existing = read_reg_32(state, iai.rd);
+        write_reg_32(state, iai.rd, ((uint32) iai.imm16 << shift) | (existing & ~(0xFFFFU << shift)));
+    }
+}
+
 /*
     Executes the given instruction.
     If we encounter a halt instruction, we return true, otherwise return false;
@@ -157,7 +206,17 @@ bool execute_instruction(State *state, OpType op, Instruction *i)
     case OP_TYPE_SUBS:
         subs_imm(state, i);
         break;
-    default: break;
+    case OP_TYPE_MOVN:
+        wide_moven_imm(state, i);
+        break;
+    case OP_TYPE_MOVZ:
+        wide_movez_imm(state, i);
+        break;
+    case OP_TYPE_MOVK:
+        wide_movek_imm(state, i);
+        break;
+    default:
+        break;
         // Data processing instruction (register)
     }
     return false;
