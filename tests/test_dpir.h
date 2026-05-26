@@ -1,1 +1,0 @@
-int testdpir(void);
