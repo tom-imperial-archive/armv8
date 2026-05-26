@@ -9,9 +9,6 @@ typedef enum DecodeResult {
     DECODE_UNDEFINED_OPCODE, // OPI, OPC, OPR are not supported in the emulator
 } DecodeResult;
 
-DecodeResult decode(uint32* input, int input_size, Instruction* result);
-
-
 typedef enum OpType {
     // Halt
     OP_TYPE_HALT,
@@ -145,5 +142,7 @@ typedef struct Instruction {
         LoadLiteral load_literal;
     } data;
 } Instruction;
+
+DecodeResult decode(uint32* input, int input_size, Instruction* result);
 
 #endif
