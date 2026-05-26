@@ -133,7 +133,7 @@ void write_pstate_flag(State *state, PSTATE_flag pstate, bool val);
 bool read_pstate_flag(State *state, PSTATE_flag pstate);
 
 void sprint_all_registers(State *state, char *out);
-void sprint_nonzero_memory(State *state, char *out);
+char *sprint_nonzero_memory(State *state);
 
 void write_mem_64(State *state, uint64 addr, uint64 val);
 void write_mem_32(State *state, uint64 addr, uint32 val);

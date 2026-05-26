@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <emulator/decode/readfile.h>
 #define PRINT_LINE_LENGTH 25
 #define MASK_LOWER_32BITS (uint32) 0xFFFFFFFFUL
 
@@ -204,7 +205,7 @@ void sprint_all_registers(State *state, char *out)
     strcat(out, nextLine);
 }
 
-void sprint_nonzero_memory(State *state, char *out)
+char *sprint_nonzero_memory(State *state)
 {
     // As before, 25 chars per line.
     char new[25];
@@ -212,9 +213,12 @@ void sprint_nonzero_memory(State *state, char *out)
 
     NonZeroMemory *memory_data = get_non_zero_memory(state->m, &nonzero_count);
 
+
     if (memory_data == NULL) {
-        return;
+        return "";
     }
+
+    char *out = malloc(30 + (25*nonzero_count));
 
     sprintf(new, "Non-zero memory:\n");
     strcat(out, new);
@@ -226,4 +230,19 @@ void sprint_nonzero_memory(State *state, char *out)
         strcat(out, new);
     }
     free(memory_data);
+
+    return out;
+}
+
+void fwrite_all(State *state, const char *path) {
+    char registers_out[1024] = {0};
+    char *nonzero_out = sprint_nonzero_memory(state);
+
+    sprint_all_registers(state, registers_out);
+
+    if (!writefile(path, registers_out, nonzero_out)) {
+        // print fallback
+    }
+
+    free(nonzero_out);
 }
