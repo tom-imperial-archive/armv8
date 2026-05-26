@@ -29,38 +29,10 @@ uint64 shift_value(uint64 val, ShiftType type, int amount, bool sf) {
     return sf ? val : (uint32)val;
 }
 
-void execute_arithmetic_register(State *state, Instruction *i) {
-    // Unpack
-    bool sf = i->data.register_arithmetic_logic.sf;
-    Register rd = (Register)i->data.register_arithmetic_logic.rd;
-    Register rn = (Register)i->data.register_arithmetic_logic.rn;
-    Register rm = (Register)i->data.register_arithmetic_logic.rm;
-
-    int shift_amount = i->data.register_arithmetic_logic.operand;
-    ShiftType shift_type = i->data.register_arithmetic_logic.shift;
-    OpType op = i->op_type;
-
-    // Initial values
-    uint64 val_n = sf ? read_reg_64(state, rn) : (uint64)read_reg_32(state, rn);
-    uint64 val_m = sf ? read_reg_64(state, rm) : (uint64)read_reg_32(state, rm);
-
-    // Shifting
-    uint64 op2 = shift_value(val_m, shift_type, shift_amount, sf);
-
+// Shared helper function for register and immediate data processing instructions
+void process_arithmetic(State *state, Register rd, uint64 val_n, uint64 op2, bool is_sub, bool set_flags, bool sf) {
     // Maths
-    uint64 result = 0;
-    switch (op) {
-        case OP_TYPE_REG_SUB:
-        case OP_TYPE_REG_SUBS:
-            result = val_n - op2;
-            break;
-        case OP_TYPE_REG_ADD:
-        case OP_TYPE_REG_ADDS:
-            result = val_n + op2;
-            break;
-        default:
-            break;
-    }
+    uint64 result = is_sub ? (val_n - op2) : (val_n + op2);
     result = sf ? result : (uint32)result;
 
     // Storing
@@ -72,7 +44,7 @@ void execute_arithmetic_register(State *state, Instruction *i) {
     }
 
     // PSTATE Flags
-    if (op == OP_TYPE_REG_ADDS || op == OP_TYPE_REG_SUBS) {
+    if (set_flags) {
         // Store the sign bit to use as a mask later
         uint64 sign_bit = 1ULL << (sf ? 63 : 31);
 
@@ -82,13 +54,11 @@ void execute_arithmetic_register(State *state, Instruction *i) {
         // Z flag: true if the result is exactly 0
         bool z_flag = (result == 0);
 
-        bool c_flag;
-        bool v_flag;
+        bool c_flag, v_flag;
 
-        if (op == OP_TYPE_REG_SUBS) {
+        if (is_sub) {
             // C flag: true if no borrow occured
             c_flag = (val_n >= op2);
-
             // V flag: true if signs of operands are different,
             // and sign of result is different from val_n
             v_flag = (((val_n ^ op2) & sign_bit) && ((val_n ^ result) & sign_bit)) != 0;
@@ -107,6 +77,56 @@ void execute_arithmetic_register(State *state, Instruction *i) {
         write_pstate_flag(state, C, c_flag);
         write_pstate_flag(state, V, v_flag);
     }
+}
+
+void execute_arithmetic_register(State *state, Instruction *i) {
+    // Unpack
+    bool sf = i->data.register_arithmetic_logic.sf;
+    Register rd = (Register)i->data.register_arithmetic_logic.rd;
+    Register rn = (Register)i->data.register_arithmetic_logic.rn;
+    Register rm = (Register)i->data.register_arithmetic_logic.rm;
+
+    int shift_amount = i->data.register_arithmetic_logic.operand;
+    ShiftType shift_type = i->data.register_arithmetic_logic.shift;
+
+    // Initial values
+    uint64 val_n = sf ? read_reg_64(state, rn) : (uint64)read_reg_32(state, rn);
+    uint64 val_m = sf ? read_reg_64(state, rm) : (uint64)read_reg_32(state, rm);
+
+    // Shifting
+    uint64 op2 = shift_value(val_m, shift_type, shift_amount, sf);
+
+    // Determine operation
+    OpType op = i->op_type;
+    bool is_sub = (op == OP_TYPE_REG_SUB || op == OP_TYPE_REG_SUBS);
+    bool set_flags = (op == OP_TYPE_REG_ADDS || op == OP_TYPE_REG_SUBS);
+
+    // Call handler
+    process_arithmetic(state, rd, val_n, op2, is_sub, set_flags, sf);
+}
+
+void execute_arithmetic_immediate(State *state, Instruction *i) {
+    // Unpack
+    bool sf = i->data.immediate_arithmetic.sf;
+    Register rd = (Register)i->data.immediate_arithmetic.rd;
+    Register rn = (Register)i->data.immediate_arithmetic.rn;
+    uint64 op2 = i->data.immediate_arithmetic.imm12;
+
+    // Shifting
+    if (i->data.immediate_arithmetic.sh) {
+        op2 = op2 << 12;
+    }
+
+    // Initial value
+    uint64 val_n = sf ? read_reg_64(state, rn) : (uint64)read_reg_32(state, rn);
+
+    // Determine operation
+    OpType op = i->op_type;
+    bool is_sub = (op == OP_TYPE_SUB || op == OP_TYPE_SUBS);
+    bool set_flags = (op == OP_TYPE_ADDS || op == OP_TYPE_SUBS);
+
+    // Call handler
+    process_arithmetic(state, rd, val_n, op2, is_sub, set_flags, sf);
 }
 
 void execute_logical_register(State *state, Instruction *i) {
@@ -221,183 +241,44 @@ void execute_multiply_register(State *state, Instruction *i) {
     }
 }
 
-void pstate_n_64(State *state, uint64 res)
-{
-    write_pstate_flag(state, N, res >> 63);
-}
+void execute_wide_move(State *state, Instruction *i) {
+    // Unpack
+    bool sf = i->data.wide_move.sf;
+    Register rd = i->data.wide_move.rd;
+    uint64 imm16 = (uint64)i->data.wide_move.imm16;
+    int shift = i->data.wide_move.hw * 16;
+    OpType op = i->op_type;
 
-void pstate_n_32(State *state, uint32 res)
-{
-    write_pstate_flag(state, N, res >> 31);
-}
+    // Compute values
+    uint64 shifted_imm = imm16 << shift;
 
-void pstate_z_eq_zero(State *state, uint64 res)
-{
-    write_pstate_flag(state, Z, res == 0);
-}
-
-void pstate_c(State *state, uint64 res, uint64 original)
-{
-    write_pstate_flag(state, C, res < original);
-}
-
-void pstate_v_64(State *state, uint64 res, uint64 original, uint64 imm)
-{
-    write_pstate_flag(state, V, (original ^ res) >> 63 && (imm ^ res) >> 63);
-}
-
-void pstate_v_32(State *state, uint32 res, uint32 original, uint32 imm)
-{
-    write_pstate_flag(state, V, (original ^ res) >> 31 && (imm ^ res) >> 31);
-}
-
-void add_imm(State *state, Instruction *i)
-{
-    ImmediateArithmeticInstruction iai = i->data.immediate_arithmetic;
-    uint64 imm = iai.imm12;
-    if (iai.sh)
-    {
-        imm = imm << 12;
+    // Logic
+    uint64 result = 0;
+    switch (op) {
+        case OP_TYPE_MOVZ:
+            result = shifted_imm;
+            break;
+        case OP_TYPE_MOVN:
+            result = ~shifted_imm;
+            break;
+        case OP_TYPE_MOVK: {
+            uint64 keep_mask = ~(0xFFFFULL << shift);
+            uint64 existing_value = sf ? read_reg_64(state, rd) : (uint64)read_reg_32(state, rd);
+            result = (existing_value & keep_mask) | shifted_imm;
+            break;
+        }
+        default:
+            break;
     }
+    result = sf ? result : (uint32)result;
 
-    if (iai.sf)
-    {
-        uint64 valRn = read_reg_64(state, iai.rn);
-        write_reg_64(state, iai.rd, imm + valRn);
-    }
-    else
-    {
-        uint32 valRn = read_reg_32(state, iai.rn);
-        write_reg_32(state, iai.rd, imm + valRn);
-    }
-}
-
-void adds_imm(State *state, Instruction *i)
-{
-    ImmediateArithmeticInstruction iai = i->data.immediate_arithmetic;
-    uint32 imm = iai.imm12;
-    if (iai.sh)
-    {
-        imm = imm << 12;
+    // Storing
+    if (sf) {
+        write_reg_64(state, rd, result);
+    } else {
+        write_reg_32(state, rd, result);
     }
 
-    if (iai.sf)
-    {
-        uint64 valXn = read_reg_64(state, iai.rn);
-        uint64 res = imm + valXn;
-        write_reg_64(state, iai.rd, res);
-        pstate_n_64(state, res);
-        pstate_z_eq_zero(state, res);
-        pstate_c(state, res, valXn);
-        pstate_v_64(state, res, valXn, imm);
-    }
-    else
-    {
-        uint32 valWn = read_reg_32(state, iai.rn);
-        uint32 res = imm + valWn;
-        write_reg_32(state, iai.rd, res);
-        pstate_n_32(state, res);
-        pstate_z_eq_zero(state, res);
-        pstate_c(state, res, valWn);
-        pstate_v_32(state, res, valWn, imm);
-    }
-}
-
-void sub_imm(State *state, Instruction *i)
-{
-    ImmediateArithmeticInstruction iai = i->data.immediate_arithmetic;
-    uint64 imm = iai.imm12;
-    if (iai.sh)
-    {
-        imm = imm << 12;
-    }
-
-    if (iai.sf)
-    {
-        uint64 valRn = read_reg_64(state, iai.rn);
-        write_reg_64(state, iai.rd, valRn - imm);
-    }
-    else
-    {
-        uint32 valRn = read_reg_32(state, iai.rn);
-        write_reg_32(state, iai.rd, valRn - imm);
-    }
-}
-
-void subs_imm(State *state, Instruction *i)
-{
-    ImmediateArithmeticInstruction iai = i->data.immediate_arithmetic;
-    uint32 imm = iai.imm12;
-    if (iai.sh)
-    {
-        imm = imm << 12;
-    }
-
-    if (iai.sf)
-    {
-        uint64 valXn = read_reg_64(state, iai.rn);
-        uint64 res = valXn - imm;
-        write_reg_64(state, iai.rd, res);
-        pstate_n_64(state, res);
-        pstate_z_eq_zero(state, res);
-        pstate_c(state, res, valXn);
-        pstate_v_64(state, res, valXn, imm);
-    }
-    else
-    {
-        uint32 valWn = read_reg_32(state, iai.rn);
-        uint32 res = valWn - imm;
-        write_reg_32(state, iai.rd, res);
-        printf("Setting n with %x\n", res);
-        pstate_n_32(state, res);
-        pstate_z_eq_zero(state, res);
-        pstate_c(state, res, valWn);
-        pstate_v_32(state, res, valWn, imm);
-    }
-}
-
-void wide_moven_imm(State *state, Instruction *i)
-{
-    WideMoveInstruction iai = i->data.wide_move;
-    int shift = iai.hw * 16;
-    if (iai.sf)
-    {
-        write_reg_64(state, iai.rd, ~(iai.imm16 << shift));
-    }
-    else
-    {
-        write_reg_32(state, iai.rd, ~(iai.imm16 << shift));
-    }
-}
-
-void wide_movez_imm(State *state, Instruction *i)
-{
-    WideMoveInstruction iai = i->data.wide_move;
-    if (iai.sf)
-    {
-        write_reg_64(state, iai.rd, iai.imm16);
-    }
-    else
-    {
-        write_reg_32(state, iai.rd, iai.imm16);
-    }
-}
-
-void wide_movek_imm(State *state, Instruction *i)
-{
-    WideMoveInstruction iai = i->data.wide_move;
-    int shift = iai.hw * 16;
-    if (iai.sf)
-    {
-        uint64 existing = read_reg_64(state, iai.rd);
-        printf("%lx\n", (existing & ~(0xFFFFUL << shift)));
-        write_reg_64(state, iai.rd, ((uint64) iai.imm16 << shift) | (existing & ~(0xFFFFUL << shift)));
-    }
-    else
-    {
-        uint32 existing = read_reg_32(state, iai.rd);
-        write_reg_32(state, iai.rd, ((uint32) iai.imm16 << shift) | (existing & ~(0xFFFFU << shift)));
-    }
 }
 
 /*
@@ -408,32 +289,24 @@ bool execute_instruction(State *state, OpType op, Instruction *i)
 {
     switch (op)
     {
+        // Halt instruction
         case OP_TYPE_HALT:
             return true;
 
-        // Data processing instruction (immediate)
+        // Data processing instructions (immediate)
         case OP_TYPE_ADD:
-            add_imm(state, i);
-            break;
         case OP_TYPE_ADDS:
-            adds_imm(state, i);
-            break;
         case OP_TYPE_SUB:
-            sub_imm(state, i);
-            break;
         case OP_TYPE_SUBS:
-            subs_imm(state, i);
+            execute_arithmetic_immediate(state, i);
             break;
         case OP_TYPE_MOVN:
-            wide_moven_imm(state, i);
-            break;
         case OP_TYPE_MOVZ:
-            wide_movez_imm(state, i);
-            break;
         case OP_TYPE_MOVK:
-            wide_movek_imm(state, i);
+            execute_wide_move(state, i);
             break;
-        // Data processing instruction (register)
+
+        // Data processing instructions (register)
         case OP_TYPE_REG_SUB:
         case OP_TYPE_REG_SUBS:
         case OP_TYPE_REG_ADD:
