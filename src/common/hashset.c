@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include "hashset.h"
-#include "util.h"
 
 #define BIG_PRIME 26544357617u
 #define INITIAL_CAPACITY 1024
@@ -12,12 +11,12 @@ AddressSet* create_set(void) {
     set->capacity = INITIAL_CAPACITY;
     set->size = 0;
 
-    set->entries = calloc(set->capacity, sizeof(char *));
+    set->entries = calloc(set->capacity, sizeof(uint8 *));
 
     return set;
 }
 
-static int get_hash_index(char *address, int current_capacity) {
+static int get_hash_index(uint8 *address, int current_capacity) {
     // Cast to an integer, so we can use %
     uintptr numeric_address = (uintptr)address;
     // Multiply by a prime to ensure more even hashes
@@ -26,12 +25,12 @@ static int get_hash_index(char *address, int current_capacity) {
 
 static void resize_set(AddressSet *set) {
     int old_capacity = set->capacity;
-    char **old_entries = set->entries;
+    uint8 **old_entries = set->entries;
 
     // Resizing doubles capacity
     set->capacity = old_capacity * 2;
 
-    set->entries = calloc(set->capacity, sizeof(char *));
+    set->entries = calloc(set->capacity, sizeof(uint8 *));
     set->size = 0;
 
     for (int i = 0; i < old_capacity; i++) {
@@ -43,7 +42,7 @@ static void resize_set(AddressSet *set) {
     free(old_entries);
 }
 
-void insert_address(AddressSet *set, char *address) {
+void insert_address(AddressSet *set, uint8 *address) {
     if (address == NULL) return;
 
     // Check if resize is required
@@ -77,12 +76,12 @@ void free_set(AddressSet *set) {
     free(set);
 }
 
-char** get_all_addresses(AddressSet *set) {
+uint8** get_all_addresses(AddressSet *set) {
     if (set == NULL || set-> size == 0) {
         return NULL;
     }
 
-    char **results = malloc(set->size * sizeof(char *));
+    uint8 **results = malloc(set->size * sizeof(uint8 *));
 
     int result_index = 0;
     for (int i = 0; i < set->capacity; i++) {

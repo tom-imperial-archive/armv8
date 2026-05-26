@@ -2,15 +2,13 @@
 
 #define PARSE_H_
 
+#include "common/util.h"
 #include <stdbool.h>
 
 typedef enum DecodeResult {
     DECODE_SUCCESS,
     DECODE_UNDEFINED_OPCODE, // OPI, OPC, OPR are not supported in the emulator
 } DecodeResult;
-
-DecodeResult decode(char* input, int input_size, Instruction* result);
-
 
 typedef enum OpType {
     // Halt
@@ -62,13 +60,14 @@ typedef enum OpType {
     OP_TYPE_GT,
     OP_TYPE_LE,
     OP_TYPE_AL,
+    OP_TYPE_BR,
 } OpType;
 
 // Data Processing Instruction (Immediate)
 
 //
 typedef struct ImmediateArithmeticInstruction {
-    int imm12;
+    uint16 imm12;
     int rd;
     int rn;
     bool sf;
@@ -144,5 +143,7 @@ typedef struct Instruction {
         LoadLiteral load_literal;
     } data;
 } Instruction;
+
+DecodeResult decode(uint32 input, Instruction* result);
 
 #endif
