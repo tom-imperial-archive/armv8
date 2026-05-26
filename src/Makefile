@@ -16,7 +16,7 @@ assemble: assemble.o
 emulate: emulate.o common/hashset.o emulator/state/state.o emulator/state/memory.o emulator/decode/readfile.o emulator/decode/execute.o
 
 test:
-	$(CC) $(CFLAGS) ../tests/tests.c ../tests/test_hashset.c ../tests/test_execute.c ../tests/test_state.c emulator/state/state.c emulator/decode/execute.c emulator/state/memory.c common/hashset.c -o test_runner
+	$(CC) $(CFLAGS) ../tests/tests.c ../tests/test_hashset.c ../tests/test_state.c emulator/state/state.c emulator/decode/execute.c emulator/state/memory.c common/hashset.c -o test_runner
 	./test_runner
 
 clean:
