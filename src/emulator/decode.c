@@ -218,7 +218,7 @@ DecodeResult decode(uint32* input, int input_size, Instruction* result) {
 
                 OpType op_type = OP_TYPE_AL;
 
-                Instruction instruction = {
+                instruction = (Instruction) {
                     .op_type = op_type,
                     .data.reg_branch.xn = xn,
                 };
