@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <emulator/decode/readfile.h>
+#include <assert.h>
 #define PRINT_LINE_LENGTH 25
 #define MASK_LOWER_32BITS (uint32) 0xFFFFFFFFUL
 
@@ -240,9 +241,18 @@ void fwrite_all(State *state, const char *path) {
 
     sprint_all_registers(state, registers_out);
 
-    if (!writefile(path, registers_out, nonzero_out)) {
-        // print fallback
-    }
+    assert(writefile(path, registers_out, nonzero_out));
+
+    free(nonzero_out);
+}
+
+void print_all(State *state) {
+    char registers_out[1024] = {0};
+    char *nonzero_out = sprint_nonzero_memory(state);
+
+    sprint_all_registers(state, registers_out);
+
+    printf("%s\n%s\n", registers_out, nonzero_out);
 
     free(nonzero_out);
 }
