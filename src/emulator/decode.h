@@ -59,6 +59,7 @@ typedef enum OpType {
     OP_TYPE_GT,
     OP_TYPE_LE,
     OP_TYPE_AL,
+    OP_TYPE_BR,
 } OpType;
 
 // Data Processing Instruction (Immediate)
