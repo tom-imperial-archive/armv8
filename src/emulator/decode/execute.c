@@ -1,4 +1,6 @@
 #include <stdbool.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include "common/util.h"
 #include "emulator/state/state.h"
 #include "emulator/decode.h"
@@ -319,8 +321,8 @@ uint64 find_address(State* state, SingleDataTransfer data_transfer) {
         return address;
     } else {
         // ERROR: unrecognised addressing mode
-        // TOD0: handle error properly?
-        return 0;
+        printf("error: addressing mode not recognized.");
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -352,8 +354,7 @@ void execute_single_data_transfer(State* state, Instruction* i) {
     if ((data_transfer.offset & MASK_PRE_POST_INDEXED) == EXPECTED_PRE_POST_INDEXED) {
         uint64 old_xn = read_reg_64(state, data_transfer.xn);
         int simm9 = (data_transfer.offset >> OFFSET_SIMM9) & MASK_SIMM9;
-        if (simm9 & (1 << 8)) {
-            // Sign extend
+        if (simm9 & (1 << 8)) { // Sign extend
             simm9 |= ~MASK_SIMM9;
         }
         write_reg_64(state, data_transfer.xn, old_xn + simm9);
@@ -361,9 +362,8 @@ void execute_single_data_transfer(State* state, Instruction* i) {
 }
 
 void execute_load_literal(State* state, Instruction* i) {
-    // TODO: check if need to handle simm19 differently here or in decode.
     LoadLiteral instruction_data = i->data.load_literal;
-    uint64 transfer_address = state->PC + instruction_data.simm19 * 4; // TODO: sign extend simm19?
+    uint64 transfer_address = state->PC + instruction_data.simm19 * 4;
     if (instruction_data.sf) {
         uint64 data = read_mem_64(state, transfer_address);
         write_reg_64(state, instruction_data.rt, data);

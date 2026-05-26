@@ -1,7 +1,6 @@
 #include "test_load_literal.h"
 
 #include "emulator/decode.h"
-//#include "emulator/state/state.h"
 #include "emulator/decode/execute.h"
 
 #include <assert.h>
@@ -19,7 +18,6 @@ int test_load_literal(void) {
     // Check value of rt is set to the whatever value is at address PC + simm19 * 4.
 
     // Checking with sf = false
-    // TODO: do properly with 32-bit words
     Instruction instruction1 = {
         .op_type = OP_TYPE_LOAD_LITERAL,
         .data.load_literal = {
