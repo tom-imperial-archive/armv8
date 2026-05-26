@@ -5,6 +5,7 @@
 #include "emulator/decode/filehandlers.h"
 #include "emulator/decode/execute.h"
 #include <string.h>
+#include "emulator/output.h"
 
 int main(int argc, char **argv)
 {
@@ -59,6 +60,14 @@ int main(int argc, char **argv)
             break;
         }
     }
+
+    char* outputFile = argv[2];
+    if (outputFile == NULL) {
+        outputFile = "emulate.out";
+    }
+    printf("saving to file %s", outputFile);
+    fwrite_all(state, outputFile);
+    print_all(state);
 
     free(i);
 

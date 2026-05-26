@@ -1,6 +1,12 @@
+#ifndef STATE_H_
+#define STATE_H_
+
+
+
 #include <stdbool.h>
 #include "common/util.h"
 #include "emulator/state/memory.h"
+
 /*
 This includes all registers including the special registers, excluding PSTATE which is handled separately.
 Instructions cannot modify PSTATE so we implement the fields separately.
@@ -141,3 +147,4 @@ void write_mem_32(State *state, uint64 addr, uint32 val);
 uint64 read_mem_64(State *state, uint64 addr);
 
 uint32 read_mem_32(State *state, uint64 addr);
+#endif
