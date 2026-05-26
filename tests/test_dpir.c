@@ -4,12 +4,10 @@
 #include "emulator/state/state.h"
 #include "emulator/decode.h"
 
-// TEMP FOR TESTS TO WORK EASILY WITHOUT HAVING TO REFACTOR STUFF
-void execute_arithmetic_register(State *state, Instruction *i);
-void execute_logical_register(State *state, Instruction *i);
-void execute_multiply_register(State *state, Instruction *i);
+// Forward declaration of the main execution dispatcher
+bool execute_instruction(State *state, OpType op, Instruction *i);
 
-// Instruction builder helper for arithmetic
+// Instruction builder helper for arithmetic & logical
 Instruction create_arithmetic_inst(OpType op, bool sf, Register rd, Register rn, Register rm, ShiftType shift, int operand) {
     Instruction i = { .op_type = op };
     i.data.register_arithmetic_logic.sf = sf;
@@ -42,8 +40,8 @@ void test_standard_add() {
     // Build: ADD X0, X1, X2 (sf=true, shift=LSL, amount=0)
     Instruction i = create_arithmetic_inst(OP_TYPE_REG_ADD, true, R0, R1, R2, SHIFT_LSL, 0);
 
-    // Execute
-    execute_arithmetic_register(&state, &i);
+    // Execute via main dispatcher
+    execute_instruction(&state, i.op_type, &i);
 
     // Verify X0 is 40
     assert(read_reg_64(&state, R0) == 40);
@@ -60,8 +58,7 @@ void test_edge_case_32bit_asr() {
     // Build: SUB W0, W1, W2, ASR #1 (sf=false, shift=ASR, amount=1)
     Instruction i = create_arithmetic_inst(OP_TYPE_REG_SUB, false, R0, R1, R2, SHIFT_ASR, 1);
 
-    // Execute
-    execute_arithmetic_register(&state, &i);
+    execute_instruction(&state, i.op_type, &i);
 
     // Verify
     // op2 = (-4 >> 1) = -2.
@@ -83,23 +80,15 @@ void test_flags_subs_borrow() {
     // Build: SUBS X0, X1, X2 (sf=true, shift=LSL, amount=0)
     Instruction i = create_arithmetic_inst(OP_TYPE_REG_SUBS, true, R0, R1, R2, SHIFT_LSL, 0);
 
-    // Execute
-    execute_arithmetic_register(&state, &i);
+    execute_instruction(&state, i.op_type, &i);
 
     // Verify Math: 5 - 10 = -5
     assert(read_reg_64(&state, R0) == (uint64)-5);
 
     // Verify Flags
-    // N should be 1 (result is negative)
     assert(read_pstate_flag(&state, N) == true);
-
-    // Z should be 0 (result is not zero)
     assert(read_pstate_flag(&state, Z) == false);
-
-    // C should be 0 (val_n was smaller than op2, so a borrow occurred)
     assert(read_pstate_flag(&state, C) == false);
-
-    // V should be 0 (no signed overflow occurred)
     assert(read_pstate_flag(&state, V) == false);
 
     printf("test_flags_subs_borrow: OK\n");
@@ -115,16 +104,13 @@ void test_flags_unsigned_overflow() {
     // Build: ADDS X0, X1, X2
     Instruction i = create_arithmetic_inst(OP_TYPE_REG_ADDS, true, R0, R1, R2, SHIFT_LSL, 0);
 
-    execute_arithmetic_register(&state, &i);
+    execute_instruction(&state, i.op_type, &i);
 
     // Verify Math: It should wrap around completely. Max + 5 = 4.
     assert(read_reg_64(&state, R0) == 4);
 
     // Verify Flags
-    // C should be 1 (The result 4 is strictly less than the input Max uint64)
     assert(read_pstate_flag(&state, C) == true);
-
-    // V should be 0 (No signed overflow. Signed -1 + 5 = 4, which is correct)
     assert(read_pstate_flag(&state, V) == false);
 
     printf("test_flags_unsigned_overflow: OK\n");
@@ -140,19 +126,14 @@ void test_flags_signed_overflow_add() {
     // Build: ADDS X0, X1, X2
     Instruction i = create_arithmetic_inst(OP_TYPE_REG_ADDS, true, R0, R1, R2, SHIFT_LSL, 0);
 
-    execute_arithmetic_register(&state, &i);
+    execute_instruction(&state, i.op_type, &i);
 
     // Verify Math: It spilled into the sign bit, becoming exactly Min int64
     assert(read_reg_64(&state, R0) == 0x8000000000000000ULL);
 
     // Verify Flags
-    // V should be 1 (Positive + Positive = Negative -> Signed Overflow!)
     assert(read_pstate_flag(&state, V) == true);
-
-    // N should be 1 (The result is now artificially negative)
     assert(read_pstate_flag(&state, N) == true);
-
-    // C should be 0 (It didn't wrap past 0xFFFFFFFFFFFFFFFF, so no unsigned carry)
     assert(read_pstate_flag(&state, C) == false);
 
     printf("test_flags_signed_overflow_add: OK\n");
@@ -168,19 +149,14 @@ void test_flags_signed_underflow_sub() {
     // Build: SUBS X0, X1, X2
     Instruction i = create_arithmetic_inst(OP_TYPE_REG_SUBS, true, R0, R1, R2, SHIFT_LSL, 0);
 
-    execute_arithmetic_register(&state, &i);
+    execute_instruction(&state, i.op_type, &i);
 
     // Verify Math: It underflowed into Max int64
     assert(read_reg_64(&state, R0) == 0x7FFFFFFFFFFFFFFFULL);
 
     // Verify Flags
-    // V should be 1 (Negative - Positive = Positive -> Signed Overflow!)
     assert(read_pstate_flag(&state, V) == true);
-
-    // N should be 0 (The result is now artificially positive)
     assert(read_pstate_flag(&state, N) == false);
-
-    // C should be 1 (A borrow did NOT occur from the unsigned perspective)
     assert(read_pstate_flag(&state, C) == true);
 
     printf("test_flags_signed_underflow_sub: OK\n");
@@ -196,7 +172,7 @@ void test_logical_orr() {
     // Build: ORR X0, X1, X2
     Instruction i = create_arithmetic_inst(OP_TYPE_ORR, true, R0, R1, R2, SHIFT_LSL, 0);
 
-    execute_logical_register(&state, &i);
+    execute_instruction(&state, i.op_type, &i);
 
     // Verify: 1010 | 0101 = 1111 (All 1s)
     assert(read_reg_64(&state, R0) == 0xFFFFFFFFFFFFFFFFULL);
@@ -213,7 +189,7 @@ void test_logical_bic_32bit() {
     // Build: BIC W0, W1, W2 (Bitwise Clear: W1 AND NOT W2)
     Instruction i = create_arithmetic_inst(OP_TYPE_BIC, false, R0, R1, R2, SHIFT_LSL, 0);
 
-    execute_logical_register(&state, &i);
+    execute_instruction(&state, i.op_type, &i);
 
     // Verify: W2 inverted is 0xFFFF0000.
     // 0xFFFFFFFF & 0xFFFF0000 = 0xFFFF0000.
@@ -234,7 +210,7 @@ void test_logical_ands_flags() {
     // Build: ANDS X0, X1, X2
     Instruction i = create_arithmetic_inst(OP_TYPE_ANDS, true, R0, R1, R2, SHIFT_LSL, 0);
 
-    execute_logical_register(&state, &i);
+    execute_instruction(&state, i.op_type, &i);
 
     // Verify Math
     assert(read_reg_64(&state, R0) == 0x8000000000000000ULL);
@@ -260,7 +236,7 @@ void test_multiply_madd() {
     // Formula: X0 = X3 + (X1 * X2)
     Instruction i = create_multiply_inst(OP_TYPE_MADD, true, R0, R1, R2, R3);
 
-    execute_multiply_register(&state, &i);
+    execute_instruction(&state, i.op_type, &i);
 
     // Verify: 10 + (5 * 6) = 40
     assert(read_reg_64(&state, R0) == 40);
@@ -279,7 +255,7 @@ void test_multiply_msub_32bit() {
     // Formula: W0 = W3 - (W1 * W2)
     Instruction i = create_multiply_inst(OP_TYPE_MSUB, false, R0, R1, R2, R3);
 
-    execute_multiply_register(&state, &i);
+    execute_instruction(&state, i.op_type, &i);
 
     // Verify: 20 - (3 * 4) = 8
     assert(read_reg_32(&state, R0) == 8);

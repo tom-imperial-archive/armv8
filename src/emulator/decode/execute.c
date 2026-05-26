@@ -239,7 +239,20 @@ bool execute_instruction(State *state, OpType op, Instruction *i)
         case OP_TYPE_REG_ADDS:
             execute_arithmetic_register(state, i);
             break;
-
+        case OP_TYPE_AND:
+        case OP_TYPE_BIC:
+        case OP_TYPE_ORR:
+        case OP_TYPE_ORN:
+        case OP_TYPE_EOR:
+        case OP_TYPE_EON:
+        case OP_TYPE_ANDS:
+        case OP_TYPE_BICS:
+            execute_logical_register(state, i);
+            break;
+        case OP_TYPE_MADD:
+        case OP_TYPE_MSUB:
+            execute_multiply_register(state, i);
+            break;
 
         // TEMP until all instructions have been implemented
         default:
