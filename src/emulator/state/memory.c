@@ -24,11 +24,6 @@ void write(Memory m, uint64 addr, uint8 *data, long n)
 {
     check_mem_addr(m, addr, n);
 
-    printf("Writing %ld bytes: ", n);
-    for (int j = 0; j < n; j++) {
-        printf("%02x ", (uint8) data[j]);
-    }
-    printf("\n");
     // Write data by copying n bytes
     memcpy(&(m->data[addr]), data, n);
 
