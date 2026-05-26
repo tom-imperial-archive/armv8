@@ -281,6 +281,98 @@ void execute_wide_move(State *state, Instruction *i) {
 
 }
 
+const int MASK_SIMM9 = 0x1FF;
+const int OFFSET_SIMM9 = 2;
+const int EXPECTED_REGISTER_OFFSET = 0x81A;
+const int MASK_REGISTER_OFFSET = 0x83F;
+const int EXPECTED_PRE_POST_INDEXED = 0x001;
+const int MASK_PRE_POST_INDEXED = 0x801;
+const int MASK_I = 0x01;
+const int OFFSET_I = 1;
+
+// Used in `execute_single_data_transfer` to calculate the source address in the load/store.
+uint64 find_address(State* state, SingleDataTransfer data_transfer) {
+    if (data_transfer.U) {
+        // Unsigned offset
+        uint64 imm12 = data_transfer.offset & 0xFFF;
+        uint64 uoffset = data_transfer.sf ? imm12 * 8 : imm12 * 4;
+        return read_reg_64(state, data_transfer.xn) + uoffset;
+    }
+
+    if ((data_transfer.offset & MASK_REGISTER_OFFSET) == EXPECTED_REGISTER_OFFSET) {
+        // Register offset
+        const int MASK_M = 0x1F;
+        const int OFFSET_M = 6;
+        int m = (data_transfer.offset >> OFFSET_M) & MASK_M;
+        uint64 xm = read_reg_64(state, m);
+        uint64 xn = read_reg_64(state, data_transfer.xn);
+        return xn + xm;
+    } else if ((data_transfer.offset & MASK_PRE_POST_INDEXED) == EXPECTED_PRE_POST_INDEXED) {
+        // Pre/Post Indexed
+        int simm9 = (data_transfer.offset >> OFFSET_SIMM9) & MASK_SIMM9;
+        if (simm9 & (1 << 8)) {  // Sign extend
+            simm9 |= ~MASK_SIMM9;
+        }
+        bool i = (data_transfer.offset >> OFFSET_I) & MASK_I;
+        uint64 xn = read_reg_64(state, data_transfer.xn);
+        uint64 address = i ? xn + simm9 : xn;
+        return address;
+    } else {
+        // ERROR: unrecognised addressing mode
+        // TOD0: handle error properly?
+        return 0;
+    }
+}
+
+// PRE: op == OP_TYPE_SINGLE_DATA_TRANSFER
+void execute_single_data_transfer(State* state, Instruction* i) {
+    SingleDataTransfer data_transfer = i->data.single_data_transfer;
+    uint64 address = find_address(state, data_transfer);
+    int rt = i->data.single_data_transfer.rt;
+
+    if (data_transfer.L) { // Load operation
+        if (data_transfer.sf) {
+            uint64 data = read_mem_64(state, address);
+            write_reg_64(state, rt, data);
+        } else {
+            uint32 data = read_mem_32(state, address);
+            write_reg_32(state, rt, data);
+        }
+    } else { // Store operation
+        if (data_transfer.sf) {
+            uint64 data = read_reg_64(state, rt);
+            write_mem_64(state, address, data);
+        } else {
+            uint32 data = read_reg_32(state, rt);
+            write_mem_32(state, address, data);
+        }
+    }
+
+    // Write-back for pre/post-indexed
+    if ((data_transfer.offset & MASK_PRE_POST_INDEXED) == EXPECTED_PRE_POST_INDEXED) {
+        uint64 old_xn = read_reg_64(state, data_transfer.xn);
+        int simm9 = (data_transfer.offset >> OFFSET_SIMM9) & MASK_SIMM9;
+        if (simm9 & (1 << 8)) {
+            // Sign extend
+            simm9 |= ~MASK_SIMM9;
+        }
+        write_reg_64(state, data_transfer.xn, old_xn + simm9);
+    }
+}
+
+void execute_load_literal(State* state, Instruction* i) {
+    // TODO: check if need to handle simm19 differently here or in decode.
+    LoadLiteral instruction_data = i->data.load_literal;
+    uint64 transfer_address = state->PC + instruction_data.simm19 * 4; // TODO: sign extend simm19?
+    if (instruction_data.sf) {
+        uint64 data = read_mem_64(state, transfer_address);
+        write_reg_64(state, instruction_data.rt, data);
+    } else {
+        uint32 data = read_mem_32(state, transfer_address);
+        write_reg_32(state, instruction_data.rt, data);
+    }
+}
+
 /*
     Executes the given instruction.
     If we encounter a halt instruction, we return true, otherwise return false;
@@ -327,7 +419,14 @@ bool execute_instruction(State *state, OpType op, Instruction *i)
         case OP_TYPE_MSUB:
             execute_multiply_register(state, i);
             break;
-
+        // Single data transfer
+        case OP_TYPE_SINGLE_DATA_TRANSFER:
+            execute_single_data_transfer(state, i);
+            break;
+        // Load literal
+        case OP_TYPE_LOAD_LITERAL:
+            execute_load_literal(state, i);
+            break;
         // Branch instructions
         // Conditional branches
         case OP_TYPE_EQ:
