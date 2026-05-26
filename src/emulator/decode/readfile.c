@@ -1,12 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include "common/util.h"
 
 uint32 *readfile(const char *path, size_t *count) {
     FILE *f = fopen(path, "rb");
     if (!f) {
-        perror("Error opening input file");
+        perror("Error opening file");
         return NULL;
     }
 
@@ -38,18 +37,4 @@ uint32 *readfile(const char *path, size_t *count) {
     fclose(f);
     return instrs;
 
-}
-
-bool writefile(const char *path, char *registers_out, char *nonzero_out) {
-    FILE *f = fopen(path, "w");
-
-    if (f == NULL) {
-        perror("Error opening output file");
-        return false;
-    }
-
-    fprintf(f, "%s\n%s\n", registers_out, nonzero_out);
-    fclose(f);
-
-    return true;
 }
