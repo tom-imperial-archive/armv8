@@ -136,22 +136,22 @@ bool read_pstate_flag(State *state, PSTATE_flag flag)
 }
 
 void write_mem_64(State *state, uint64 addr, uint64 val) {
-    write(state->m, addr, (char *)&val, sizeof(uint64));
+    write(state->m, addr, (uint8 *)&val, sizeof(uint64));
 }
 
 void write_mem_32(State *state, uint64 addr, uint32 val) {
-    write(state->m, addr, (char *)&val, sizeof(uint32));
+    write(state->m, addr, (uint8 *)&val, sizeof(uint32));
 }
 
 uint64 read_mem_64(State *state, uint64 addr) {
     uint64 val = 0;
-    read(state->m, addr, (char *)&val, sizeof(uint64));
+    read(state->m, addr, (uint8 *)&val, sizeof(uint64));
     return val;
 }
 
-uint32 read_mem_32(State *state, uint32 addr) {
+uint32 read_mem_32(State *state, uint64 addr) {
     uint64 val = 0;
-    read(state->m, addr, (char *)&val, sizeof(uint32));
+    read(state->m, addr, (uint8 *)&val, sizeof(uint32));
     return val;
 }
 

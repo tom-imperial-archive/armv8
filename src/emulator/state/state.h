@@ -140,4 +140,4 @@ void write_mem_32(State *state, uint64 addr, uint32 val);
 
 uint64 read_mem_64(State *state, uint64 addr);
 
-uint32 read_mem_32(State *state, uint32 addr);
+uint32 read_mem_32(State *state, uint64 addr);
