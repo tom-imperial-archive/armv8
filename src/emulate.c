@@ -23,16 +23,8 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    printf("Reading file and writing to memory\n");
-    printf("First instruction: %x\n", *fileBuffer);
-    printf("Size: %ld\n", size);
-    write(state->m, 0, (uint8 *) fileBuffer, size * sizeof(uint32));
-    char a[10000];
-    sprint_nonzero_memory(state, a);
-    printf("%s", a);
-    printf("First instruction: %x\n", read_mem_32(state, 0));
 
-    printf("Reading file\n");
+    write(state->m, 0, (uint8 *) fileBuffer, size * sizeof(uint32));
 
     // Main loop
     bool shouldHalt = false;
