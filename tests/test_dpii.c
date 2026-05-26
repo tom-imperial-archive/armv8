@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include "emulator/decode/execute.h"
-#include "common/hashset.c"
+#include "common/hashset.h"
 
 // Instruction Builder Helpers
 Instruction create_imm_arithmetic_inst(OpType op, bool sf, Register rd, Register rn, uint16_t imm12, bool sh) {
@@ -144,7 +144,7 @@ void test_movn_64bit_shift_prevents_truncation() {
     destroy_state(state);
 }
 
-int main(void) {
+void test_dpii(void) {
     printf("Data Processing Immediate Tests\n");
     printf("--------------------------------\n");
 
@@ -159,6 +159,4 @@ int main(void) {
 
     printf("--------------------------------\n");
     printf("All DPI Immediate tests passed\n");
-
-    return 0;
 }

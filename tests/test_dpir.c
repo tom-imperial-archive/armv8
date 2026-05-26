@@ -266,7 +266,7 @@ void test_multiply_msub_32bit() {
     printf("test_multiply_msub_32bit: OK\n");
 }
 
-int main(void) {
+void test_dpir(void) {
     printf("Data Processing Instruction (Register) Tests\n");
     printf("--------------------------------------------\n");
 
@@ -289,5 +289,4 @@ int main(void) {
 
     printf("--------------------------------------------\n");
     printf("All tests passed\n");
-    return 0;
 }

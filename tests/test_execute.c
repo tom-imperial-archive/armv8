@@ -2,12 +2,21 @@
 #include <stdio.h>
 #include "common/util.h"
 #include "emulator/decode/execute.h"
+#include "test_dpii.h"
+#include "test_dpir.h"
+#include "test_branch.h"
 
-void test_execute(void)
+
+int main(void)
 {
     printf("Execute Tests\n");
     printf("-------------\n");
 
+    test_dpii();
+    test_dpir();
+    test_branch();
+
     printf("-------------\n");
     printf("All tests passed\n");
+    return 0;
 }
