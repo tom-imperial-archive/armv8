@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "emulator/state/state.h"
 #include "common/util.h"
-#include "emulator/decode/readfile.h"
+#include "emulator/decode/filehandlers.h"
 
 int main(int argc, char **argv) {
     State *state = init_state();

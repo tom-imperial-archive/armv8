@@ -2,11 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <emulator/decode/readfile.h>
-#include <assert.h>
 #define PRINT_LINE_LENGTH 25
 #define MASK_LOWER_32BITS (uint32) 0xFFFFFFFFUL
-#define REG_OUT_PRINT_BUFFER 1024
 
 typedef enum {STATE_REG_NOT_EXISTS, STATE_WRITE_NOT_ALLOWED, STATE_READ_32_FROM_PC, STATE_FLAG_NOT_EXISTS} StateError;
 
@@ -234,26 +231,4 @@ char *sprint_nonzero_memory(State *state)
     free(memory_data);
 
     return out;
-}
-
-void fwrite_all(State *state, const char *path) {
-    char registers_out[REG_OUT_PRINT_BUFFER] = {0};
-    char *nonzero_out = sprint_nonzero_memory(state);
-
-    sprint_all_registers(state, registers_out);
-
-    assert(writefile(path, registers_out, nonzero_out));
-
-    free(nonzero_out);
-}
-
-void print_all(State *state) {
-    char registers_out[REG_OUT_PRINT_BUFFER] = {0};
-    char *nonzero_out = sprint_nonzero_memory(state);
-
-    sprint_all_registers(state, registers_out);
-
-    printf("%s\n%s\n", registers_out, nonzero_out);
-
-    free(nonzero_out);
 }
