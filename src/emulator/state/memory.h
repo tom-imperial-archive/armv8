@@ -2,7 +2,7 @@
 #include "common/hashset.h"
 
 typedef struct {
-    uint8* data;
+    char* data;
     AddressSet *accessed;
 } MemoryState;
 
@@ -20,12 +20,12 @@ For both reading and writing, data must be in little-endian format, ie. the LSB 
 /*
 Write the first n bytes of data to memory starting from base addr
 */
-void write(Memory m, uint64 addr, uint8 *data, long n);
+void write(Memory m, uint64 addr, char *data, long n);
 /*
 Read the first n bytes in memory starting from base addr and write these to data.
 Pre: sizeof(*data) = n
 */
-void read(Memory m, uint64 addr, uint8 *data, long n);
+void read(Memory m, uint64 addr, char *data, long n);
 
 /*
 Returns the 4 byte chunks of memory that are non-zero, and their values

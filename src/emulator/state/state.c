@@ -62,6 +62,7 @@ void check_writeable_register(Register reg)
     check_register(reg);
     if (reg == ZR || reg == PC)
     {
+        printf("%d", reg);
         error(STATE_WRITE_NOT_ALLOWED);
     }
 }
@@ -135,22 +136,22 @@ bool read_pstate_flag(State *state, PSTATE_flag flag)
 }
 
 void write_mem_64(State *state, uint64 addr, uint64 val) {
-    write(state->m, addr, (uint8 *)&val, sizeof(uint64));
+    write(state->m, addr, (char *)&val, sizeof(uint64));
 }
 
 void write_mem_32(State *state, uint64 addr, uint32 val) {
-    write(state->m, addr, (uint8 *)&val, sizeof(uint32));
+    write(state->m, addr, (char *)&val, sizeof(uint32));
 }
 
 uint64 read_mem_64(State *state, uint64 addr) {
     uint64 val = 0;
-    read(state->m, addr, (uint8 *)&val, sizeof(uint64));
+    read(state->m, addr, (char *)&val, sizeof(uint64));
     return val;
 }
 
-uint32 read_mem_32(State *state, uint64 addr) {
+uint32 read_mem_32(State *state, uint32 addr) {
     uint64 val = 0;
-    read(state->m, addr, (uint8 *)&val, sizeof(uint32));
+    read(state->m, addr, (char *)&val, sizeof(uint32));
     return val;
 }
 
@@ -203,7 +204,7 @@ void sprint_all_registers(State *state, char *out)
     strcat(out, nextLine);
 }
 
-void sprint_nonzero_memory(State *state, char *out)
+char *sprint_nonzero_memory(State *state)
 {
     // As before, 25 chars per line.
     char new[25];
@@ -211,9 +212,12 @@ void sprint_nonzero_memory(State *state, char *out)
 
     NonZeroMemory *memory_data = get_non_zero_memory(state->m, &nonzero_count);
 
+
     if (memory_data == NULL) {
-        return;
+        return "";
     }
+
+    char *out = malloc(30 + (25*nonzero_count));
 
     sprintf(new, "Non-zero memory:\n");
     strcat(out, new);
@@ -225,4 +229,6 @@ void sprint_nonzero_memory(State *state, char *out)
         strcat(out, new);
     }
     free(memory_data);
+
+    return out;
 }
