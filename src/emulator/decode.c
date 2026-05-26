@@ -1,5 +1,4 @@
 #include "decode.h"
-#include "util.h"
 
 // TODO: check if simm and imm need to be handled differently when extracting them.
 
@@ -11,8 +10,8 @@ DecodeResult decode(uint32 input, Instruction* result) {
         instruction = (Instruction) {
             .op_type = op_type
         };
-    } else if (input & 0x1C000000 == 0x10000000) { // Data Processing Instruction (Immediate)
-        bool sf  = input & 0x80000000 == 0x80000000;
+    } else if ((input & 0x1C000000) == 0x10000000) { // Data Processing Instruction (Immediate)
+        bool sf  = (input & 0x80000000) == 0x80000000;
         int opc = (input & 0x60000000) >> 28;
         int opi = (input & 0x03800000) >> 22;
         int operand = input & 0x007FFFF0;
@@ -69,7 +68,7 @@ DecodeResult decode(uint32 input, Instruction* result) {
         } else {
             return DECODE_UNDEFINED_OPCODE;
         }
-    } else if (input & 0x0E == 0x0A) { // Data Processing Instruction (Register)
+    } else if ((input & 0x0E) == 0x0A) { // Data Processing Instruction (Register)
         const uint32 MASK_SF = 0x80000000;
         const uint32 MASK_OPC = 0x60000000;
         const uint32 MASK_M = 0x10000000;
@@ -164,7 +163,7 @@ DecodeResult decode(uint32 input, Instruction* result) {
                 }
             };
         }
-    } else if (input & 0x0A == 0x08) {
+    } else if ((input & 0x0A) == 0x08) {
         // load/store
         if ((input & 0x80000000) == 0x80000000) {
             // Single Data Transfer: bit 31 = 1
@@ -207,7 +206,7 @@ DecodeResult decode(uint32 input, Instruction* result) {
             };
         }
 
-    } else if (input & 0x1C == 0x14) {
+    } else if ((input & 0x1C) == 0x14) {
         // branch
 
         if ((input & 0xFF000000) == 0xD6000000) {
@@ -223,7 +222,7 @@ DecodeResult decode(uint32 input, Instruction* result) {
 
         } else if ((input & 0xFF000000) == 0x54000000) {
             // Conditional
-            int opcode = (input & 0xFF000000) >> 24;
+            // int opcode = (input & 0xFF000000) >> 24;
             int simm19 = (input & 0x00FFFFE0) >> 5;  // sign-extend after
             int cond   = (input & 0x0000000F);
 
@@ -246,7 +245,7 @@ DecodeResult decode(uint32 input, Instruction* result) {
 
         } else if ((input & 0xFC000000) == 0x14000000) {
             // Unconditional
-            int opcode = (input & 0xFC000000) >> 26;
+            // int opcode = (input & 0xFC000000) >> 26;
             int simm26 = (input & 0x03FFFFFF);
 
             OpType op_type = OP_TYPE_AL;// sign-extend after

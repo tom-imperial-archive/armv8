@@ -2,6 +2,7 @@
 
 #define PARSE_H_
 
+#include "common/util.h"
 #include <stdbool.h>
 
 typedef enum DecodeResult {
