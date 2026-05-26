@@ -6,6 +6,7 @@
 #include <assert.h>
 #define PRINT_LINE_LENGTH 25
 #define MASK_LOWER_32BITS (uint32) 0xFFFFFFFFUL
+#define REG_OUT_PRINT_BUFFER 1024
 
 typedef enum {STATE_REG_NOT_EXISTS, STATE_WRITE_NOT_ALLOWED, STATE_READ_32_FROM_PC, STATE_FLAG_NOT_EXISTS} StateError;
 
@@ -236,7 +237,7 @@ char *sprint_nonzero_memory(State *state)
 }
 
 void fwrite_all(State *state, const char *path) {
-    char registers_out[1024] = {0};
+    char registers_out[REG_OUT_PRINT_BUFFER] = {0};
     char *nonzero_out = sprint_nonzero_memory(state);
 
     sprint_all_registers(state, registers_out);
@@ -247,7 +248,7 @@ void fwrite_all(State *state, const char *path) {
 }
 
 void print_all(State *state) {
-    char registers_out[1024] = {0};
+    char registers_out[REG_OUT_PRINT_BUFFER] = {0};
     char *nonzero_out = sprint_nonzero_memory(state);
 
     sprint_all_registers(state, registers_out);
