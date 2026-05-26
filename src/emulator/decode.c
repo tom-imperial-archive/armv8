@@ -214,7 +214,7 @@ DecodeResult decode(uint32 input, Instruction* result) {
             // Register
             int xn = (input & 0x000003E0) >> 5;
 
-            OpType op_type = OP_TYPE_AL;
+                OpType op_type = OP_TYPE_BR;
 
             instruction = (Instruction) {
                 .op_type = op_type,
