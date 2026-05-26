@@ -4,6 +4,7 @@
 
 #include "common/util.h"
 #include <stdbool.h>
+#include "common/util.h"
 
 typedef enum DecodeResult {
     DECODE_SUCCESS,
@@ -65,7 +66,6 @@ typedef enum OpType {
 
 // Data Processing Instruction (Immediate)
 
-//
 typedef struct ImmediateArithmeticInstruction {
     uint16 imm12;
     int rd;

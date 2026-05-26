@@ -1,4 +1,5 @@
 #include "decode.h"
+#include "common/util.h"
 
 // TODO: check if simm and imm need to be handled differently when extracting them.
 
@@ -213,7 +214,7 @@ DecodeResult decode(uint32 input, Instruction* result) {
             // Register
             int xn = (input & 0x000003E0) >> 5;
 
-                OpType op_type = OP_TYPE_BR;
+            OpType op_type = OP_TYPE_BR;
 
             instruction = (Instruction) {
                 .op_type = op_type,
@@ -222,7 +223,6 @@ DecodeResult decode(uint32 input, Instruction* result) {
 
         } else if ((input & 0xFF000000) == 0x54000000) {
             // Conditional
-            // int opcode = (input & 0xFF000000) >> 24;
             int simm19 = (input & 0x00FFFFE0) >> 5;  // sign-extend after
             int cond   = (input & 0x0000000F);
 

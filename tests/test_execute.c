@@ -5,6 +5,8 @@
 #include "test_dpii.h"
 #include "test_dpir.h"
 #include "test_branch.h"
+#include "test_load_literal.h"
+#include "test_single_data_transfer.h"
 
 
 int main(void)
@@ -16,6 +18,8 @@ int main(void)
     test_dpir();
     test_branch();
 
+    test_load_literal();
+    test_single_data_transfer();
     printf("-------------\n");
     printf("All tests passed\n");
     return 0;
