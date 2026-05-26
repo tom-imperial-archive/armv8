@@ -58,7 +58,7 @@ int main(int argc, char **argv)
         case DECODE_SUCCESS:
         {
             printf("Executing instruction %x\n", instruction);
-            shouldHalt = execute_instruction(state, i->op_type, *i);
+            shouldHalt = execute_instruction(state, i->op_type, i);
         };
         break;
         case DECODE_UNDEFINED_OPCODE:
