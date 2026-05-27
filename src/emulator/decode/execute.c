@@ -489,5 +489,12 @@ bool execute_instruction(State *state, OpType op, Instruction *i)
         default:
             break;
     }
+
+    if (!(op == OP_TYPE_EQ || op == OP_TYPE_NE || op == OP_TYPE_GE || op == OP_TYPE_LT || op == OP_TYPE_GT || op == OP_TYPE_LE || op == OP_TYPE_AL || op == OP_TYPE_BR)) {
+        inc_pc(state);
+    }
+
+
+
     return false;
 }
