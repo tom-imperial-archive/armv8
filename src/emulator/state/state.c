@@ -217,7 +217,7 @@ char *sprint_nonzero_memory(State *state)
     }
 
     char *out = malloc(30 + (25*nonzero_count));
-
+    out[0] = '\0';
     sprintf(new, "Non-zero memory:\n");
     strcat(out, new);
 
