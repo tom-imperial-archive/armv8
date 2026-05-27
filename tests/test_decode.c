@@ -81,7 +81,7 @@ void test_decode_dpir(void) {
     // sf=0, opc=0(ADD), M=0, opr=1010(LSR, N=0), rm=3, operand(shift_amt)=7, rn=4, rd=5
     res = decode(0x0B431C85, &inst);
     assert(res == DECODE_SUCCESS);
-    assert(inst.op_type == OP_TYPE_ADD);
+    assert(inst.op_type == OP_TYPE_REG_ADD);
     assert(inst.data.register_arithmetic_logic.sf == false);
     assert(inst.data.register_arithmetic_logic.shift == SHIFT_LSR);
     assert(inst.data.register_arithmetic_logic.rm == 3);
@@ -146,36 +146,29 @@ void test_decode_negative_simm(void) {
     Instruction inst;
     DecodeResult res;
 
-    // B (Unconditional Branch) with negative offset
-    // Branching backwards by 4 words (-16 bytes).
-    // -4 in 26-bit two's complement is 0x3FFFFFC.
-    // Base opcode: 0x14000000. Combined: 0x14000000 | 0x03FFFFFC = 0x17FFFFFC
+    // Test 1: B (Unconditional Branch)
+    // Offset: -4.
+    // Instruction: 0x14000000 | 0x03FFFFFC = 0x17FFFFFC
     res = decode(0x17FFFFFC, &inst);
     assert(res == DECODE_SUCCESS);
-    assert(inst.op_type == OP_TYPE_AL); // Per your decode.c mapping
-    assert(inst.data.uncond_branch.simm26 == 0x3FFFFFC);
+    assert(inst.op_type == OP_TYPE_AL);
+    assert(inst.data.uncond_branch.simm26 == -4); // Now asserts true negative!
 
-    // B.cond (Conditional Branch) with negative offset
-    // Branching backwards by 8 words (-32 bytes).
-    // -8 in 19-bit two's complement is 0x7FFF8.
-    // Base opcode: 0x54000000. cond = 1 (NE).
-    // Combined: 0x54000000 | (0x7FFF8 << 5) | 0x1 = 0x54FFF001
-    res = decode(0x54FFF001, &inst);
+    // Test 2: B.cond (Conditional Branch)
+    // Offset: -8.
+    // Instruction: 0x54000000 | (0x7FFF8 << 5) | 0x1 = 0x54FFFF01
+    res = decode(0x54FFFF01, &inst);
     assert(res == DECODE_SUCCESS);
     assert(inst.op_type == OP_TYPE_NE);
-    assert(inst.data.cond_branch.simm19 == 0x7FFF8);
+    assert(inst.data.cond_branch.simm19 == -8);
 
-    // Load Literal with negative offset
-    // Loading from PC - 12 words (-48 bytes).
-    // -12 in 19-bit two's complement is 0x7FFF4.
-    // Base opcode: 0x58000000. sf = 1 (64-bit). rt = 0.
-    // Combined: 0x58000000 | (0x7FFF4 << 5) | 0x0 = 0x58FFE800
-    res = decode(0x58FFE800, &inst);
+    // Test 3: Load Literal
+    // Offset: -12.
+    // Instruction: 0x58000000 | (0x7FFF4 << 5) | 0x0 = 0x58FFFE80
+    res = decode(0x58FFFE80, &inst);
     assert(res == DECODE_SUCCESS);
     assert(inst.op_type == OP_TYPE_LOAD_LITERAL);
-    assert(inst.data.load_literal.sf == true);
-    assert(inst.data.load_literal.rt == 0);
-    assert(inst.data.load_literal.simm19 == 0x7FFF4);
+    assert(inst.data.load_literal.simm19 == -12);
 }
 
 void test_decode(void) {

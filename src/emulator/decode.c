@@ -29,7 +29,7 @@ DecodeResult decode(uint32 input, Instruction* result) {
             const int MASK_SH = 0x00400000;
             const int MASK_IMM12 = 0x003FFC00;
             const int MASK_RN = 0x000003E0;
-            bool rn = (operand & MASK_RN) >> 5;
+            int rn = (operand & MASK_RN) >> 5;
             int sh = (operand & MASK_SH) >> 22;
             int imm12 = (operand & MASK_IMM12) >> 10;
 
@@ -69,7 +69,7 @@ DecodeResult decode(uint32 input, Instruction* result) {
         } else {
             return DECODE_UNDEFINED_OPCODE;
         }
-    } else if ((input & 0x0E) == 0x0A) { // Data Processing Instruction (Register)
+    } else if ((input & 0x0E000000) == 0x0A000000) { // Data Processing Instruction (Register)
         const uint32 MASK_SF = 0x80000000;
         const uint32 MASK_OPC = 0x60000000;
         const uint32 MASK_M = 0x10000000;
@@ -118,10 +118,10 @@ DecodeResult decode(uint32 input, Instruction* result) {
                     return DECODE_UNDEFINED_OPCODE;
                 }
                 switch (opc) {
-                    case 0x0: op_type = OP_TYPE_ADD; break;
-                    case 0x1: op_type = OP_TYPE_ADDS; break;
-                    case 0x2: op_type = OP_TYPE_SUB; break;
-                    case 0x3: op_type = OP_TYPE_SUBS; break;
+                    case 0x0: op_type = OP_TYPE_REG_ADD; break;
+                    case 0x1: op_type = OP_TYPE_REG_ADDS; break;
+                    case 0x2: op_type = OP_TYPE_REG_SUB; break;
+                    case 0x3: op_type = OP_TYPE_REG_SUBS; break;
                 }
                 instruction = (Instruction) {
                     .op_type = op_type,
@@ -138,17 +138,17 @@ DecodeResult decode(uint32 input, Instruction* result) {
                 bool n = opr & 0x1;
                 if (n) {
                     switch (opc) {
-                        case 0x0: op_type = OP_TYPE_AND; break;
-                        case 0x1: op_type = OP_TYPE_ORR; break;
-                        case 0x2: op_type = OP_TYPE_EOR; break;
-                        case 0x3: op_type = OP_TYPE_ANDS; break;
-                    }
-                } else {
-                    switch (opc) {
                         case 0x0: op_type = OP_TYPE_BIC; break;
                         case 0x1: op_type = OP_TYPE_ORN; break;
                         case 0x2: op_type = OP_TYPE_EON; break;
                         case 0x3: op_type = OP_TYPE_BICS; break;
+                    }
+                } else {
+                    switch (opc) {
+                        case 0x0: op_type = OP_TYPE_AND; break;
+                        case 0x1: op_type = OP_TYPE_ORR; break;
+                        case 0x2: op_type = OP_TYPE_EOR; break;
+                        case 0x3: op_type = OP_TYPE_ANDS; break;
                     }
                 }
             }
@@ -164,8 +164,7 @@ DecodeResult decode(uint32 input, Instruction* result) {
                 }
             };
         }
-    } else if ((input & 0x0A) == 0x08) {
-        // load/store
+    } else if ((input & 0x0A000000) == 0x08000000) { // Load/store
         if ((input & 0x80000000) == 0x80000000) {
             // Single Data Transfer: bit 31 = 1
             int sf     = (input & 0x40000000) >> 30;
@@ -189,11 +188,15 @@ DecodeResult decode(uint32 input, Instruction* result) {
                 }
             };
 
-        } else {
-            // Load Literal: bit 31 = 0
+        } else { // Load Literal: bit 31 = 0
             int sf     = (input & 0x40000000) >> 30;
-            int simm19 = (input & 0x00FFFFE0) >> 5;  // sign-extend after
+            int simm19 = (input & 0x00FFFFE0) >> 5;
             int rt     = (input & 0x0000001F);
+
+            // Sign-extend
+            if (simm19 & (1 << 18)) {
+                simm19 |= ~((1 << 19) - 1);
+            }
 
             OpType op_type = OP_TYPE_LOAD_LITERAL;
 
@@ -207,11 +210,8 @@ DecodeResult decode(uint32 input, Instruction* result) {
             };
         }
 
-    } else if ((input & 0x1C) == 0x14) {
-        // branch
-
-        if ((input & 0xFF000000) == 0xD6000000) {
-            // Register
+    } else if ((input & 0x1C000000) == 0x14000000) { // Branch
+        if ((input & 0xFF000000) == 0xD6000000) { // Register
             int xn = (input & 0x000003E0) >> 5;
 
             OpType op_type = OP_TYPE_BR;
@@ -221,10 +221,14 @@ DecodeResult decode(uint32 input, Instruction* result) {
                 .data.reg_branch.xn = xn,
             };
 
-        } else if ((input & 0xFF000000) == 0x54000000) {
-            // Conditional
+        } else if ((input & 0xFF000000) == 0x54000000) { // Conditional
             int simm19 = (input & 0x00FFFFE0) >> 5;  // sign-extend after
             int cond   = (input & 0x0000000F);
+
+            // Sign-extend
+            if (simm19 & (1 << 18)) {
+                simm19 |= ~((1 << 19) - 1);
+            }
 
             OpType op_type;
 
@@ -243,12 +247,13 @@ DecodeResult decode(uint32 input, Instruction* result) {
                 .data.cond_branch.simm19 = simm19,
             };
 
-        } else if ((input & 0xFC000000) == 0x14000000) {
-            // Unconditional
-            // int opcode = (input & 0xFC000000) >> 26;
+        } else if ((input & 0xFC000000) == 0x14000000) { // Unconditional
             int simm26 = (input & 0x03FFFFFF);
+            if (simm26 & (1 << 25)) { // Sign extend
+                simm26 |= ~((1 << 26) - 1);
+            }
 
-            OpType op_type = OP_TYPE_AL;// sign-extend after
+            OpType op_type = OP_TYPE_AL;
 
             instruction = (Instruction) {
                 .op_type = op_type,
