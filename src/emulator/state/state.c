@@ -42,7 +42,7 @@ State *init_state()
 
     // Clear PSTATE
     state->N = false;
-    state->Z = false;
+    state->Z = true;
     state->C = false;
     state->V = false;
 
@@ -178,19 +178,14 @@ void sprint_all_registers(State *state, char *out)
     for (int r = R0; r <= R30; r++)
     {
         uint64 val = read_reg_64(state, r);
-        sprintf(nextLine, "X%.2d = %lx\n", r, val);
+        sprintf(nextLine, "X%.2d = %016lx\n", r, val);
         strcat(out, nextLine);
     }
 
     // Special
-    sprintf(nextLine, "ZR = %lx\n", read_reg_64(state, ZR));
+    sprintf(nextLine, "PC = %016lx\n", read_reg_64(state, PC));
     strcat(out, nextLine);
 
-    sprintf(nextLine, "PC = %lx\n", read_reg_64(state, PC));
-    strcat(out, nextLine);
-
-    sprintf(nextLine, "SP = %lx\n", read_reg_64(state, SP));
-    strcat(out, nextLine);
 
     //PSTATE
     sprintf(nextLine, "PSTATE : %c", pstate_flag_to_char(N, state));
@@ -217,14 +212,14 @@ char *sprint_nonzero_memory(State *state)
     }
 
     char *out = malloc(30 + (25*nonzero_count));
-
+    out[0] = '\0';
     sprintf(new, "Non-zero memory:\n");
     strcat(out, new);
 
     for (int i = 0; i < nonzero_count; i++) {
         // 0x%08lx formats the 64-bit address has an 8-character zero-padded hex value
         // 0x%08x formats the 32-bit chunk of data as an 8-character zero-added hex value
-        sprintf(new, "0x%08lx: 0x%08x\n", memory_data[i].address, memory_data[i].value);
+        sprintf(new, "0x%08lx: %08x\n", memory_data[i].address, memory_data[i].value);
         strcat(out, new);
     }
     free(memory_data);

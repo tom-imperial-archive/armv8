@@ -30,7 +30,7 @@ int main(int argc, char **argv)
     // Main loop
     bool shouldHalt = false;
 
-    Instruction *i = malloc(sizeof(uint32));
+    Instruction *i = malloc(sizeof(Instruction));
 
     if (i == NULL) {
         printf("Not enough memory\n");
@@ -39,10 +39,10 @@ int main(int argc, char **argv)
 
     while (!shouldHalt)
     {
-        printf("Reading instruction from memory\n");
-        printf("PC: %lx\n", read_reg_64(state, PC));
+        //printf("Reading instruction from memory\n");
+        //printf("PC: %lx\n", read_reg_64(state, PC));
         uint32 instruction = read_mem_32(state, read_reg_64(state, PC));
-        printf("a\n");
+        //printf("a\n");
         //todo make this nicer
         DecodeResult r = decode(instruction, i);
 
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
     if (outputFile == NULL) {
         outputFile = "emulate.out";
     }
-    printf("saving to file %s", outputFile);
+    //printf("saving to file %s\n", outputFile);
     fwrite_all(state, outputFile);
     print_all(state);
 
