@@ -20,7 +20,7 @@ void check_mem_addr(Memory m, uint64 addr, long n)
     }
 }
 
-void write(Memory m, uint64 addr, char *data, long n)
+void write(Memory m, uint64 addr, uint8 *data, long n)
 {
     check_mem_addr(m, addr, n);
 
@@ -39,7 +39,7 @@ void write(Memory m, uint64 addr, char *data, long n)
     }
 }
 
-void read(Memory m, uint64 addr, char *data, long n)
+void read(Memory m, uint64 addr, uint8 *data, long n)
 {
     check_mem_addr(m, addr, n);
     // Copy n bytes from the emulated memory to the data buffer
@@ -53,12 +53,12 @@ NonZeroMemory* get_non_zero_memory(Memory m, int *out_size)
         return NULL;
     }
 
-    char **accessed_addresses = get_all_addresses(m->accessed);
+    uint8 **accessed_addresses = get_all_addresses(m->accessed);
     NonZeroMemory *results = malloc(m->accessed->size * sizeof(NonZeroMemory));
     int nonzero_count = 0;
 
     for (int i = 0; i < m->accessed->size; i++) {
-        char *physical_address = accessed_addresses[i];
+        uint8 *physical_address = accessed_addresses[i];
 
         // Read all 4 bytes at once
         uint32_t value = *(uint32_t *)physical_address;

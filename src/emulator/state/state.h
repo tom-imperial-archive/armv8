@@ -1,6 +1,12 @@
+#ifndef STATE_H_
+#define STATE_H_
+
+
+
 #include <stdbool.h>
 #include "common/util.h"
 #include "emulator/state/memory.h"
+
 /*
 This includes all registers including the special registers, excluding PSTATE which is handled separately.
 Instructions cannot modify PSTATE so we implement the fields separately.
@@ -51,8 +57,8 @@ Represents the fields of PSTATE
 */
 enum PSTATE_flag
 {
-    Z,
     N,
+    Z,
     C,
     V
 };
@@ -128,16 +134,18 @@ uint32 read_reg_32(State *state, Register reg);
 
 void offset_pc(State *state, uint64 offset);
 void inc_pc(State *state);
+void write_pc(State *state, uint64 value);
 
 void write_pstate_flag(State *state, PSTATE_flag pstate, bool val);
 bool read_pstate_flag(State *state, PSTATE_flag pstate);
 
 void sprint_all_registers(State *state, char *out);
-void sprint_nonzero_memory(State *state, char *out);
+char *sprint_nonzero_memory(State *state);
 
 void write_mem_64(State *state, uint64 addr, uint64 val);
 void write_mem_32(State *state, uint64 addr, uint32 val);
 
 uint64 read_mem_64(State *state, uint64 addr);
 
-uint32 read_mem_32(State *state, uint32 addr);
+uint32 read_mem_32(State *state, uint64 addr);
+#endif

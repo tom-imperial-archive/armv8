@@ -18,8 +18,8 @@ void test_insertion() {
     AddressSet *set = create_set(10);
 
     // Dummy data
-    char var_a = 'A';
-    char var_b = 'B';
+    uint8 var_a = 'A';
+    uint8 var_b = 'B';
     insert_address(set, &var_a);
     assert(set->size == 1);
 
@@ -35,15 +35,15 @@ void test_get_all_addresses() {
     AddressSet *set = create_set(10);
 
     // Dummy data
-    char var_a = 'A';
-    char var_b = 'B';
-    char var_c = 'C';
+    uint8 var_a = 'A';
+    uint8 var_b = 'B';
+    uint8 var_c = 'C';
 
     insert_address(set, &var_a);
     insert_address(set, &var_b);
     insert_address(set, &var_c);
 
-    char **results = get_all_addresses(set);
+    uint8 **results = get_all_addresses(set);
 
     assert(results != NULL);
 

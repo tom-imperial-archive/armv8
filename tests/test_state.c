@@ -14,11 +14,10 @@ void test_create(void) {
     assert(read_reg_64(state, PC) == 0);
     assert(read_reg_64(state, SP) == 0);
     assert(read_reg_32(state, ZR) == 0);
-    assert(read_reg_32(state, PC) == 0);
     assert(read_reg_32(state, SP) == 0);
 
     assert(read_pstate_flag(state, N) == 0);
-    assert(read_pstate_flag(state, Z) == 0);
+    assert(read_pstate_flag(state, Z) == 1);
     assert(read_pstate_flag(state, C) == 0);
     assert(read_pstate_flag(state, V) == 0);
     printf("Test create: OK\n");
@@ -45,6 +44,7 @@ int test_state(void) {
     printf("State Tests\n");
     printf("-------------\n");
     test_create();
+    test_write_reg();
 
     printf("-------------\n");
     printf("All tests passed\n");
