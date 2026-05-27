@@ -13,8 +13,8 @@ DecodeResult decode(uint32 input, Instruction* result) {
         };
     } else if ((input & 0x1C000000) == 0x10000000) { // Data Processing Instruction (Immediate)
         bool sf  = (input & 0x80000000) == 0x80000000;
-        int opc = (input & 0x60000000) >> 28;
-        int opi = (input & 0x03800000) >> 22;
+        int opc = (input & 0x60000000) >> 29;
+        int opi = (input & 0x03800000) >> 23;
         int operand = input & 0x007FFFF0;
         int rd = input & 0x0000000F;
 
