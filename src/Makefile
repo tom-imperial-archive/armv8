@@ -16,10 +16,10 @@ assemble: assemble.o
 emulate: emulate.o common/hashset.o emulator/state/state.o emulator/state/memory.o emulator/decode/filehandlers.o emulator/decode.o emulator/decode/execute.o emulator/output.o
 
 test:
-	$(CC) $(CFLAGS) ../tests/tests.c ../tests/test_hashset.c ../tests/test_load_literal.c ../tests/test_single_data_transfer.c emulator/decode/execute.c  ../tests/test_execute.c ../tests/test_state.c emulator/state/state.c emulator/state/memory.c common/hashset.c -o test_runner
+	$(CC) $(CFLAGS) ../tests/tests.c ../tests/test_hashset.c ../tests/test_load_literal.c ../tests/test_single_data_transfer.c emulator/decode/execute.c  ../tests/test_state.c emulator/state/state.c emulator/state/memory.c common/hashset.c -o test_runner
 	./test_runner
 test_execute:
-	$(CC) $(CFLAGS) ../tests/test_execute.c ../tests/test_dpii.c ../tests/test_dpir.c ../tests/test_branch.c emulator/state/state.c emulator/decode/execute.c emulator/state/memory.c common/hashset.c -o test_execute_runner
+	$(CC) $(CFLAGS) ../tests/test_execute.c ../tests/test_dpii.c ../tests/test_dpir.c ../tests/test_branch.c ../tests/test_single_data_transfer.c ../tests/test_load_literal.c emulator/state/state.c emulator/decode/execute.c emulator/state/memory.c common/hashset.c -o test_execute_runner
 	./test_execute_runner
 clean:
 	$(RM) *.o assemble emulate test_runner test_execute_runner

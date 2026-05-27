@@ -44,6 +44,7 @@ int test_state(void) {
     printf("State Tests\n");
     printf("-------------\n");
     test_create();
+    test_write_reg();
 
     printf("-------------\n");
     printf("All tests passed\n");
