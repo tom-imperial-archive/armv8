@@ -1,5 +1,5 @@
-#include "common/util.h"
-#include "common/hashset.h"
+#include "utils/types.h"
+#include "utils/hashset.h"
 
 typedef struct {
     uint8* data;

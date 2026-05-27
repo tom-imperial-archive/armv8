@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include "common/hashset.h"
+#include "utils/hashset.h"
 
 void test_creation() {
     AddressSet *set = create_set(1024);
@@ -66,7 +66,7 @@ void test_get_all_addresses() {
     printf("Test get all addresses: OK\n");
 }
 
-int test_hashset(void) {
+int main(void) {
     printf("Hashset Tests\n");
     printf("-------------\n");
     test_creation();

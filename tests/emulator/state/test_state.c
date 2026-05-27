@@ -40,12 +40,11 @@ void test_write_reg(void) {
     printf("Test write (32 and 64 bit): OK\n");
 }
 
-int test_state(void) {
+int main(void) {
     printf("State Tests\n");
     printf("-------------\n");
     test_create();
     test_write_reg();
-
     printf("-------------\n");
     printf("All tests passed\n");
     return 0;

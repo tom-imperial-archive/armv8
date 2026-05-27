@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stdbool.h>
-#include "emulator/decode.h"
+#include "emulator/decode/decode.h"
 
 void test_decode_halt(void) {
     Instruction inst;
@@ -171,7 +171,7 @@ void test_decode_negative_simm(void) {
     assert(inst.data.load_literal.simm19 == -12);
 }
 
-void test_decode(void) {
+int main(void) {
     printf("Decode Tests\n");
     printf("------------\n");
 
@@ -201,4 +201,6 @@ void test_decode(void) {
 
     printf("------------\n");
     printf("All decode tests passed!\n");
+
+    return 0;
 }

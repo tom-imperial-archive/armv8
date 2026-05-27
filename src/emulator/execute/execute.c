@@ -1,9 +1,9 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "common/util.h"
+#include "utils/types.h"
 #include "emulator/state/state.h"
-#include "emulator/decode.h"
+#include "emulator/decode/decode.h"
 #include <stdio.h>
 
 uint64 shift_value(uint64 val, ShiftType type, int amount, bool sf) {

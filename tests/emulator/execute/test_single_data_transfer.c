@@ -1,7 +1,7 @@
 #include "test_single_data_transfer.h"
 
-#include "emulator/decode.h"
-#include "emulator/decode/execute.h"
+#include "emulator/decode/decode.h"
+#include "emulator/execute/execute.h"
 
 #include <assert.h>
 #include <stdbool.h>

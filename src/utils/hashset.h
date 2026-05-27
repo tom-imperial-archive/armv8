@@ -1,6 +1,6 @@
 #ifndef HASHSET_H
 #define HASHSET_H
-#include "common/util.h"
+#include "utils/types.h"
 
 typedef struct {
     uint8 **entries;

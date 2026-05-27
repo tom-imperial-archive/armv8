@@ -1,7 +1,7 @@
 #include "test_execute.h"
 #include <stdio.h>
-#include "common/util.h"
-#include "emulator/decode/execute.h"
+#include "utils/types.h"
+#include "emulator/execute/execute.h"
 #include "test_dpii.h"
 #include "test_dpir.h"
 #include "test_branch.h"

@@ -2,10 +2,10 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "emulator/decode/filehandlers.h"
-#include "emulator/decode/execute.h"
+#include "emulator/io/filehandlers.h"
+#include "emulator/execute/execute.h"
 #include <string.h>
-#include "emulator/output.h"
+#include "emulator/io/output.h"
 
 int main(int argc, char **argv)
 {

@@ -4,7 +4,7 @@
 
 
 #include <stdbool.h>
-#include "common/util.h"
+#include "utils/types.h"
 #include "emulator/state/memory.h"
 
 /*

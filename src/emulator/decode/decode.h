@@ -1,10 +1,8 @@
 #ifndef PARSE_H_
-
 #define PARSE_H_
 
-#include "common/util.h"
 #include <stdbool.h>
-#include "common/util.h"
+#include "utils/types.h"
 
 typedef enum DecodeResult {
     DECODE_SUCCESS,
