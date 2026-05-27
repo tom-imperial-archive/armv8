@@ -89,8 +89,8 @@ void test_conditional_branch_not_taken() {
 
     execute_instruction(&state, i.op_type, &i);
 
-    // Verify PC did NOT change because the condition failed
-    assert(state.PC == 0x1000);
+    // Verify PC did NOT change because the condition failed, only incremented
+    assert(state.PC == 0x1000 + 0x4);
     printf("test_conditional_branch_not_taken: OK\n");
 }
 
