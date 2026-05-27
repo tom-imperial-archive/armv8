@@ -62,9 +62,11 @@ all: bin/emulate bin/assemble
 
 bin/emulate: $(EMULATE_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
+emulate: bin/emulate
 
 bin/assemble: $(ASSEMBLE_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
+assemble: bin/assemble
 
 # Compiles any missing .o file, and places next to its .c counterpart
 %.o: %.c
