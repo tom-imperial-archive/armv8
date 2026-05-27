@@ -112,6 +112,11 @@ void inc_pc(State *state)
     state->PC += 4;
 }
 
+void write_pc(State *state, uint64 value)
+{
+    state->PC = value;
+}
+
 bool *get_pstate_flag(State *state, PSTATE_flag pstate)
 {
     switch(pstate) {

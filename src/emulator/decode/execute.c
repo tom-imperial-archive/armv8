@@ -467,8 +467,8 @@ bool execute_instruction(State *state, OpType op, Instruction *i)
 
             if (condition_met) {
                 int64 offset = (int64)i->data.cond_branch.simm19 * 4;
-                //todo refactor PC offsets
-                state->PC += offset;
+
+                offset_pc(state, offset);
             } else {
                 inc_pc(state);
             }
@@ -477,14 +477,14 @@ bool execute_instruction(State *state, OpType op, Instruction *i)
         // Unconditional branch
         case OP_TYPE_AL: {
             int64 offset = (int64)i->data.uncond_branch.simm26 * 4;
-            state->PC += offset;
+            offset_pc(state, offset);
             break;
         }
 
 
         // Register branch
         case OP_TYPE_BR:
-            state->PC = read_reg_64(state, i->data.reg_branch.xn);
+            write_pc(state, read_reg_64(state, i->data.reg_branch.xn));
             break;
 
 
