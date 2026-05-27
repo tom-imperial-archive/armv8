@@ -134,6 +134,7 @@ uint32 read_reg_32(State *state, Register reg);
 
 void offset_pc(State *state, uint64 offset);
 void inc_pc(State *state);
+void write_pc(State *state, uint64 value);
 
 void write_pstate_flag(State *state, PSTATE_flag pstate, bool val);
 bool read_pstate_flag(State *state, PSTATE_flag pstate);
