@@ -3,7 +3,7 @@
 #include <string.h>
 #include <assert.h>
 #include "emulator/state/state.h"
-#include "emulator/decode/filehandlers.h"
+#include "emulator/io/filehandlers.h"
 #define REG_OUT_PRINT_BUFFER 1024
 
 void fwrite_all(State *state, const char *path) {

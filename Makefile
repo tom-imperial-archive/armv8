@@ -21,7 +21,7 @@ ASSEMBLE_SRCS = \
 
 # Objects are source files with extensions changed
 EMULATE_OBJS = $(EMULATE_SRCS:.c=.o)
-ASSEMBLE_OBJS = $(assemble:.c=.o)
+ASSEMBLE_OBJS = $(ASSEMBLE_SRCS:.c=.o)
 
 .PHONY: all clean test test_execute
 

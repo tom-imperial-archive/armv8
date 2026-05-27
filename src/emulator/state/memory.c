@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "common/util.h"
-#include "common/hashset.h"
+#include "utils/types.h"
+#include "utils/hashset.h"
 #define MEM_SIZE (2 << 20)
 
 /*
