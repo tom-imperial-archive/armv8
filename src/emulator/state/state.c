@@ -60,7 +60,7 @@ void check_register(Register reg)
 void check_writeable_register(Register reg)
 {
     check_register(reg);
-    if (reg == ZR || reg == PC)
+    if (reg == PC)
     {
         error(STATE_WRITE_NOT_ALLOWED);
     }
@@ -69,8 +69,10 @@ void check_writeable_register(Register reg)
 void write_reg_64(State *state, Register reg, uint64 val)
 {
     check_writeable_register(reg);
-    uint64 *rp = get_register(state, reg);
-    *rp = val;
+    if (reg != ZR) {
+        uint64 *rp = get_register(state, reg);
+        *rp = val;
+    }
 }
 
 void write_reg_32(State *state, Register reg, uint32 val)
