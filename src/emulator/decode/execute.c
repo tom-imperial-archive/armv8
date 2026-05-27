@@ -467,7 +467,10 @@ bool execute_instruction(State *state, OpType op, Instruction *i)
 
             if (condition_met) {
                 int64 offset = (int64)i->data.cond_branch.simm19 * 4;
+                //todo refactor PC offsets
                 state->PC += offset;
+            } else {
+                inc_pc(state);
             }
             break;
 
