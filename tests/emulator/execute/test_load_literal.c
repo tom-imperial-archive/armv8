@@ -1,7 +1,7 @@
 #include "test_load_literal.h"
 
-#include "emulator/decode.h"
-#include "emulator/decode/execute.h"
+#include "emulator/decode/decode.h"
+#include "emulator/execute/execute.h"
 
 #include <assert.h>
 

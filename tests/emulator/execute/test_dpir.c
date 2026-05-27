@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include "emulator/state/state.h"
-#include "emulator/decode.h"
+#include "emulator/decode/decode.h"
 
 // Forward declaration of the main execution dispatcher
 bool execute_instruction(State *state, OpType op, Instruction *i);
