@@ -112,7 +112,15 @@ void inc_pc(State *state)
 
 bool *get_pstate_flag(State *state, PSTATE_flag pstate)
 {
-    return &(state->N) + pstate;
+    switch(pstate) {
+        case N: return &state->N;
+        case Z: return &state->Z;
+        case C: return &state->C;
+        case V: return &state->V;
+    }
+
+    error(STATE_FLAG_NOT_EXISTS);
+    return NULL;
 }
 
 void check_valid_flag(State *state, PSTATE_flag pstate) {
@@ -174,6 +182,9 @@ void sprint_all_registers(State *state, char *out)
     // Assume 25 chars per line. 38 lines so 950 chars of space required
     char nextLine[PRINT_LINE_LENGTH];
 
+    sprintf(nextLine, "Registers:\n");
+    strcat(out, nextLine);
+
     // General purpose
     for (int r = R0; r <= R30; r++)
     {
@@ -194,7 +205,7 @@ void sprint_all_registers(State *state, char *out)
     strcat(out, nextLine);
     sprintf(nextLine, "%c", pstate_flag_to_char(C, state));
     strcat(out, nextLine);
-    sprintf(nextLine, "%c\n", pstate_flag_to_char(V, state));
+    sprintf(nextLine, "%c", pstate_flag_to_char(V, state));
     strcat(out, nextLine);
 }
 

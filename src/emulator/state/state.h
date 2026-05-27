@@ -57,8 +57,8 @@ Represents the fields of PSTATE
 */
 enum PSTATE_flag
 {
-    Z,
     N,
+    Z,
     C,
     V
 };

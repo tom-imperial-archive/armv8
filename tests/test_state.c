@@ -17,7 +17,7 @@ void test_create(void) {
     assert(read_reg_32(state, SP) == 0);
 
     assert(read_pstate_flag(state, N) == 0);
-    assert(read_pstate_flag(state, Z) == 0);
+    assert(read_pstate_flag(state, Z) == 1);
     assert(read_pstate_flag(state, C) == 0);
     assert(read_pstate_flag(state, V) == 0);
     printf("Test create: OK\n");
