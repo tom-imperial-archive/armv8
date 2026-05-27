@@ -1,26 +1,82 @@
 CC      ?= gcc
 CFLAGS  ?= -std=c17 -g\
 	-D_POSIX_SOURCE -D_DEFAULT_SOURCE\
-	-Wall -Werror -pedantic -I.
+	-Wall -Werror -pedantic -Isrc
 
-.SUFFIXES: .c .o
+$(shell mkdir -p bin)
+
+# Source files
+EMULATE_SRCS = \
+	src/emulate/emulate.c \
+	src/utils/hashset.c \
+	src/emulator/state/state.c \
+	src/emulator/state/memory.c \
+	src/emulator/execute/execute.c \
+	src/emulator/decode/decode.c \
+	src/emulator/io/filehandlers.c \
+	src/emulator/io/output.c
+
+ASSEMBLE_SRCS = \
+	src/assemble/assemble.c
+
+# Objects are source files with extensions changed
+EMULATE_OBJS = $(EMULATE_SRCS:.c=.o)
+ASSEMBLE_OBJS = $(assemble:.c=.o)
 
 .PHONY: all clean test test_execute
 
-all: assemble emulate
+all: bin/emulate bin/assemble
 
-$(objects): %.o: %.c
-	$(CC) -c $^ -o $@
+# $^ refers to all .o files, $@ means the target name
+bin/emulate: $(EMULATE_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@
 
-assemble: assemble.o
-emulate: emulate.o common/hashset.o emulator/state/state.o emulator/state/memory.o emulator/decode/filehandlers.o emulator/decode.o emulator/decode/execute.o emulator/output.o
+bin/assemble: $(ASSEMBLE_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@
 
+# Ensure .o files are placed next to their .c counterparts
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+
+# Testing logic
 test:
-	$(CC) $(CFLAGS) ../tests/tests.c ../tests/test_hashset.c ../tests/test_load_literal.c ../tests/test_single_data_transfer.c emulator/decode/execute.c  ../tests/test_dpir.c ../tests/test_dpii.c ../tests/test_branch.c ../tests/test_state.c emulator/state/state.c emulator/state/memory.c common/hashset.c emulator/decode.c ../tests/test_decode.c -o test_runner
-	./test_runner
+	$(CC) $(CFLAGS) \
+		tests/tests.c \
+		tests/utils/test_hashset.c \
+		tests/emulator/execute/test_load_literal.c \
+		tests/emulator/execute/test_single_data_transfer.c \
+		tests/emulator/execute/test_dpir.c \
+		tests/emulator/execute/test_dpii.c \
+		tests/emulator/execute/test_branch.c \
+		tests/emulator/state/test_state.c \
+		tests/emulator/decode/test_decode.c \
+		src/emulator/decode/execute.c \
+		src/emulator/state/state.c \
+		src/emulator/state/memory.c \
+		src/utils/hashset.c \
+		src/emulator/decode/decode.c \
+		-o bin/test_runner
+	./bin/test_runner
+
 test_execute:
-	$(CC) $(CFLAGS) ../tests/test_execute.c ../tests/test_dpii.c ../tests/test_dpir.c ../tests/test_branch.c emulator/state/state.c emulator/decode/execute.c emulator/state/memory.c common/hashset.c emulator/decode.c ../tests/test_load_literal.c ../tests/test_single_data_transfer.c -o test_execute_runner
-	./test_execute_runner
+	$(CC) $(CFLAGS) \
+		tests/emulator/execute/test_execute.c \
+		tests/emulator/execute/test_dpii.c \
+		tests/emulator/execute/test_dpir.c \
+		tests/emulator/execute/test_branch.c \
+		tests/emulator/execute/test_load_literal.c \
+		tests/emulator/execute/test_single_data_transfer.c \
+		src/emulator/state/state.c \
+		src/emulator/decode/execute.c \
+		src/emulator/state/memory.c \
+		src/utils/hashset.c \
+		src/emulator/decode/decode.c \
+		-o bin/test_execute_runner
+	./bin/test_execute_runner
+
+# Clean
 clean:
-	$(RM) *.o assemble emulate test_runner test_execute_runner
+	-$(RM) -r bin/*
+	-$(RM) $(EMULATE_OBJS) $(ASSEMBLE_OBJS)
 
