@@ -48,6 +48,8 @@ int main(int argc, char **argv)
         case DECODE_SUCCESS:
         {
             shouldHalt = execute_instruction(state, i->op_type, i);
+            // DEBUGGG
+            // print_all(state);
         };
         break;
         case DECODE_UNDEFINED_OPCODE:

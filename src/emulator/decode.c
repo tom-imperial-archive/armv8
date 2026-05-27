@@ -16,7 +16,7 @@ DecodeResult decode(uint32 input, Instruction* result) {
         int opc = (input & 0x60000000) >> 29;
         int opi = (input & 0x03800000) >> 23;
         int operand = input & 0x007FFFF0;
-        int rd = input & 0x0000000F;
+        int rd = input & 0x0000001F;
 
         if (opi == 0x2) { // Immediate Arithmetic
             OpType op_type;
