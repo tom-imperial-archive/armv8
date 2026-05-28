@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "utils/types.h"
+#include "utils/bitmasks.h"
 #include "emulator/state/state.h"
 #include "emulator/decode/decode.h"
 #include <stdio.h>
@@ -24,7 +25,7 @@ uint64 shift_value(uint64 val, ShiftType type, int amount, bool sf) {
         case SHIFT_ROR:
             // Use bitwise OR and normal shifts to simulate a rotate
             if (sf) val = (val >> amount) | (val << (64 - amount));
-            else val = (val >> amount) | ((val & 0xFFFFFFFF) << (32 - amount));
+            else val = (val >> amount) | ((val & BITMASK_LOWER_32_BITS) << (32 - amount));
             break;
     }
     // Zero-extension neccessary here, since shifts can overwrite top half.
@@ -264,7 +265,7 @@ void execute_wide_move(State *state, Instruction *i) {
             result = ~shifted_imm;
             break;
         case OP_TYPE_MOVK: {
-            uint64 keep_mask = ~(0xFFFFULL << shift);
+            uint64 keep_mask = ~(BITMASK_LOWER_16_BITS << shift);
             uint64 existing_value = sf ? read_reg_64(state, rd) : (uint64)read_reg_32(state, rd);
             result = (existing_value & keep_mask) | shifted_imm;
             break;
@@ -283,29 +284,19 @@ void execute_wide_move(State *state, Instruction *i) {
 
 }
 
-const int MASK_SIMM9 = 0x1FF;
-const int OFFSET_SIMM9 = 2;
-const int EXPECTED_REGISTER_OFFSET = 0x81A;
-const int MASK_REGISTER_OFFSET = 0x83F;
-const int EXPECTED_PRE_POST_INDEXED = 0x001;
-const int MASK_PRE_POST_INDEXED = 0x801;
-const int MASK_I = 0x01;
-const int OFFSET_I = 1;
-
 // Used in `execute_single_data_transfer` to calculate the source address in the load/store.
 uint64 find_address(State* state, SingleDataTransfer data_transfer) {
     if (data_transfer.U) {
         // Unsigned offset
-        uint64 imm12 = data_transfer.offset & 0xFFF;
+        uint64 imm12 = data_transfer.offset & BITMASK_LOWER_12_BITS;
         uint64 uoffset = data_transfer.sf ? imm12 * 8 : imm12 * 4;
         return read_reg_64(state, data_transfer.xn) + uoffset;
     }
 
     if ((data_transfer.offset & MASK_REGISTER_OFFSET) == EXPECTED_REGISTER_OFFSET) {
         // Register offset
-        const int MASK_M = 0x1F;
         const int OFFSET_M = 6;
-        int m = (data_transfer.offset >> OFFSET_M) & MASK_M;
+        int m = (data_transfer.offset >> OFFSET_M) & BITMASK_LOWER_5_BITS;
         uint64 xm = read_reg_64(state, m);
         uint64 xn = read_reg_64(state, data_transfer.xn);
         return xn + xm;
@@ -496,8 +487,6 @@ bool execute_instruction(State *state, OpType op, Instruction *i)
     if (!(op == OP_TYPE_EQ || op == OP_TYPE_NE || op == OP_TYPE_GE || op == OP_TYPE_LT || op == OP_TYPE_GT || op == OP_TYPE_LE || op == OP_TYPE_AL || op == OP_TYPE_BR)) {
         inc_pc(state);
     }
-
-
 
     return false;
 }
