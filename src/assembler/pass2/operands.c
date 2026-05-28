@@ -12,7 +12,7 @@ We will require (at least): register parsing, immediate value parsing, memory of
 // Parses a register string e.g. "x0" or "w12"
 // Returns the register number, and sets the boolean pointer depending on the register size
 int parse_register(char *token, bool *is_64_bit) {
-    char size = token[0];
+    char size = *token;
 
     switch (size) {
         case 'x':
@@ -34,8 +34,37 @@ int parse_register(char *token, bool *is_64_bit) {
 }
 
 // Parses an immediate value string in decimal or hex e.g. #5, #0x1A, or #-12
-long parse_immediate(char *token);
+long parse_immediate(char *token) {
+
+    if (*token == '#') {
+        token++;
+    } else {
+        perror("Invalid immediate format");
+        exit(EXIT_FAILURE);
+    }
+
+    bool neg = false;
+
+    if (*token == '-') {
+        neg = true;
+        token++;
+    }
+
+    long val;
+    if (token[0] == '0' && (token[1] == 'x' || token[1] == 'X')) {
+        // hex
+        val = strtol(token, NULL, 16);
+    } else {
+        // decimal
+        val = strtol(token, NULL, 10);
+    }
+
+    return neg ? -val : val;
+
+}
 
 // Calculates the branch offset for branch instructions
 // Returns the offset in terms of number of instructions
-int calculate_offset(uint64 current_address, uint64 target_address);
+int calculate_offset(uint64 current_address, uint64 target_address) {
+    return (int)((target_address-current_address) / 4);
+}
