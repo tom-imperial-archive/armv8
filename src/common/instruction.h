@@ -1,3 +1,6 @@
+#ifndef INSTRUCTION_H
+#define INSTRUCTION_H
+
 #include <stdbool.h>
 #include "utils/types.h"
 
@@ -142,3 +145,5 @@ typedef struct Instruction {
         LoadLiteral load_literal;
     } data;
 } Instruction;
+
+#endif
