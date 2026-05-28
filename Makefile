@@ -56,7 +56,8 @@ TEST_ENCODE_SRCS = \
 
 TEST_PASS1_SRCS = \
 	tests/assembler/pass1/test_scanner.c \
-	src/assembler/pass1/scanner.c
+	src/assembler/pass1/scanner.c \
+	src/assembler/symbol_table/symbol_table.c
 
 TEST_PARSER_SRCS = \
     tests/assembler/pass2/test_parser.c \
