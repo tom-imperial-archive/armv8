@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include "assembler/pass2/operands.h"
+#include "common/instruction.h"
 
 void test_parse_register_64_bit(void) {
     bool is_64_bit;
@@ -123,6 +124,15 @@ void test_calculate_offset_nonzero_base(void) {
     printf("Test calculate offset nonzero base: OK\n");
 }
 
+void test_parse_shift(void) {
+    assert(parse_shift("lsl") == SHIFT_LSL);
+    assert(parse_shift("lsr") == SHIFT_LSR);
+    assert(parse_shift("asr") == SHIFT_ASR);
+    assert(parse_shift("ror") == SHIFT_ROR);
+
+    printf("Test parse shift: OK\n");
+}
+
 int main(void) {
     printf("Operand Parsing Tests\n");
     printf("---------------------\n");
@@ -138,6 +148,8 @@ int main(void) {
     test_calculate_offset_forward();
     test_calculate_offset_backward();
     test_calculate_offset_nonzero_base();
+
+    test_parse_shift();
 
     printf("---------------------\n");
     printf("All Operand tests passed successfully\n");

@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include "utils/types.h"
+#include "common/instruction.h"
 
 // Parses a register string e.g. "x0" or "w12"
 // Returns the register number, and sets the boolean pointer depending on the register size
@@ -14,5 +15,8 @@ long parse_immediate(char *token);
 // Calculates the branch offset for branch instructions
 // Returns the offset in terms of number of instructions
 int calculate_offset(uint64 current_address, uint64 target_address);
+
+// Parses a shift type string and returns the enum
+ShiftType parse_shift(char *token);
 
 #endif
