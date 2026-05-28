@@ -148,13 +148,14 @@ void parse_logical(char *operands, Instruction *i, OpType opcode) {
     int rm = parse_register(rm_str, &sf_rm);
 
     if (sf_rd != sf_rn || sf_rd != sf_rm) {
-        printf("Error: register size mismatch between Rd, Rn, and Rm\n");
+        printf("Error: register size mismatch in logical operation\n");
         exit(EXIT_FAILURE);
     }
 
     build_logical(i, opcode, rd, rn, rm, sf_rd, saveptr);
 }
 
+// Intermediate parser logical aliases - mvn and mov
 void parse_move(char *operands, Instruction *i, OpType opcode) {
     char *saveptr;
     char *rd_str = strtok_r(operands, " ,", &saveptr);
@@ -172,6 +173,54 @@ void parse_move(char *operands, Instruction *i, OpType opcode) {
     build_logical(i, opcode, rd, ZERO_REG, rm, sf_rd, saveptr);
 }
 
+void build_multiply(Instruction *i, OpType opcode, int rd, int rn, int rm, int ra, bool sf) {
+    i->op_type = opcode;
+    i->data.multiply.rd = rd;
+    i->data.multiply.rn = rn;
+    i->data.multiply.rm = rm;
+    i->data.multiply.ra = ra;
+    i->data.multiply.sf = sf;
+}
+
+void parse_multiply(char *operands, Instruction *i, OpType opcode) {
+    char *saveptr;
+    char *rd_str = strtok_r(operands, " ,", &saveptr);
+    char *rn_str = strtok_r(NULL, " ,", &saveptr);
+    char *rm_str = strtok_r(NULL, " ,", &saveptr);
+    char *ra_str = strtok_r(NULL, " ,", &saveptr);
+
+    bool sf_rd, sf_rn, sf_rm, sf_ra;
+    int rd = parse_register(rd_str, &sf_rd);
+    int rn = parse_register(rn_str, &sf_rn);
+    int rm = parse_register(rm_str, &sf_rm);
+    int ra = parse_register(ra_str, &sf_ra);
+
+    if (sf_rd != sf_rn || sf_rd != sf_rm || sf_rd != sf_ra) {
+        printf("Error: register size mismatch in multiply instruction\n");
+        exit(EXIT_FAILURE);
+    }
+
+    build_multiply(i, opcode, rd, rn, rm, ra, sf_rd);
+}
+
+void parse_multiply_alias(char *operands, Instruction *i, OpType opcode) {
+    char *saveptr;
+    char *rd_str = strtok_r(operands, " ,", &saveptr);
+    char *rn_str = strtok_r(NULL, " ,", &saveptr);
+    char *rm_str = strtok_r(NULL, " ,", &saveptr);
+
+    bool sf_rd, sf_rn, sf_rm;
+    int rd = parse_register(rd_str, &sf_rd);
+    int rn = parse_register(rn_str, &sf_rn);
+    int rm = parse_register(rm_str, &sf_rm);
+
+    if (sf_rd != sf_rn || sf_rd != sf_rm) {
+        printf("Error: register size mismatch in multiply instruction\n");
+        exit(EXIT_FAILURE);
+    }
+
+    build_multiply(i, opcode, rd, rn, rm, ZERO_REG, sf_rd);
+}
 
 void parse_add(char *operands, Instruction *i, SymbolTable *table) {
     parse_arithmetic(operands, i, OP_TYPE_ADD, OP_TYPE_REG_ADD);
@@ -263,6 +312,22 @@ void parse_mov(char *operands, Instruction *i, SymbolTable *table) {
     parse_move(operands, i, OP_TYPE_ORR);
 }
 
+void parse_madd(char *operands, Instruction *i, SymbolTable *table) {
+    parse_multiply(operands, i, OP_TYPE_MADD);
+}
+
+void parse_msub(char *operands, Instruction *i, SymbolTable *table) {
+    parse_multiply(operands, i, OP_TYPE_MSUB);
+}
+
+void parse_mul(char *operands, Instruction *i, SymbolTable *table) {
+    parse_multiply_alias(operands, i, OP_TYPE_MADD);
+}
+
+void parse_mneg(char *operands, Instruction *i, SymbolTable *table) {
+    parse_multiply_alias(operands, i, OP_TYPE_MSUB);
+}
+
 MnemonicMap router[] = {
     {"add", parse_add},
     {"adds", parse_adds},
@@ -283,6 +348,10 @@ MnemonicMap router[] = {
     {"tst", parse_tst},
     {"mvn", parse_mvn},
     {"mov", parse_mov},
+    {"madd", parse_madd},
+    {"msub", parse_msub},
+    {"mul", parse_mul},
+    {"mneg", parse_mneg},
 };
 
 // Takes a single line of assembly

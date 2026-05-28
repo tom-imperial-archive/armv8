@@ -292,6 +292,76 @@ void test_parse_mov_register(void) {
     printf("Test parse mov register: OK\n");
 }
 
+void test_parse_madd_standard(void) {
+    Instruction i;
+    char line[] = "madd x0, x1, x2, x3";
+
+    bool routed = parse_line(line, &i, NULL);
+
+    assert(routed == true);
+    assert(i.op_type == OP_TYPE_MADD);
+    assert(i.data.multiply.rd == 0);
+    assert(i.data.multiply.rn == 1);
+    assert(i.data.multiply.rm == 2);
+    assert(i.data.multiply.ra == 3);
+    assert(i.data.multiply.sf == true);
+
+    printf("Test parse madd standard: OK\n");
+}
+
+void test_parse_msub_standard(void) {
+    Instruction i;
+    char line[] = "msub w4, w5, w6, w7";
+
+    bool routed = parse_line(line, &i, NULL);
+
+    assert(routed == true);
+    assert(i.op_type == OP_TYPE_MSUB);
+    assert(i.data.multiply.rd == 4);
+    assert(i.data.multiply.rn == 5);
+    assert(i.data.multiply.rm == 6);
+    assert(i.data.multiply.ra == 7);
+    assert(i.data.multiply.sf == false);
+
+    printf("Test parse msub standard: OK\n");
+}
+
+void test_parse_mul_alias(void) {
+    Instruction i;
+
+    char line[] = "mul x8, x9, x10";
+
+    bool routed = parse_line(line, &i, NULL);
+
+    assert(routed == true);
+    assert(i.op_type == OP_TYPE_MADD);
+    assert(i.data.multiply.rd == 8);
+    assert(i.data.multiply.rn == 9);
+    assert(i.data.multiply.rm == 10);
+    assert(i.data.multiply.ra == 31);
+    assert(i.data.multiply.sf == true);
+
+    printf("Test parse mul alias: OK\n");
+}
+
+void test_parse_mneg_alias(void) {
+    Instruction i;
+
+    char line[] = "mneg w11, w12, w13";
+
+    bool routed = parse_line(line, &i, NULL);
+
+    assert(routed == true);
+    assert(i.op_type == OP_TYPE_MSUB);
+    assert(i.data.multiply.rd == 11);
+    assert(i.data.multiply.rn == 12);
+    assert(i.data.multiply.rm == 13);
+    assert(i.data.multiply.ra == 31);
+    assert(i.data.multiply.sf == false);
+
+    printf("Test parse mneg alias: OK\n");
+}
+
 int main(void) {
     printf("Assembler Arithmetic Parsing Tests\n");
     printf("----------------------------------\n");
@@ -316,6 +386,11 @@ int main(void) {
     test_parse_tst_register();
     test_parse_mvn_register_shifted();
     test_parse_mov_register();
+
+    test_parse_madd_standard();
+    test_parse_msub_standard();
+    test_parse_mul_alias();
+    test_parse_mneg_alias();
 
     printf("----------------------------------\n");
     printf("All Parser tests passed successfully\n");
