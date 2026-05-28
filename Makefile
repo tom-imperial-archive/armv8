@@ -45,6 +45,26 @@ TEST_EXECUTE_SRCS = \
 	src/emulator/state/memory.c \
 	src/utils/hashset.c
 
+TEST_ENCODE_SRCS = \
+	tests/assembler/encode/test_encode.c \
+	src/assembler/encode/encode.c
+
+TEST_PASS1_SRCS = \
+	tests/assembler/pass1/test_scanner.c \
+	src/assembler/pass1/scanner.c
+
+TEST_PARSER_SRCS = \
+    tests/assembler/pass2/test_parser.c \
+    src/assembler/pass2/parser.c \
+    src/assembler/pass2/operands.c
+
+TEST_OPERANDS_SRCS = \
+    tests/assembler/pass2/test_operands.c \
+    src/assembler/pass2/operands.c
+
+TEST_SYMBOL_TABLE_SRCS = \
+	tests/assembler/symbol_table/test_symbol_table.c \
+	src/assembler/symbol_table/symbol_table.c
 
 # OBJECT FILES (source files with extensions changed)
 EMULATE_OBJS = $(EMULATE_SRCS:.c=.o)
@@ -53,6 +73,12 @@ TEST_UTILS_OBJS = $(TEST_UTILS_SRCS:.c=.o)
 TEST_STATE_OBJS = $(TEST_STATE_SRCS:.c=.o)
 TEST_DECODE_OBJS = $(TEST_DECODE_SRCS:.c=.o)
 TEST_EXECUTE_OBJS = $(TEST_EXECUTE_SRCS:.c=.o)
+TEST_ENCODE_OBJS = $(TEST_ENCODE_SRCS:.c=.o)
+TEST_PASS1_OBJS = $(TEST_PASS1_SRCS:.c=.o)
+TEST_PARSER_OBJS = $(TEST_PARSER_SRCS:.c=.o)
+TEST_OPERANDS_OBJS = $(TEST_OPERANDS_SRCS:.c=.o)
+TEST_SYMBOL_TABLE_OBJS = $(TEST_SYMBOL_TABLE_SRCS:.c=.o)
+
 
 
 # BUILD TARGETS AND RULES
@@ -85,6 +111,21 @@ bin/test_decode: $(TEST_DECODE_OBJS)
 bin/test_execute: $(TEST_EXECUTE_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
 
+bin/test_encode: $(TEST_ENCODE_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@
+
+bin/test_pass1: $(TEST_PASS1_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@
+
+bin/test_parser: $(TEST_PARSER_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@
+
+bin/test_operands: $(TEST_OPERANDS_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@
+
+bin/test_symbol_table: $(TEST_SYMBOL_TABLE_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@
+
 # TEST TARGETS
 test-utils: bin/test_utils
 	./bin/test_utils
@@ -98,13 +139,32 @@ test-decode: bin/test_decode
 test-execute: bin/test_execute
 	./bin/test_execute
 
+test-encode: bin/test_encode
+	./bin/test_encode
+
+test-pass1: bin/test_pass1
+	./bin/test_pass1
+
+test-parser: bin/test_parser
+	./bin/test_parser
+
+test-operands: bin/test_operands
+	./bin/test_operands
+
+test-symbol-table: bin/test_symbol_table
+	./bin/test_symbol_table
+
 # COMBINED TESTS
 test-emulator: test-state test-decode test-execute
-test-all: test-utils test-emulator
+
+test-pass2: test-parser test-operands
+test-assembler: test-encode test-pass1 test-pass2 test-symbol-table
+
+test-all: test-utils test-emulator test-assembler
 
 # CLEAN
 clean:
 	-$(RM) -r bin/*
 	-$(RM) $(EMULATE_OBJS) $(ASSEMBLE_OBJS)
-	-$(RM) $(TEST_UTILS_OBJS) $(TEST_STATE_OBJS) $(TEST_DECODE_OBJS) $(TEST_EXECUTE_OBJS)
+	-$(RM) $(TEST_UTILS_OBJS) $(TEST_STATE_OBJS) $(TEST_DECODE_OBJS) $(TEST_EXECUTE_OBJS) $(TEST_ENCODE_OBJS) $(TEST_PASS1_OBJS) $(TEST_PARSER_OBJS) $(TEST_OPERANDS_OBJS) $(TEST_SYMBOL_TABLE_OBJS)
 
