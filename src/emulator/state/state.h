@@ -1,11 +1,10 @@
 #ifndef STATE_H_
 #define STATE_H_
-
-
-
 #include <stdbool.h>
 #include "utils/types.h"
 #include "emulator/state/memory.h"
+#define REG_PRINT_LINE_LENGTH 24
+#define REG_PRINT_BUFFER_SIZE (33 * REG_PRINT_LINE_LENGTH)
 
 /*
 This includes all registers including the special registers, excluding PSTATE which is handled separately.
@@ -64,6 +63,10 @@ enum PSTATE_flag
 };
 typedef enum PSTATE_flag PSTATE_flag;
 
+/*
+    Represents the registers of an ARMv8 machine and contains a reference to the memory of the machine.
+    Do not construct directly; use init_state() instead.
+*/
 struct State
 {
     uint64 R0;
@@ -117,15 +120,6 @@ Frees the memory attached to state
 */
 void destroy_state(State *state);
 
-/*
-For all the following functions, it is the responsibility of the CALLER to ensure that they call the correct 64-bit or 32-bit function.
-Only unsigned int types are used in C, which represent the raw bits in the register, even if the actual number saved is stored in 2s-complement.
-If the register stores signed data, this conversion must be done elsewhere.
-*/
-
-/*
-PC and ZR cannot be modified by write functions.
-*/
 void write_reg_64(State *state, Register reg, uint64 val);
 void write_reg_32(State *state, Register reg, uint32 val);
 
@@ -136,8 +130,8 @@ void offset_pc(State *state, uint64 offset);
 void inc_pc(State *state);
 void write_pc(State *state, uint64 value);
 
-void write_pstate_flag(State *state, PSTATE_flag pstate, bool val);
-bool read_pstate_flag(State *state, PSTATE_flag pstate);
+void write_pstate_flag(State *state, PSTATE_flag flag, bool val);
+bool read_pstate_flag(State *state, PSTATE_flag flag);
 
 void sprint_all_registers(State *state, char *out);
 char *sprint_nonzero_memory(State *state);

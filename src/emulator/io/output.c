@@ -4,10 +4,9 @@
 #include <assert.h>
 #include "emulator/state/state.h"
 #include "emulator/io/filehandlers.h"
-#define REG_OUT_PRINT_BUFFER 1024
 
 void fwrite_all(State *state, const char *path) {
-    char registers_out[REG_OUT_PRINT_BUFFER] = {0};
+    char registers_out[REG_PRINT_BUFFER_SIZE] = {0};
     char *nonzero_out = sprint_nonzero_memory(state);
 
     sprint_all_registers(state, registers_out);
@@ -18,7 +17,7 @@ void fwrite_all(State *state, const char *path) {
 }
 
 void print_all(State *state) {
-    char registers_out[REG_OUT_PRINT_BUFFER] = {0};
+    char registers_out[REG_PRINT_BUFFER_SIZE] = {0};
     char *nonzero_out = sprint_nonzero_memory(state);
 
     sprint_all_registers(state, registers_out);
