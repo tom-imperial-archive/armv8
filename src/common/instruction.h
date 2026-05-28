@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 #include <stdbool.h>
 #include "utils/types.h"
-=======
-#include <stdint.h>
-#include <stdbool.h>
->>>>>>> 59d9715 ([Tom Stapely] refac(decode): moved all structs that were used in decoding into src/common, since these will be reused by the assembler)
 
 typedef enum OpType {
     // Halt
