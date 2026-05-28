@@ -1,0 +1,10 @@
+.label1:
+    .int x
+    .dir2 y
+    fdsuahfu
+label2:
+    int y
+    d w2ru rw
+    _label$:
+.int z sdqsfhu3 123498
+    idfjsfioju wefjiwje efqweiei12 X232
