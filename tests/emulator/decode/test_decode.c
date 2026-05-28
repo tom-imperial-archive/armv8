@@ -138,7 +138,7 @@ void test_decode_branch(void) {
     // simm26=0x12345
     res = decode(0x14012345, &inst);
     assert(res == DECODE_SUCCESS);
-    assert(inst.op_type == OP_TYPE_AL); // Note: decode.c currently maps this to OP_TYPE_AL
+    assert(inst.op_type == OP_TYPE_UNCONDITIONAL_BRANCH);
     assert(inst.data.uncond_branch.simm26 == 0x12345);
 }
 
@@ -151,7 +151,7 @@ void test_decode_negative_simm(void) {
     // Instruction: 0x14000000 | 0x03FFFFFC = 0x17FFFFFC
     res = decode(0x17FFFFFC, &inst);
     assert(res == DECODE_SUCCESS);
-    assert(inst.op_type == OP_TYPE_AL);
+    assert(inst.op_type == OP_TYPE_UNCONDITIONAL_BRANCH);
     assert(inst.data.uncond_branch.simm26 == -4); // Now asserts true negative!
 
     // Test 2: B.cond (Conditional Branch)
