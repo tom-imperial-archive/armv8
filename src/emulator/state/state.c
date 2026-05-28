@@ -2,8 +2,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#define PRINT_LINE_LENGTH 25
+#include <assert.h>
 #define MASK_LOWER_32BITS (uint32) 0xFFFFFFFFUL
+#define INSTRUCTION_LENGTH 4
 
 typedef enum {STATE_REG_NOT_EXISTS, STATE_WRITE_NOT_ALLOWED, STATE_READ_32_FROM_PC, STATE_FLAG_NOT_EXISTS} StateError;
 
@@ -20,15 +21,19 @@ void error(StateError error) {
 }
 
 
-uint64 *get_register(State *state, Register reg)
+static uint64 *get_register(State *state, Register reg)
 {
     return (uint64 *)state + reg;
 }
 
-void clear_reg(State *state, Register reg) {
+static void clear_reg(State *state, Register reg) {
     *get_register(state, reg) = 0;
 }
 
+/*
+    Creates a State representing the cleared, initial state of an ARMv8 machine.
+    Returns the pointer to this state.
+*/
 State *init_state()
 {
     State *state = malloc(sizeof(State));
@@ -40,7 +45,7 @@ State *init_state()
         clear_reg(state, r);
     }
 
-    // Clear PSTATE
+    // Set default values of PSTATE
     state->N = false;
     state->Z = true;
     state->C = false;
@@ -49,7 +54,7 @@ State *init_state()
     return state;
 }
 
-void check_register(Register reg)
+static void check_register(Register reg)
 {
     if ((reg < R0) || (reg > SP))
     {
@@ -57,7 +62,7 @@ void check_register(Register reg)
     }
 }
 
-void check_writeable_register(Register reg)
+static void check_writeable_register(Register reg)
 {
     check_register(reg);
     if (reg == PC)
@@ -66,6 +71,10 @@ void check_writeable_register(Register reg)
     }
 }
 
+/*
+    Sets the contents of the 64-bit register reg to val
+    Writes to ZR are ignored. Writes directly to the PC throw an error: use an appropriate PC modification function.
+*/
 void write_reg_64(State *state, Register reg, uint64 val)
 {
     check_writeable_register(reg);
@@ -75,17 +84,27 @@ void write_reg_64(State *state, Register reg, uint64 val)
     }
 }
 
+/*
+    Sets the lower 32-bits of the register reg to val. Clears the upper 32-bits.
+    Writes to WZR are ignored. Writes directly to the PC throw an error: use an appropriate PC modification function.
+*/
 void write_reg_32(State *state, Register reg, uint32 val)
 {
     write_reg_64(state, reg, (uint64)val);
 }
 
+/*
+    Returns the contents of the 64-bit register reg
+*/
 uint64 read_reg_64(State *state, Register reg)
 {
     check_register(reg);
     return *get_register(state, reg);
 }
 
+/*
+    Returns the lower 32-bits of the register reg
+*/
 uint32 read_reg_32(State *state, Register reg)
 {
     if (reg == PC)
@@ -96,73 +115,98 @@ uint32 read_reg_32(State *state, Register reg)
     return read_reg_64(state, reg) & MASK_LOWER_32BITS;
 }
 
+/*
+    Frees all memory associated with the state
+*/
 void destroy_state(State *state)
 {
     destroy_mem(state->m);
     free(state);
 }
 
+/*
+    Adds the value of offset to the PC. To subtract offset from the PC, use the 2's complement of offset
+*/
 void offset_pc(State *state, uint64 offset)
 {
     state->PC += offset;
 }
 
+/*
+    Sets the PC to value
+*/
 void inc_pc(State *state)
 {
-    state->PC += 4;
+    state->PC += INSTRUCTION_LENGTH;
 }
 
+/*
+    Sets the PC to value
+*/
 void write_pc(State *state, uint64 value)
 {
     state->PC = value;
 }
 
-bool *get_pstate_flag(State *state, PSTATE_flag pstate)
+static void check_valid_flag(State *state, PSTATE_flag flag) {
+    assert(flag >= 0 && flag <= V);
+}
+
+static bool *get_pstate_flag(State *state, PSTATE_flag flag)
 {
-    switch(pstate) {
+    check_valid_flag(state, flag);
+    switch(flag) {
         case N: return &state->N;
         case Z: return &state->Z;
         case C: return &state->C;
-        case V: return &state->V;
-    }
-
-    error(STATE_FLAG_NOT_EXISTS);
-    return NULL;
-}
-
-void check_valid_flag(State *state, PSTATE_flag pstate) {
-    if (pstate < 0 || pstate > V)
-    {
-        error(STATE_FLAG_NOT_EXISTS);
+        default: return &state->V;
     }
 }
 
+/*
+    Sets the flag flag in the PSTATE register to val
+*/
 void write_pstate_flag(State *state, PSTATE_flag flag, bool val)
 {
     check_valid_flag(state, flag);
     *get_pstate_flag(state, flag) = val;
 }
 
+/*
+    Reads the flag flag from the PSTATE register
+*/
 bool read_pstate_flag(State *state, PSTATE_flag flag)
 {
     check_valid_flag(state, flag);
     return *get_pstate_flag(state, flag);
 }
 
+/*
+    Writes the 32-bit integer val to memory at address addr
+*/
 void write_mem_64(State *state, uint64 addr, uint64 val) {
     write(state->m, addr, (uint8 *)&val, sizeof(uint64));
 }
 
+/*
+    Writes the 32-bit integer val to memory at address addr
+*/
 void write_mem_32(State *state, uint64 addr, uint32 val) {
     write(state->m, addr, (uint8 *)&val, sizeof(uint32));
 }
 
+/*
+    Returns the unsigned 64-bit integer representing the data at memory address addr
+*/
 uint64 read_mem_64(State *state, uint64 addr) {
     uint64 val = 0;
     read(state->m, addr, (uint8 *)&val, sizeof(uint64));
     return val;
 }
 
+/*
+    Returns the unsigned 32-bit integer representing the data at memory address addr
+*/
 uint32 read_mem_32(State *state, uint64 addr) {
     uint64 val = 0;
     read(state->m, addr, (uint8 *)&val, sizeof(uint32));
@@ -184,10 +228,13 @@ char pstate_flag_to_char(PSTATE_flag flag, State *state) {
     return '-';
 }
 
+/*
+    Sprints the content of all registers to the string buffer out.
+    Precondition: Size of the out buffer >= PRINT_LINE_LENGTH * 33
+*/
 void sprint_all_registers(State *state, char *out)
 {
-    // Assume 25 chars per line. 38 lines so 950 chars of space required
-    char nextLine[PRINT_LINE_LENGTH];
+    char nextLine[REG_PRINT_LINE_LENGTH];
 
     sprintf(nextLine, "Registers:\n");
     strcat(out, nextLine);
@@ -216,27 +263,25 @@ void sprint_all_registers(State *state, char *out)
     strcat(out, nextLine);
 }
 
+/*
+    Sprints the content of memory addresses where the value is non-zero.
+    Must call free() on the pointer returned when done using.
+*/
 char *sprint_nonzero_memory(State *state)
 {
-    // As before, 25 chars per line.
-    char new[25];
     int nonzero_count = 0;
 
     NonZeroMemory *memory_data = get_non_zero_memory(state->m, &nonzero_count);
 
+    char *out = malloc(30 + (25*nonzero_count));
+    sprintf(out, "Non-zero memory:\n");
 
     if (memory_data == NULL) {
-        return "";
+        return out;
     }
 
-    char *out = malloc(30 + (25*nonzero_count));
-    out[0] = '\0';
-    sprintf(new, "Non-zero memory:\n");
-    strcat(out, new);
-
+    char new[REG_PRINT_LINE_LENGTH];
     for (int i = 0; i < nonzero_count; i++) {
-        // 0x%08lx formats the 64-bit address has an 8-character zero-padded hex value
-        // 0x%08x formats the 32-bit chunk of data as an 8-character zero-added hex value
         sprintf(new, "0x%08lx: %08x\n", memory_data[i].address, memory_data[i].value);
         strcat(out, new);
     }
