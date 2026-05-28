@@ -17,7 +17,12 @@ EMULATE_SRCS = \
 	src/emulator/io/output.c
 
 ASSEMBLE_SRCS = \
-	src/assemble/assemble.c
+	src/assemble/assemble.c \
+	src/assembler/encode/encode.c \
+	src/assembler/pass1/scanner.c \
+	src/assembler/pass2/parser.c \
+	src/assembler/pass2/operands.c \
+	src/assembler/symbol_table/symbol_table.c
 
 TEST_UTILS_SRCS = \
 	tests/utils/test_hashset.c \
