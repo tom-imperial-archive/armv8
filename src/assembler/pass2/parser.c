@@ -6,6 +6,8 @@
 #include "common/instruction.h"
 #include "assembler/symbol_table/symbol_table.h"
 
+#define ZERO_REG 31 // TODO - MAYBE FACTOR OUT
+
 /*
 THIS IS PASS 2 OF THE TWO PASS APPROACH
 
@@ -23,27 +25,27 @@ typedef struct {
     ParseFunc func;
 } MnemonicMap;
 
-void parse_arithmetic(char *operands, Instruction *i, OpType immediate_opcode, OpType register_opcode) {
-    char *saveptr;
-    char *rd_str = strtok_r(operands, " ,", &saveptr);
-    char *rn_str = strtok_r(NULL, " ,", &saveptr);
-    char *op2_str = strtok_r(NULL, " ,", &saveptr);
-
-    bool sf_rd, sf_rn;
-    int rd = parse_register(rd_str, &sf_rd);
-    int rn = parse_register(rn_str, &sf_rn);
-
-    if (sf_rd != sf_rn) {
-        printf("Error: register size mismatch between Rd and Rn\n");
-        exit(EXIT_FAILURE);
+void apply_register_shift(Instruction *i, char *saveptr) {
+    char *shift_type = strtok_r(NULL, " ,\t\n", &saveptr);
+    if (shift_type == NULL) {
+        // Default behaviour - has no effect
+        i->data.register_arithmetic_logic.shift = SHIFT_LSL;
+        i->data.register_arithmetic_logic.operand = 0;
+    } else {
+        i->data.register_arithmetic_logic.shift = parse_shift(shift_type);
+        char *shift_amount_str = strtok_r(NULL, " ,\t\n", &saveptr);
+        i->data.register_arithmetic_logic.operand = parse_immediate(shift_amount_str);
     }
+}
 
+void build_arithmetic(Instruction *i, OpType immediate_opcode, OpType register_opcode,
+                      int rd, int rn, bool sf, char *op2_str, char *saveptr) {
     if (op2_str[0] == '#') {
         // Immediate
         i->op_type = immediate_opcode;
         i->data.immediate_arithmetic.rd = rd;
         i->data.immediate_arithmetic.rn = rn;
-        i->data.immediate_arithmetic.sf = sf_rd;
+        i->data.immediate_arithmetic.sf = sf;
         i->data.immediate_arithmetic.imm12 = parse_immediate(op2_str);
 
         // Check for shift
@@ -68,25 +70,91 @@ void parse_arithmetic(char *operands, Instruction *i, OpType immediate_opcode, O
         i->op_type = register_opcode;
         i->data.register_arithmetic_logic.rd = rd;
         i->data.register_arithmetic_logic.rn = rn;
-        i->data.register_arithmetic_logic.sf = sf_rd;
+        i->data.register_arithmetic_logic.sf = sf;
 
         bool sf_rm;
         i->data.register_arithmetic_logic.rm = parse_register(op2_str, &sf_rm);
 
         // Check for shift
-        char *shift_type = strtok_r(NULL, " ,\t\n", &saveptr);
-        if (shift_type == NULL) {
-            // Default behaviour - has no effect
-            i->data.register_arithmetic_logic.shift = SHIFT_LSL;
-            i->data.register_arithmetic_logic.operand = 0;
-        } else {
-            i->data.register_arithmetic_logic.shift = parse_shift(shift_type);
-            char *shift_amount_str = strtok_r(NULL, " ,\t\n", &saveptr);
-            i->data.register_arithmetic_logic.operand = parse_immediate(shift_amount_str);
-        }
+        apply_register_shift(i, saveptr);
 
     }
 }
+
+void build_logical(Instruction *i, OpType opcode, int rd, int rn, int rm, bool sf, char *saveptr) {
+    i->op_type = opcode;
+    i->data.register_arithmetic_logic.rd = rd;
+    i->data.register_arithmetic_logic.rn = rn;
+    i->data.register_arithmetic_logic.rm = rm;
+    i->data.register_arithmetic_logic.sf = sf;
+
+    // Check for shift
+    apply_register_shift(i, saveptr);
+}
+
+// Intermediate parser for standard arithmetic instructions - add(s) and sub(s)
+void parse_arithmetic(char *operands, Instruction *i, OpType immediate_opcode, OpType register_opcode) {
+    char *saveptr;
+    char *rd_str = strtok_r(operands, " ,", &saveptr);
+    char *rn_str = strtok_r(NULL, " ,", &saveptr);
+    char *op2_str = strtok_r(NULL, " ,", &saveptr);
+
+    bool sf_rd, sf_rn;
+    int rd = parse_register(rd_str, &sf_rd);
+    int rn = parse_register(rn_str, &sf_rn);
+
+    if (sf_rd != sf_rn) {
+        printf("Error: register size mismatch between Rd and Rn\n");
+        exit(EXIT_FAILURE);
+    }
+
+    build_arithmetic(i, immediate_opcode, register_opcode, rd, rn, sf_rd, op2_str, saveptr);
+}
+
+// Intermediate parser for compare aliases - cmp and cmn
+void parse_compare(char *operands, Instruction *i, OpType immediate_opcode, OpType register_opcode) {
+    char *saveptr;
+    char *rn_str = strtok_r(operands, " ,", &saveptr);
+    char *op2_str = strtok_r(NULL, " ,", &saveptr);
+
+    bool sf_rn;
+    int rn = parse_register(rn_str, &sf_rn);
+
+    build_arithmetic(i, immediate_opcode, register_opcode, ZERO_REG, rn, sf_rn, op2_str, saveptr);
+}
+
+// Intermediate parser for negate aliases - neg(s)
+void parse_negate(char *operands, Instruction *i, OpType immediate_opcode, OpType register_opcode) {
+    char *saveptr;
+    char *rd_str = strtok_r(operands, " ,", &saveptr);
+    char *op2_str = strtok_r(NULL, " ,", &saveptr);
+
+    bool sf_rd;
+    int rd = parse_register(rd_str, &sf_rd);
+
+    build_arithmetic(i, immediate_opcode, register_opcode, rd, ZERO_REG, sf_rd, op2_str, saveptr);
+}
+
+// Intermediate parser for standard logical operations - and(s), bic(s), eor, orr, eon, and orn
+void parse_logical(char *operands, Instruction *i, OpType opcode) {
+    char *saveptr;
+    char *rd_str = strtok_r(operands, " ,", &saveptr);
+    char *rn_str = strtok_r(NULL, " ,", &saveptr);
+    char *rm_str = strtok_r(NULL, " ,", &saveptr);
+
+    bool sf_rd, sf_rn, sf_rm;
+    int rd = parse_register(rd_str, &sf_rd);
+    int rn = parse_register(rn_str, &sf_rn);
+    int rm = parse_register(rm_str, &sf_rm);
+
+    if (sf_rd != sf_rn || sf_rd != sf_rm) {
+        printf("Error: register size mismatch between Rd, Rn, and Rm\n");
+        exit(EXIT_FAILURE);
+    }
+
+    build_logical(i, opcode, rd, rn, rm, sf_rd, saveptr);
+}
+
 
 void parse_add(char *operands, Instruction *i, SymbolTable *table) {
     parse_arithmetic(operands, i, OP_TYPE_ADD, OP_TYPE_REG_ADD);
@@ -104,11 +172,71 @@ void parse_subs(char *operands, Instruction *i, SymbolTable *table) {
     parse_arithmetic(operands, i, OP_TYPE_SUBS, OP_TYPE_REG_SUBS);
 }
 
+void parse_cmp(char *operands, Instruction *i, SymbolTable *table) {
+    parse_compare(operands, i, OP_TYPE_SUBS, OP_TYPE_REG_SUBS);
+}
+
+void parse_cmn(char *operands, Instruction *i, SymbolTable *table) {
+    parse_compare(operands, i, OP_TYPE_ADDS, OP_TYPE_REG_ADDS);
+}
+
+void parse_neg(char *operands, Instruction *i, SymbolTable *table) {
+    parse_negate(operands, i, OP_TYPE_SUB, OP_TYPE_REG_SUB);
+}
+
+void parse_negs(char *operands, Instruction *i, SymbolTable *table) {
+    parse_negate(operands, i, OP_TYPE_SUBS, OP_TYPE_REG_SUBS);
+}
+
+void parse_and(char *operands, Instruction *i, SymbolTable *table) {
+    parse_logical(operands, i, OP_TYPE_AND);
+}
+
+void parse_ands(char *operands, Instruction *i, SymbolTable *table) {
+    parse_logical(operands, i, OP_TYPE_ANDS);
+}
+
+void parse_bic(char *operands, Instruction *i, SymbolTable *table) {
+    parse_logical(operands, i, OP_TYPE_BIC);
+}
+
+void parse_bics(char *operands, Instruction *i, SymbolTable *table) {
+    parse_logical(operands, i, OP_TYPE_BICS);
+}
+
+void parse_eor(char *operands, Instruction *i, SymbolTable *table) {
+    parse_logical(operands, i, OP_TYPE_EOR);
+}
+
+void parse_orr(char *operands, Instruction *i, SymbolTable *table) {
+    parse_logical(operands, i, OP_TYPE_ORR);
+}
+
+void parse_eon(char *operands, Instruction *i, SymbolTable *table) {
+    parse_logical(operands, i, OP_TYPE_EON);
+}
+
+void parse_orn(char *operands, Instruction *i, SymbolTable *table) {
+    parse_logical(operands, i, OP_TYPE_ORN);
+}
+
 MnemonicMap router[] = {
     {"add", parse_add},
     {"adds", parse_adds},
     {"sub", parse_sub},
     {"subs", parse_subs},
+    {"cmp", parse_cmp},
+    {"cmn", parse_cmn},
+    {"neg", parse_neg},
+    {"negs", parse_negs},
+    {"and", parse_and},
+    {"ands", parse_ands},
+    {"bic", parse_bic},
+    {"bics", parse_bics},
+    {"eor", parse_eor},
+    {"orr", parse_orr},
+    {"eon", parse_eon},
+    {"orn", parse_orn},
 };
 
 // Takes a single line of assembly
