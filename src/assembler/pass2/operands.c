@@ -13,8 +13,8 @@ We will require (at least): register parsing, immediate value parsing, memory of
 // Parses a register string e.g. "x0" or "w12"
 // Returns the register number, and sets the boolean pointer depending on the register size
 int parse_register(char *token, bool *is_64_bit) {
-    if (strcmp(token, "sp") == 0) {
-        *is_64_bit = true;
+    if (!strcmp(token, "sp") || !strcmp(token, "wsp")) {
+        *is_64_bit = (token[0] != 'w');
         return 31;
     }
 
