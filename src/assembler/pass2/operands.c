@@ -12,8 +12,12 @@ We will require (at least): register parsing, immediate value parsing, memory of
 // Parses a register string e.g. "x0" or "w12"
 // Returns the register number, and sets the boolean pointer depending on the register size
 int parse_register(char *token, bool *is_64_bit) {
-    char size = *token;
+    if (strcmp(token, "sp") == 0) {
+        *is_64_bit = true;
+        return 31;
+    }
 
+    char size = token[0];
     switch (size) {
         case 'x':
             *is_64_bit = true;
@@ -22,11 +26,11 @@ int parse_register(char *token, bool *is_64_bit) {
             *is_64_bit = false;
             break;
         default:
-            perror("Invalid register format");
+            printf("Error: Invalid register prefix '%c' in '%s'\n", size, token);
             exit(EXIT_FAILURE);
     }
 
-    if (strcmp(token+1, "zr") == 0) {
+    if (strcmp(token + 1, "zr") == 0) {
         return 31;
     }
 
@@ -35,32 +39,12 @@ int parse_register(char *token, bool *is_64_bit) {
 
 // Parses an immediate value string in decimal or hex e.g. #5, #0x1A, or #-12
 long parse_immediate(char *token) {
-
-    if (*token == '#') {
-        token++;
-    } else {
-        perror("Invalid immediate format");
+    if (token[0] != '#') {
+        fprintf(stderr, "Error: Invalid immediate format '%s' (missing '#')\n", token);
         exit(EXIT_FAILURE);
     }
 
-    bool neg = false;
-
-    if (*token == '-') {
-        neg = true;
-        token++;
-    }
-
-    long val;
-    if (token[0] == '0' && (token[1] == 'x' || token[1] == 'X')) {
-        // hex
-        val = strtol(token, NULL, 16);
-    } else {
-        // decimal
-        val = strtol(token, NULL, 10);
-    }
-
-    return neg ? -val : val;
-
+    return strtol(token + 1, NULL, 0);
 }
 
 // Calculates the branch offset for branch instructions
