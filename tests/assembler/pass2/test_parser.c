@@ -236,6 +236,62 @@ void test_parse_bics_register_standard(void) {
     printf("Test parse bics register standard: OK\n");
 }
 
+void test_parse_tst_register(void) {
+    Instruction i;
+    char line[] = "tst x1, x2";
+
+    bool routed = parse_line(line, &i, NULL);
+
+    assert(routed == true);
+    assert(i.op_type == OP_TYPE_ANDS);
+    assert(i.data.register_arithmetic_logic.rd == 31);
+    assert(i.data.register_arithmetic_logic.rn == 1);
+    assert(i.data.register_arithmetic_logic.rm == 2);
+    assert(i.data.register_arithmetic_logic.sf == true);
+    assert(i.data.register_arithmetic_logic.shift == SHIFT_LSL);
+    assert(i.data.register_arithmetic_logic.operand == 0);
+
+    printf("Test parse tst register: OK\n");
+}
+
+void test_parse_mvn_register_shifted(void) {
+    Instruction i;
+
+    char line[] = "mvn w3, w4, asr #2";
+
+    bool routed = parse_line(line, &i, NULL);
+
+    assert(routed == true);
+    assert(i.op_type == OP_TYPE_ORN);
+    assert(i.data.register_arithmetic_logic.rd == 3);
+    assert(i.data.register_arithmetic_logic.rn == 31);
+    assert(i.data.register_arithmetic_logic.rm == 4);
+    assert(i.data.register_arithmetic_logic.sf == false);
+    assert(i.data.register_arithmetic_logic.shift == SHIFT_ASR);
+    assert(i.data.register_arithmetic_logic.operand == 2);
+
+    printf("Test parse mvn register shifted: OK\n");
+}
+
+void test_parse_mov_register(void) {
+    Instruction i;
+
+    char line[] = "mov x5, x6";
+
+    bool routed = parse_line(line, &i, NULL);
+
+    assert(routed == true);
+    assert(i.op_type == OP_TYPE_ORR);
+    assert(i.data.register_arithmetic_logic.rd == 5);
+    assert(i.data.register_arithmetic_logic.rn == 31);
+    assert(i.data.register_arithmetic_logic.rm == 6);
+    assert(i.data.register_arithmetic_logic.sf == true);
+    assert(i.data.register_arithmetic_logic.shift == SHIFT_LSL);
+    assert(i.data.register_arithmetic_logic.operand == 0);
+
+    printf("Test parse mov register: OK\n");
+}
+
 int main(void) {
     printf("Assembler Arithmetic Parsing Tests\n");
     printf("----------------------------------\n");
@@ -256,6 +312,10 @@ int main(void) {
     test_parse_orr_register_shifted();
     test_parse_eor_register_shifted();
     test_parse_bics_register_standard();
+
+    test_parse_tst_register();
+    test_parse_mvn_register_shifted();
+    test_parse_mov_register();
 
     printf("----------------------------------\n");
     printf("All Parser tests passed successfully\n");

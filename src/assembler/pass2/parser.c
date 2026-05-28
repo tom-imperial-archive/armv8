@@ -155,6 +155,23 @@ void parse_logical(char *operands, Instruction *i, OpType opcode) {
     build_logical(i, opcode, rd, rn, rm, sf_rd, saveptr);
 }
 
+void parse_move(char *operands, Instruction *i, OpType opcode) {
+    char *saveptr;
+    char *rd_str = strtok_r(operands, " ,", &saveptr);
+    char *rm_str = strtok_r(NULL, " ,", &saveptr);
+
+    bool sf_rd, sf_rm;
+    int rd = parse_register(rd_str, &sf_rd);
+    int rm = parse_register(rm_str, &sf_rm);
+
+    if (sf_rd != sf_rm) {
+        printf("Error: register size mismatch between Rd and Rm\n");
+        exit(EXIT_FAILURE);
+    }
+
+    build_logical(i, opcode, rd, ZERO_REG, rm, sf_rd, saveptr);
+}
+
 
 void parse_add(char *operands, Instruction *i, SymbolTable *table) {
     parse_arithmetic(operands, i, OP_TYPE_ADD, OP_TYPE_REG_ADD);
@@ -220,6 +237,32 @@ void parse_orn(char *operands, Instruction *i, SymbolTable *table) {
     parse_logical(operands, i, OP_TYPE_ORN);
 }
 
+// Unique shape so no intermediate parser
+void parse_tst(char *operands, Instruction *i, SymbolTable *table) {
+    char *saveptr;
+    char *rn_str = strtok_r(operands, " ,", &saveptr);
+    char *rm_str = strtok_r(NULL, " ,", &saveptr);
+
+    bool sf_rn, sf_rm;
+    int rn = parse_register(rn_str, &sf_rn);
+    int rm = parse_register(rm_str, &sf_rm);
+
+    if (sf_rn != sf_rm) {
+        printf("Error: register size mismatch between Rn and Rm\n");
+        exit(EXIT_FAILURE);
+    }
+
+    build_logical(i, OP_TYPE_ANDS, ZERO_REG, rn, rm, sf_rn, saveptr);
+}
+
+void parse_mvn(char *operands, Instruction *i, SymbolTable *table) {
+    parse_move(operands, i, OP_TYPE_ORN);
+}
+
+void parse_mov(char *operands, Instruction *i, SymbolTable *table) {
+    parse_move(operands, i, OP_TYPE_ORR);
+}
+
 MnemonicMap router[] = {
     {"add", parse_add},
     {"adds", parse_adds},
@@ -237,6 +280,9 @@ MnemonicMap router[] = {
     {"orr", parse_orr},
     {"eon", parse_eon},
     {"orn", parse_orn},
+    {"tst", parse_tst},
+    {"mvn", parse_mvn},
+    {"mov", parse_mov},
 };
 
 // Takes a single line of assembly
