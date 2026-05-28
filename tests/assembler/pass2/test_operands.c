@@ -96,12 +96,35 @@ static void test_parse_imm(void) {
     TEST("neg zero #-0",     parse_immediate("#-0")   == 0);
 }
 
+static void test_calc_offset(void) {
+    // --- forward branches (positive offset) ---
+    TEST("same address gives 0",         calculate_offset(0x00, 0x00) == 0);
+    TEST("one instruction forward",      calculate_offset(0x00, 0x04) == 1);
+    TEST("two instructions forward",     calculate_offset(0x00, 0x08) == 2);
+    TEST("ten instructions forward",     calculate_offset(0x00, 0x28) == 10);
+    TEST("large forward offset",         calculate_offset(0x1000, 0x2000) == 0x400);
+
+    // --- backward branches (negative offset) ---
+    TEST("one instruction backward",     calculate_offset(0x04, 0x00) == -1);
+    TEST("two instructions backward",    calculate_offset(0x08, 0x00) == -2);
+    TEST("ten instructions backward",    calculate_offset(0x28, 0x00) == -10);
+    TEST("large backward offset",        calculate_offset(0x2000, 0x1000) == -0x400);
+
+    // --- non-zero base address ---
+    TEST("forward from mid-program",     calculate_offset(0x100, 0x110) == 4);
+    TEST("backward from mid-program",    calculate_offset(0x110, 0x100) == -4);
+    TEST("far forward from mid-program", calculate_offset(0x400, 0x800) == 0x100);
+}
+
 int main(void) {
     printf("=== parse_register ===\n");
     test_parse_reg();
 
     printf("\n=== parse_immediate ===\n");
     test_parse_imm();
+
+    printf("\n=== calculate_offset ===\n");
+    test_calc_offset();
 
     printf("\n%d/%d tests passed\n", tests_passed, tests_run);
     return (tests_passed == tests_run) ? 0 : 1;
