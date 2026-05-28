@@ -55,6 +55,7 @@ typedef enum OpType {
     OP_TYPE_LE,
     OP_TYPE_AL,
     OP_TYPE_BR,
+    OP_TYPE_UNCONDITIONAL_BRANCH,
 } OpType;
 
 // Data Processing Instruction (Immediate)

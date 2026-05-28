@@ -253,7 +253,7 @@ DecodeResult decode(uint32 input, Instruction* result) {
                 simm26 |= ~((1 << 26) - 1);
             }
 
-            OpType op_type = OP_TYPE_AL;
+            OpType op_type = OP_TYPE_UNCONDITIONAL_BRANCH;
 
             instruction = (Instruction) {
                 .op_type = op_type,
