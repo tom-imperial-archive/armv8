@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
-#define MASK_LOWER_32BITS (uint32) 0xFFFFFFFFUL
+#include "utils/bitmasks.h"
 #define INSTRUCTION_LENGTH 4
 
 typedef enum {STATE_REG_NOT_EXISTS, STATE_WRITE_NOT_ALLOWED, STATE_READ_32_FROM_PC, STATE_FLAG_NOT_EXISTS} StateError;
@@ -112,7 +112,7 @@ uint32 read_reg_32(State *state, Register reg)
         error(STATE_READ_32_FROM_PC);
     }
 
-    return read_reg_64(state, reg) & MASK_LOWER_32BITS;
+    return read_reg_64(state, reg) & BITMASK_LOWER_32_BITS;
 }
 
 /*
