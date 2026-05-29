@@ -69,6 +69,10 @@ bool is_register_branch(OpType op_type) {
     return op_type == OP_TYPE_BR;
 }
 
+bool is_directive_int(OpType op_type) {
+    return op_type == OP_TYPE_DIRECTIVE_INT;
+}
+
 const int MASK_OP0_DPII = 0x8; // 0b1000
 const int MASK_OP0_DPIR = 0x5; // 0b0101
 const int MASK_OP0_LOAD_STORE = 0xC; // 0b1100
@@ -524,6 +528,10 @@ uint32 encode_register_branch(Instruction* i) {
     return instruction;
 }
 
+uint32 encode_directive_int(Instruction* i) {
+    return (uint32)i->data.directive_int.value;
+}
+
 // Takes a fully populated instruction struct and packs it into a 32 bit binary instruction
 // This is the exact opposite of what we did in decode
 uint32 encode_instruction(Instruction* i) {
@@ -547,6 +555,8 @@ uint32 encode_instruction(Instruction* i) {
         return encode_unconditional_branch(i);
     } else if (is_register_branch(i->op_type)) {
         return encode_register_branch(i);
+    } else if (is_directive_int(i->op_type)) {
+        return encode_directive_int(i);
     } else {
         // ERROR: Unrecognized instruction type
         assert(false);

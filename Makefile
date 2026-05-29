@@ -62,7 +62,8 @@ TEST_PASS1_SRCS = \
 TEST_PARSER_SRCS = \
     tests/assembler/pass2/test_parser.c \
     src/assembler/pass2/parser.c \
-    src/assembler/pass2/operands.c
+    src/assembler/pass2/operands.c \
+	src/assembler/symbol_table/symbol_table.c
 
 TEST_OPERANDS_SRCS = \
     tests/assembler/pass2/test_operands.c \

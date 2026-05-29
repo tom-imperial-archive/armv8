@@ -499,6 +499,15 @@ void test_encode_negative_load_literal(void) {
     assert(encode_instruction(&i) == 0x58FFFFA0);
 }
 
+void test_encode_directive_int(void) {
+    Instruction i = {
+        .op_type = OP_TYPE_DIRECTIVE_INT,
+        .data.directive_int.value = 0x12345678,
+    };
+
+    assert(encode_instruction(&i) == 0x12345678);
+}
+
 int main(void) {
     printf("Encode Tests\n");
     printf("-------------\n");
@@ -555,10 +564,13 @@ int main(void) {
     test_encode_uncond_branch();
     test_encode_reg_branch();
 
-    // Negative SIMM tests
+    // Negative SIMM
     test_encode_negative_uncond_branch();
     test_encode_negative_cond_branch();
     test_encode_negative_load_literal();
+
+    // Directive int
+    test_encode_directive_int();
 
     printf("All tests passed\n");
 

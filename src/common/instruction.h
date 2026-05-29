@@ -56,6 +56,9 @@ typedef enum OpType {
     OP_TYPE_AL,
     OP_TYPE_BR,
     OP_TYPE_UNCONDITIONAL_BRANCH,
+
+    // Directive
+    OP_TYPE_DIRECTIVE_INT,
 } OpType;
 
 // Data Processing Instruction (Immediate)
@@ -140,6 +143,12 @@ typedef struct LoadLiteral {
     int rt;
 } LoadLiteral;
 
+// Directive
+typedef struct DirectiveInt {
+    int value;
+} DirectiveInt;
+
+// Main Instruction Struct
 typedef struct Instruction {
     OpType op_type;
     union InstructionData {
@@ -152,6 +161,7 @@ typedef struct Instruction {
         ConditionalBranchInstruction cond_branch;
         SingleDataTransfer single_data_transfer;
         LoadLiteral load_literal;
+        DirectiveInt directive_int;
     } data;
 } Instruction;
 
