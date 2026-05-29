@@ -94,19 +94,45 @@ void test_decode_sdt(void) {
     Instruction inst;
     DecodeResult res;
 
-    // LDR (Single Data Transfer - Unsigned Offset)
+    // 1. LDR (Single Data Transfer - Unsigned Offset)
     // sf=1, U=1, L=1(LDR), offset=0x12, xn=2, rt=3
     res = decode(0xF9404843, &inst);
     assert(res == DECODE_SUCCESS);
     assert(inst.op_type == OP_TYPE_SINGLE_DATA_TRANSFER);
     assert(inst.data.single_data_transfer.sf == true);
-    assert(inst.data.single_data_transfer.U == true);
     assert(inst.data.single_data_transfer.L == true);
+    assert(inst.data.single_data_transfer.mode == ADDR_UNSIGNED_OFFSET);
     assert(inst.data.single_data_transfer.offset == 0x12);
     assert(inst.data.single_data_transfer.xn == 2);
     assert(inst.data.single_data_transfer.rt == 3);
 
-    // Load Literal
+    // 2. STR (Single Data Transfer - Pre-Indexed)
+    // sf=1, U=0, L=0(STR), simm9=16, i=1 (Pre), xn=5, rt=3
+    // Instruction: 0xF8010CA3
+    res = decode(0xF8010CA3, &inst);
+    assert(res == DECODE_SUCCESS);
+    assert(inst.op_type == OP_TYPE_SINGLE_DATA_TRANSFER);
+    assert(inst.data.single_data_transfer.sf == true);
+    assert(inst.data.single_data_transfer.L == false);
+    assert(inst.data.single_data_transfer.mode == ADDR_PRE_INDEXED);
+    assert(inst.data.single_data_transfer.offset == 16);
+    assert(inst.data.single_data_transfer.xn == 5);
+    assert(inst.data.single_data_transfer.rt == 3);
+
+    // 3. LDR (Single Data Transfer - Register Offset)
+    // sf=1, U=0, L=1(LDR), bit21=1 (Register), xm=6, xn=5, rt=3
+    // Instruction: 0xF86668A3
+    res = decode(0xF86668A3, &inst);
+    assert(res == DECODE_SUCCESS);
+    assert(inst.op_type == OP_TYPE_SINGLE_DATA_TRANSFER);
+    assert(inst.data.single_data_transfer.sf == true);
+    assert(inst.data.single_data_transfer.L == true);
+    assert(inst.data.single_data_transfer.mode == ADDR_REGISTER_OFFSET);
+    assert(inst.data.single_data_transfer.xm == 6);
+    assert(inst.data.single_data_transfer.xn == 5);
+    assert(inst.data.single_data_transfer.rt == 3);
+
+    // 4. Load Literal
     // sf=1, simm19=0x1A, rt=4
     res = decode(0x58000344, &inst);
     assert(res == DECODE_SUCCESS);

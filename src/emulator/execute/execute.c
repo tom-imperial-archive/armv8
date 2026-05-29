@@ -286,34 +286,26 @@ void execute_wide_move(State *state, Instruction *i) {
 
 // Used in `execute_single_data_transfer` to calculate the source address in the load/store.
 uint64 find_address(State* state, SingleDataTransfer data_transfer) {
-    if (data_transfer.U) {
-        // Unsigned offset
-        uint64 imm12 = data_transfer.offset & BITMASK_LOWER_12_BITS;
-        uint64 uoffset = data_transfer.sf ? imm12 * 8 : imm12 * 4;
-        return read_reg_64(state, data_transfer.xn) + uoffset;
-    }
+    uint64 xn = read_reg_64(state, data_transfer.xn);
 
-    if ((data_transfer.offset & MASK_REGISTER_OFFSET) == EXPECTED_REGISTER_OFFSET) {
-        // Register offset
-        const int OFFSET_M = 6;
-        int m = (data_transfer.offset >> OFFSET_M) & BITMASK_LOWER_5_BITS;
-        uint64 xm = read_reg_64(state, m);
-        uint64 xn = read_reg_64(state, data_transfer.xn);
-        return xn + xm;
-    } else if ((data_transfer.offset & MASK_PRE_POST_INDEXED) == EXPECTED_PRE_POST_INDEXED) {
-        // Pre/Post Indexed
-        int simm9 = (data_transfer.offset >> OFFSET_SIMM9) & MASK_SIMM9;
-        if (simm9 & (1 << 8)) {  // Sign extend
-            simm9 |= ~MASK_SIMM9;
+    switch (data_transfer.mode) {
+        case ADDR_UNSIGNED_OFFSET: {
+            uint64 uoffset = data_transfer.sf ? (uint64)data_transfer.offset * 8 : (uint64)data_transfer.offset * 4;
+            return xn + uoffset;
         }
-        bool i = (data_transfer.offset >> OFFSET_I) & MASK_I;
-        uint64 xn = read_reg_64(state, data_transfer.xn);
-        uint64 address = i ? xn + simm9 : xn;
-        return address;
-    } else {
-        // ERROR: unrecognised addressing mode
-        printf("error: addressing mode not recognized.");
-        exit(EXIT_FAILURE);
+        case ADDR_REGISTER_OFFSET: {
+            uint64 xm = read_reg_64(state, data_transfer.xm);
+            return xn + xm;
+        }
+        case ADDR_PRE_INDEXED: {
+            return xn + data_transfer.offset;
+        }
+        case ADDR_POST_INDEXED: {
+            return xn;
+        }
+        default:
+            printf("Error: addressing mode not recognized.\n");
+            exit(EXIT_FAILURE);
     }
 }
 
@@ -342,13 +334,9 @@ void execute_single_data_transfer(State* state, Instruction* i) {
     }
 
     // Write-back for pre/post-indexed
-    if ((data_transfer.offset & MASK_PRE_POST_INDEXED) == EXPECTED_PRE_POST_INDEXED) {
+    if (data_transfer.mode == ADDR_PRE_INDEXED || data_transfer.mode == ADDR_POST_INDEXED) {
         uint64 old_xn = read_reg_64(state, data_transfer.xn);
-        int simm9 = (data_transfer.offset >> OFFSET_SIMM9) & MASK_SIMM9;
-        if (simm9 & (1 << 8)) { // Sign extend
-            simm9 |= ~MASK_SIMM9;
-        }
-        write_reg_64(state, data_transfer.xn, old_xn + simm9);
+        write_reg_64(state, data_transfer.xn, old_xn + data_transfer.offset);
     }
 }
 

@@ -170,9 +170,32 @@ DecodeResult decode(uint32 input, Instruction* result) {
             int sf     = (input & 0x40000000) >> 30;
             int U      = (input & 0x01000000) >> 24;
             int L      = (input & 0x00400000) >> 22;
-            int offset = (input & 0x003FFC00) >> 10;
             int xn     = (input & 0x000003E0) >> 5;
             int rt     = (input & 0x0000001F);
+
+            AddressingMode mode;
+            int final_offset = 0;
+            int xm = 0;
+
+            if (U == 1) {
+                mode = ADDR_UNSIGNED_OFFSET;
+                final_offset = (input & 0x003FFC00) >> 10; // Extract imm12
+            } else {
+                int bit21 = (input >> 21) & 1;
+                if (bit21 == 1) {
+                    mode = ADDR_REGISTER_OFFSET;
+                    xm = (input >> 16) & 0x1F; //Extract Rm (bits 16-20)
+                } else {
+                    int i_bit = (input >> 11) & 1;
+                    mode = i_bit ? ADDR_PRE_INDEXED : ADDR_POST_INDEXED;
+
+                    final_offset = (input >> 12) & 0x1FF; // Extract simm9;
+                    // Sign-extend 9-bit immediate
+                    if (final_offset & (1 << 8)) {
+                        final_offset |= ~((1<<9) - 1);
+                    }
+                }
+            }
 
             OpType op_type = OP_TYPE_SINGLE_DATA_TRANSFER;
 
@@ -180,9 +203,10 @@ DecodeResult decode(uint32 input, Instruction* result) {
                 .op_type = op_type,
                 .data.single_data_transfer = {
                     .sf     = sf,
-                    .U      = U,
                     .L      = L,
-                    .offset = offset,
+                    .mode = mode,
+                    .offset = final_offset,
+                    .xm = xm,
                     .xn     = xn,
                     .rt     = rt,
                 }
