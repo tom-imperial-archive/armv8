@@ -620,9 +620,17 @@ bool parse_line(char *line, Instruction *i, SymbolTable *table, uint64 current_p
     // Take the first word (the mnemonic or label)
     char *mnemonic = strtok_r(line, " \t\n", &saveptr);
 
-    if (mnemonic == NULL || mnemonic[strlen(mnemonic)-1] == ':') {
-        // Blank line or label, so ignore
+    if (mnemonic == NULL) {
         return false;
+    }
+
+    // If the first word is a label, there may be an instruction on the same line
+    if (mnemonic[strlen(mnemonic) - 1] == ':') {
+        // Inspect next word on line
+        mnemonic = strtok_r(NULL, " \t\n", &saveptr);
+        if (mnemonic == NULL) {
+            return false;
+        }
     }
 
     // Use the routing table to call the correct function
