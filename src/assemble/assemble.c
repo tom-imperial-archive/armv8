@@ -45,12 +45,17 @@ int main(int argc, char **argv)
     uint32 *res = malloc(output_size);
     //todo graceful error handling if over line length
     //todo no hard upper limit on lines
-    for (int i = 0; i < output_size / sizeof(uint32); i++){
-        fgets(buf, MAX_FILE_LINE_LENGTH, file_in);
+    int64 PC = 0;
+    int instr_index = 0;
+    while(fgets(buf, MAX_FILE_LINE_LENGTH, file_in) != NULL) {
         Instruction instr;
-        parse_line(buf, &instr, table);
-        *(res + i) = encode_instruction(&instr);
-        printf("Instruction %d: %08x\n", i, res[i]);
+        bool instruction = parse_line(buf, &instr, table, PC);
+        if (instruction) {
+            res[instr_index] = encode_instruction(&instr);
+            printf("Instruction %d: %08x\n", instr_index, res[instr_index]);
+            PC += 4;
+            instr_index++;
+        }
     }
     fclose(file_in);
 

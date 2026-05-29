@@ -8,6 +8,6 @@
 // Takes a single line of assembly
 // If it's an instruction, we populate the instruction struct and return true.
 // If the line is blank, a comment, or a label, we simply return false.
-bool parse_line(char *line, Instruction *i, SymbolTable *table);
+bool parse_line(char *line, Instruction *i, SymbolTable *table, int64 current_PC);
 
 #endif
