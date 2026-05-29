@@ -379,21 +379,43 @@ uint32 encode_single_data_transfer(Instruction* i) {
         instruction |= 1 << OFFSET_SF_LOAD_STORE;
     }
 
-    // U
-    const int OFFSET_U = 24;
-    if (data.U) {
-        instruction |= 1 << OFFSET_U;
-    }
-
     // L
     const int OFFSET_L = 22;
     if (data.L) {
         instruction |= 1 << OFFSET_L;
     }
 
-    // OFFSET
-    const int OFFSET_OFFSET = 10;
-    instruction |= data.offset << OFFSET_OFFSET;
+    // Mode-specific encoding
+    const int OFFSET_U = 24;
+
+    if (data.mode == ADDR_UNSIGNED_OFFSET) {
+        // U = 1
+        instruction |= 1 << OFFSET_U;
+        instruction |= (data.offset & 0xFFF) << 10;
+
+    } else if (data.mode == ADDR_REGISTER_OFFSET) {
+        // U = 0
+        // Bit 21 = 1 for register offset mode
+        instruction |= 1 << 21;
+        // Rm
+        instruction |= (data.xm & 0x1F) << 16;
+        // Option
+        instruction |= 0x1A << 10;
+
+    } else {
+        // ADDR_PRE_INDEXED or ADDR_POST_INDEXED
+        // U = 0, Bit 21 = 0
+
+        // simm9
+        instruction |= (data.offset & 0x1FF) << 12;
+
+        // i-bit
+        int i_bit = (data.mode == ADDR_PRE_INDEXED) ? 1 : 0;
+        instruction |= i_bit << 11;
+
+        // Bit 10 is always 1 for indexed modes
+        instruction |= 1 << 10;
+    }
 
     // XN
     instruction |= data.xn << OFFSET_XN;

@@ -322,12 +322,12 @@ void test_encode_msub(void) {
 }
 
 // SINGLE DATA TRANSFER
-void test_encode_sdt_load(void) {
+void test_encode_sdt_load_unsigned(void) {
     Instruction i = {
         .op_type = OP_TYPE_SINGLE_DATA_TRANSFER,
         .data.single_data_transfer = {
             .sf = 1,
-            .U = 1,
+            .mode = ADDR_UNSIGNED_OFFSET,
             .L = 1,
             .xn = 10,
             .rt = 11,
@@ -337,19 +337,50 @@ void test_encode_sdt_load(void) {
     assert(encode_instruction(&i) == 0xF940094B);
 }
 
-void test_encode_sdt_store(void) {
+void test_encode_sdt_store_unsigned(void) {
     Instruction i = {
         .op_type = OP_TYPE_SINGLE_DATA_TRANSFER,
         .data.single_data_transfer = {
             .sf = 0,
-            .U = 0,
+            .mode = ADDR_UNSIGNED_OFFSET,
             .L = 0,
             .xn = 12,
             .rt = 13,
             .offset = 4,
         }
     };
-    assert(encode_instruction(&i) == 0xB800118D);
+    // Expected updated to B9 (U bit = 1) from B8
+    assert(encode_instruction(&i) == 0xB900118D);
+}
+
+void test_encode_sdt_store_pre_indexed(void) {
+    Instruction i = {
+        .op_type = OP_TYPE_SINGLE_DATA_TRANSFER,
+        .data.single_data_transfer = {
+            .sf = 1,
+            .mode = ADDR_PRE_INDEXED,
+            .L = 0,
+            .xn = 5,
+            .rt = 3,
+            .offset = 16,
+        }
+    };
+    assert(encode_instruction(&i) == 0xF8010CA3);
+}
+
+void test_encode_sdt_load_register(void) {
+    Instruction i = {
+        .op_type = OP_TYPE_SINGLE_DATA_TRANSFER,
+        .data.single_data_transfer = {
+            .sf = 1,
+            .mode = ADDR_REGISTER_OFFSET,
+            .L = 1,
+            .xm = 6,
+            .xn = 5,
+            .rt = 3,
+        }
+    };
+    assert(encode_instruction(&i) == 0xF86668A3);
 }
 
 // LOAD LITERAL
@@ -505,8 +536,10 @@ int main(void) {
     test_encode_msub();
 
     // Single Data Transfer
-    test_encode_sdt_load();
-    test_encode_sdt_store();
+    test_encode_sdt_load_unsigned();
+    test_encode_sdt_store_unsigned();
+    test_encode_sdt_store_pre_indexed();
+    test_encode_sdt_load_register();
 
     // Load Literal
     test_encode_load_literal();
