@@ -454,6 +454,7 @@ bool execute_instruction(State *state, OpType op, Instruction *i)
             break;
 
         // Unconditional branch
+        case OP_TYPE_UNCONDITIONAL_BRANCH:
         case OP_TYPE_AL: {
             int64 offset = (int64)i->data.uncond_branch.simm26 * 4;
             offset_pc(state, offset);
@@ -472,7 +473,7 @@ bool execute_instruction(State *state, OpType op, Instruction *i)
             break;
     }
 
-    if (!(op == OP_TYPE_EQ || op == OP_TYPE_NE || op == OP_TYPE_GE || op == OP_TYPE_LT || op == OP_TYPE_GT || op == OP_TYPE_LE || op == OP_TYPE_AL || op == OP_TYPE_BR)) {
+    if (!(op == OP_TYPE_EQ || op == OP_TYPE_NE || op == OP_TYPE_GE || op == OP_TYPE_LT || op == OP_TYPE_GT || op == OP_TYPE_LE || op == OP_TYPE_AL || op == OP_TYPE_BR || op == OP_TYPE_UNCONDITIONAL_BRANCH)) {
         inc_pc(state);
     }
 
