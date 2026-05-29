@@ -22,7 +22,7 @@ This accepts any preceeding whitespace
 static void read_line(char *buf, uint64 *address, SymbolTable *table)
 {
     // Remove whitespace
-    while (*buf == '\t' || *buf == ' ') buf++;
+    while (*buf == '\t' || *buf == ' ' || *buf == '\n') buf++;
 
     regex_t labelRegex;
     const char labelExp[] = "^[a-zA-Z_.][a-zA-Z0-9_$.]*:";
