@@ -6,8 +6,6 @@
 #include <assert.h>
 #include <stdbool.h>
 
-#define BUILD_INDEX_OFFSET(simm9, I) ((((simm9) & 0x1FF) << 2) | (((I) & 1) << 1) | 1)
-
 int test_single_data_transfer(void) {
     State* state;
     const int RT = 3;
@@ -20,8 +18,9 @@ int test_single_data_transfer(void) {
     Instruction instr_pre = {
         .op_type = OP_TYPE_SINGLE_DATA_TRANSFER,
         .data.single_data_transfer = {
-            .rt = RT, .xn = XN, .L = true, .sf = true, .U = false,
-            .offset = BUILD_INDEX_OFFSET(16, 1) // simm9 = 16, I = 1
+            .rt = RT, .xn = XN, .L = true, .sf = true,
+            .mode = ADDR_PRE_INDEXED,
+            .offset = 16
         },
     };
 
@@ -40,8 +39,9 @@ int test_single_data_transfer(void) {
     Instruction instr_post = {
         .op_type = OP_TYPE_SINGLE_DATA_TRANSFER,
         .data.single_data_transfer = {
-            .rt = RT, .xn = XN, .L = false, .sf = true, .U = false,
-            .offset = BUILD_INDEX_OFFSET(24, 0) // simm9 = 24, I = 0
+            .rt = RT, .xn = XN, .L = false, .sf = true,
+            .mode = ADDR_POST_INDEXED,
+            .offset = 24
         },
     };
 
@@ -61,8 +61,9 @@ int test_single_data_transfer(void) {
     Instruction instr_pre_neg = {
         .op_type = OP_TYPE_SINGLE_DATA_TRANSFER,
         .data.single_data_transfer = {
-            .rt = RT, .xn = XN, .L = true, .sf = true, .U = false,
-            .offset = BUILD_INDEX_OFFSET(-8, 1) // simm9 = -8, I = 1
+            .rt = RT, .xn = XN, .L = true, .sf = true,
+            .mode = ADDR_PRE_INDEXED,
+            .offset = -8
         },
     };
 

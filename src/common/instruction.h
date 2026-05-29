@@ -117,11 +117,19 @@ typedef struct ConditionalBranchInstruction {
 
 // Data Transfer Instruction
 
+typedef enum AddressingMode {
+    ADDR_UNSIGNED_OFFSET,
+    ADDR_PRE_INDEXED,
+    ADDR_POST_INDEXED,
+    ADDR_REGISTER_OFFSET
+} AddressingMode;
+
 typedef struct SingleDataTransfer {
     bool sf;
-    bool U;
     bool L;
+    AddressingMode mode;
     int offset;
+    int xm;
     int xn;
     int rt;
 } SingleDataTransfer;
