@@ -5,6 +5,7 @@
 #include "operands.h"
 #include "common/instruction.h"
 #include "assembler/symbol_table/symbol_table.h"
+#include "utils/types.h"
 
 #define ZERO_REG 31 // TODO - MAYBE FACTOR OUT
 
@@ -18,7 +19,7 @@ Note operands.c provides helpers that we should use here.
 We should use function pointers here (as suggested in the spec) to avoid a very messy if/then/else structure.
 */
 
-typedef void (*ParseFunc)(char *, Instruction *, SymbolTable *);
+typedef void (*ParseFunc)(char *, Instruction *, SymbolTable *, uint64);
 
 typedef struct {
     char *mnemonic;
@@ -97,7 +98,7 @@ void parse_arithmetic(char *operands, Instruction *i, OpType immediate_opcode, O
     char *saveptr;
     char *rd_str = strtok_r(operands, " ,", &saveptr);
     char *rn_str = strtok_r(NULL, " ,", &saveptr);
-    char *op2_str = strtok_r(NULL, " ,", &saveptr);
+    char *op2_str = strtok_r(NULL, " ,\t\n", &saveptr);
 
     bool sf_rd, sf_rn;
     int rd = parse_register(rd_str, &sf_rd);
@@ -115,7 +116,7 @@ void parse_arithmetic(char *operands, Instruction *i, OpType immediate_opcode, O
 void parse_compare(char *operands, Instruction *i, OpType immediate_opcode, OpType register_opcode) {
     char *saveptr;
     char *rn_str = strtok_r(operands, " ,", &saveptr);
-    char *op2_str = strtok_r(NULL, " ,", &saveptr);
+    char *op2_str = strtok_r(NULL, " ,\t\n", &saveptr);
 
     bool sf_rn;
     int rn = parse_register(rn_str, &sf_rn);
@@ -127,7 +128,7 @@ void parse_compare(char *operands, Instruction *i, OpType immediate_opcode, OpTy
 void parse_negate(char *operands, Instruction *i, OpType immediate_opcode, OpType register_opcode) {
     char *saveptr;
     char *rd_str = strtok_r(operands, " ,", &saveptr);
-    char *op2_str = strtok_r(NULL, " ,", &saveptr);
+    char *op2_str = strtok_r(NULL, " ,\t\n", &saveptr);
 
     bool sf_rd;
     int rd = parse_register(rd_str, &sf_rd);
@@ -140,7 +141,7 @@ void parse_logical(char *operands, Instruction *i, OpType opcode) {
     char *saveptr;
     char *rd_str = strtok_r(operands, " ,", &saveptr);
     char *rn_str = strtok_r(NULL, " ,", &saveptr);
-    char *rm_str = strtok_r(NULL, " ,", &saveptr);
+    char *rm_str = strtok_r(NULL, " ,\t\n", &saveptr);
 
     bool sf_rd, sf_rn, sf_rm;
     int rd = parse_register(rd_str, &sf_rd);
@@ -159,7 +160,7 @@ void parse_logical(char *operands, Instruction *i, OpType opcode) {
 void parse_move(char *operands, Instruction *i, OpType opcode) {
     char *saveptr;
     char *rd_str = strtok_r(operands, " ,", &saveptr);
-    char *rm_str = strtok_r(NULL, " ,", &saveptr);
+    char *rm_str = strtok_r(NULL, " ,\t\n", &saveptr);
 
     bool sf_rd, sf_rm;
     int rd = parse_register(rd_str, &sf_rd);
@@ -187,7 +188,7 @@ void parse_multiply(char *operands, Instruction *i, OpType opcode) {
     char *rd_str = strtok_r(operands, " ,", &saveptr);
     char *rn_str = strtok_r(NULL, " ,", &saveptr);
     char *rm_str = strtok_r(NULL, " ,", &saveptr);
-    char *ra_str = strtok_r(NULL, " ,", &saveptr);
+    char *ra_str = strtok_r(NULL, " ,\t\n", &saveptr);
 
     bool sf_rd, sf_rn, sf_rm, sf_ra;
     int rd = parse_register(rd_str, &sf_rd);
@@ -207,7 +208,7 @@ void parse_multiply_alias(char *operands, Instruction *i, OpType opcode) {
     char *saveptr;
     char *rd_str = strtok_r(operands, " ,", &saveptr);
     char *rn_str = strtok_r(NULL, " ,", &saveptr);
-    char *rm_str = strtok_r(NULL, " ,", &saveptr);
+    char *rm_str = strtok_r(NULL, " ,\t\n", &saveptr);
 
     bool sf_rd, sf_rn, sf_rm;
     int rd = parse_register(rd_str, &sf_rd);
@@ -222,72 +223,96 @@ void parse_multiply_alias(char *operands, Instruction *i, OpType opcode) {
     build_multiply(i, opcode, rd, rn, rm, ZERO_REG, sf_rd);
 }
 
-void parse_add(char *operands, Instruction *i, SymbolTable *table) {
+void build_b(Instruction *i, uint64 offset) {
+    i->op_type = OP_TYPE_UNCONDITIONAL_BRANCH;
+    i->data.uncond_branch.simm26 = offset;
+}
+
+void build_br(Instruction *i, int xn) {
+    i->op_type = OP_TYPE_BR;
+    i->data.reg_branch.xn = xn;
+}
+
+void build_b_cond(Instruction *i, uint64 offset, OpType opcode) {
+    i->op_type = opcode;
+    i->data.cond_branch.simm19 = offset;
+}
+
+void parse_b_cond(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc, OpType opcode) {
+    char *saveptr;
+    char *label = strtok_r(operands, " \t\n", &saveptr);
+    uint64 target = symbol_table_lookup(table, label);
+
+    int64 offset = calculate_offset(current_pc, target);
+
+    build_b_cond(i, offset, opcode);
+}
+
+void parse_add(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_arithmetic(operands, i, OP_TYPE_ADD, OP_TYPE_REG_ADD);
 }
 
-void parse_adds(char *operands, Instruction *i, SymbolTable *table) {
+void parse_adds(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_arithmetic(operands, i, OP_TYPE_ADDS, OP_TYPE_REG_ADDS);
 }
 
-void parse_sub(char *operands, Instruction *i, SymbolTable *table) {
+void parse_sub(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_arithmetic(operands, i, OP_TYPE_SUB, OP_TYPE_REG_SUB);
 }
 
-void parse_subs(char *operands, Instruction *i, SymbolTable *table) {
+void parse_subs(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_arithmetic(operands, i, OP_TYPE_SUBS, OP_TYPE_REG_SUBS);
 }
 
-void parse_cmp(char *operands, Instruction *i, SymbolTable *table) {
+void parse_cmp(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_compare(operands, i, OP_TYPE_SUBS, OP_TYPE_REG_SUBS);
 }
 
-void parse_cmn(char *operands, Instruction *i, SymbolTable *table) {
+void parse_cmn(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_compare(operands, i, OP_TYPE_ADDS, OP_TYPE_REG_ADDS);
 }
 
-void parse_neg(char *operands, Instruction *i, SymbolTable *table) {
+void parse_neg(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_negate(operands, i, OP_TYPE_SUB, OP_TYPE_REG_SUB);
 }
 
-void parse_negs(char *operands, Instruction *i, SymbolTable *table) {
+void parse_negs(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_negate(operands, i, OP_TYPE_SUBS, OP_TYPE_REG_SUBS);
 }
 
-void parse_and(char *operands, Instruction *i, SymbolTable *table) {
+void parse_and(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_logical(operands, i, OP_TYPE_AND);
 }
 
-void parse_ands(char *operands, Instruction *i, SymbolTable *table) {
+void parse_ands(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_logical(operands, i, OP_TYPE_ANDS);
 }
 
-void parse_bic(char *operands, Instruction *i, SymbolTable *table) {
+void parse_bic(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_logical(operands, i, OP_TYPE_BIC);
 }
 
-void parse_bics(char *operands, Instruction *i, SymbolTable *table) {
+void parse_bics(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_logical(operands, i, OP_TYPE_BICS);
 }
 
-void parse_eor(char *operands, Instruction *i, SymbolTable *table) {
+void parse_eor(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_logical(operands, i, OP_TYPE_EOR);
 }
 
-void parse_orr(char *operands, Instruction *i, SymbolTable *table) {
+void parse_orr(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_logical(operands, i, OP_TYPE_ORR);
 }
 
-void parse_eon(char *operands, Instruction *i, SymbolTable *table) {
+void parse_eon(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_logical(operands, i, OP_TYPE_EON);
 }
 
-void parse_orn(char *operands, Instruction *i, SymbolTable *table) {
+void parse_orn(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_logical(operands, i, OP_TYPE_ORN);
 }
 
-// Unique shape so no intermediate parser
-void parse_tst(char *operands, Instruction *i, SymbolTable *table) {
+void parse_tst(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     char *saveptr;
     char *rn_str = strtok_r(operands, " ,", &saveptr);
     char *rm_str = strtok_r(NULL, " ,", &saveptr);
@@ -304,28 +329,76 @@ void parse_tst(char *operands, Instruction *i, SymbolTable *table) {
     build_logical(i, OP_TYPE_ANDS, ZERO_REG, rn, rm, sf_rn, saveptr);
 }
 
-void parse_mvn(char *operands, Instruction *i, SymbolTable *table) {
+void parse_mvn(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_move(operands, i, OP_TYPE_ORN);
 }
 
-void parse_mov(char *operands, Instruction *i, SymbolTable *table) {
+void parse_mov(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_move(operands, i, OP_TYPE_ORR);
 }
 
-void parse_madd(char *operands, Instruction *i, SymbolTable *table) {
+void parse_madd(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_multiply(operands, i, OP_TYPE_MADD);
 }
 
-void parse_msub(char *operands, Instruction *i, SymbolTable *table) {
+void parse_msub(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_multiply(operands, i, OP_TYPE_MSUB);
 }
 
-void parse_mul(char *operands, Instruction *i, SymbolTable *table) {
+void parse_mul(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_multiply_alias(operands, i, OP_TYPE_MADD);
 }
 
-void parse_mneg(char *operands, Instruction *i, SymbolTable *table) {
+void parse_mneg(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_multiply_alias(operands, i, OP_TYPE_MSUB);
+}
+
+void parse_b(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+    char *saveptr;
+    char *label = strtok_r(operands, " \t\n", &saveptr);
+    uint64 target = symbol_table_lookup(table, label);
+
+    int64 offset = calculate_offset(current_pc, target);
+
+    build_b(i, offset);
+}
+
+void parse_br(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+    char *saveptr;
+    char *xn_str = strtok_r(operands, " ,\t\n", &saveptr);
+
+    bool is_64_bit;
+    int xn = parse_register(xn_str, &is_64_bit);
+
+    build_br(i, xn);
+}
+
+void parse_b_eq(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+    parse_b_cond(operands, i, table, current_pc, OP_TYPE_EQ);
+}
+
+void parse_b_ne(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+    parse_b_cond(operands, i, table, current_pc, OP_TYPE_NE);
+}
+
+void parse_b_ge(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+    parse_b_cond(operands, i, table, current_pc, OP_TYPE_GE);
+}
+
+void parse_b_lt(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+    parse_b_cond(operands, i, table, current_pc, OP_TYPE_LT);
+}
+
+void parse_b_gt(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+    parse_b_cond(operands, i, table, current_pc, OP_TYPE_GT);
+}
+
+void parse_b_le(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+    parse_b_cond(operands, i, table, current_pc, OP_TYPE_LE);
+}
+
+void parse_b_al(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+    parse_b_cond(operands, i, table, current_pc, OP_TYPE_AL);
 }
 
 MnemonicMap router[] = {
@@ -352,12 +425,21 @@ MnemonicMap router[] = {
     {"msub", parse_msub},
     {"mul", parse_mul},
     {"mneg", parse_mneg},
+    {"b", parse_b},
+    {"br", parse_br},
+    {"b.eq", parse_b_eq},
+    {"b.ne", parse_b_ne},
+    {"b.ge", parse_b_ge},
+    {"b.lt", parse_b_lt},
+    {"b.gt", parse_b_gt},
+    {"b.le", parse_b_le},
+    {"b.al", parse_b_al},
 };
 
 // Takes a single line of assembly
 // If it's an instruction, we populate the instruction struct and return true.
 // If the line is blank, a comment, or a label, we simply return false.
-bool parse_line(char *line, Instruction *i, SymbolTable *table) {
+bool parse_line(char *line, Instruction *i, SymbolTable *table, uint64 current_pc) {
     char *saveptr;
 
     // Take the first word (the mnemonic or label)
@@ -371,7 +453,7 @@ bool parse_line(char *line, Instruction *i, SymbolTable *table) {
     // Use the routing table to call the correct function
     for (int cnt = 0; cnt < (sizeof(router)/sizeof(MnemonicMap)); cnt++){
         if (!strcmp(mnemonic, router[cnt].mnemonic)) {
-            router[cnt].func(saveptr, i, table);
+            router[cnt].func(saveptr, i, table, current_pc);
 
             return true;
         }

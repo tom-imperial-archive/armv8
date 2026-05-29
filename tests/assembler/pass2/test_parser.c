@@ -10,10 +10,10 @@ void test_parse_line_ignores_labels_and_blanks(void) {
     Instruction i;
 
     char label_line[] = "my_loop:";
-    assert(parse_line(label_line, &i, NULL) == false);
+    assert(parse_line(label_line, &i, NULL, 0) == false);
 
     char blank_line[] = "   \n";
-    assert(parse_line(blank_line, &i, NULL) == false);
+    assert(parse_line(blank_line, &i, NULL, 0) == false);
 
     printf("Test parse line ignores labels and blanks: OK\n");
 }
@@ -22,7 +22,7 @@ void test_parse_add_immediate_standard(void) {
     Instruction i;
     char line[] = "add x0, x1, #42";
 
-    bool routed = parse_line(line, &i, NULL);
+    bool routed = parse_line(line, &i, NULL, 0);
 
     assert(routed == true);
     assert(i.op_type == OP_TYPE_ADD);
@@ -39,7 +39,7 @@ void test_parse_sub_immediate_shifted(void) {
     Instruction i;
     char line[] = "sub w2, w3, #10, lsl #12";
 
-    bool routed = parse_line(line, &i, NULL);
+    bool routed = parse_line(line, &i, NULL, 0);
 
     assert(routed == true);
     assert(i.op_type == OP_TYPE_SUB);
@@ -56,7 +56,7 @@ void test_parse_adds_register_standard(void) {
     Instruction i;
     char line[] = "adds x5, x6, x7";
 
-    bool routed = parse_line(line, &i, NULL);
+    bool routed = parse_line(line, &i, NULL, 0);
 
     assert(routed == true);
     assert(i.op_type == OP_TYPE_REG_ADDS);
@@ -75,7 +75,7 @@ void test_parse_subs_register_shifted(void) {
     Instruction i;
     char line[] = "subs w10, w11, w12, asr #4";
 
-    bool routed = parse_line(line, &i, NULL);
+    bool routed = parse_line(line, &i, NULL, 0);
 
     assert(routed == true);
     assert(i.op_type == OP_TYPE_REG_SUBS);
@@ -94,7 +94,7 @@ void test_parse_cmp_immediate(void) {
 
     char line[] = "cmp x5, #100";
 
-    bool routed = parse_line(line, &i, NULL);
+    bool routed = parse_line(line, &i, NULL, 0);
 
     assert(routed == true);
     assert(i.op_type == OP_TYPE_SUBS);
@@ -112,7 +112,7 @@ void test_parse_cmn_register_shifted(void) {
 
     char line[] = "cmn w10, w11, lsl #2";
 
-    bool routed = parse_line(line, &i, NULL);
+    bool routed = parse_line(line, &i, NULL, 0);
 
     assert(routed == true);
     assert(i.op_type == OP_TYPE_REG_ADDS);
@@ -131,7 +131,7 @@ void test_parse_neg_register(void) {
 
     char line[] = "neg x2, x3";
 
-    bool routed = parse_line(line, &i, NULL);
+    bool routed = parse_line(line, &i, NULL, 0);
 
     assert(routed == true);
     assert(i.op_type == OP_TYPE_REG_SUB);
@@ -150,7 +150,7 @@ void test_parse_negs_register_shifted(void) {
 
     char line[] = "negs w4, w5, asr #1";
 
-    bool routed = parse_line(line, &i, NULL);
+    bool routed = parse_line(line, &i, NULL, 0);
 
     assert(routed == true);
     assert(i.op_type == OP_TYPE_REG_SUBS);
@@ -168,7 +168,7 @@ void test_parse_and_register_standard(void) {
     Instruction i;
     char line[] = "and x1, x2, x3";
 
-    bool routed = parse_line(line, &i, NULL);
+    bool routed = parse_line(line, &i, NULL, 0);
 
     assert(routed == true);
     assert(i.op_type == OP_TYPE_AND);
@@ -186,7 +186,7 @@ void test_parse_orr_register_shifted(void) {
     Instruction i;
     char line[] = "orr w4, w5, w6, lsl #2";
 
-    bool routed = parse_line(line, &i, NULL);
+    bool routed = parse_line(line, &i, NULL, 0);
 
     assert(routed == true);
     assert(i.op_type == OP_TYPE_ORR);
@@ -204,7 +204,7 @@ void test_parse_eor_register_shifted(void) {
     Instruction i;
     char line[] = "eor x7, x8, x9, asr #4";
 
-    bool routed = parse_line(line, &i, NULL);
+    bool routed = parse_line(line, &i, NULL, 0);
 
     assert(routed == true);
     assert(i.op_type == OP_TYPE_EOR);
@@ -222,7 +222,7 @@ void test_parse_bics_register_standard(void) {
     Instruction i;
     char line[] = "bics w10, w11, w12";
 
-    bool routed = parse_line(line, &i, NULL);
+    bool routed = parse_line(line, &i, NULL, 0);
 
     assert(routed == true);
     assert(i.op_type == OP_TYPE_BICS);
@@ -240,7 +240,7 @@ void test_parse_tst_register(void) {
     Instruction i;
     char line[] = "tst x1, x2";
 
-    bool routed = parse_line(line, &i, NULL);
+    bool routed = parse_line(line, &i, NULL, 0);
 
     assert(routed == true);
     assert(i.op_type == OP_TYPE_ANDS);
@@ -259,7 +259,7 @@ void test_parse_mvn_register_shifted(void) {
 
     char line[] = "mvn w3, w4, asr #2";
 
-    bool routed = parse_line(line, &i, NULL);
+    bool routed = parse_line(line, &i, NULL, 0);
 
     assert(routed == true);
     assert(i.op_type == OP_TYPE_ORN);
@@ -278,7 +278,7 @@ void test_parse_mov_register(void) {
 
     char line[] = "mov x5, x6";
 
-    bool routed = parse_line(line, &i, NULL);
+    bool routed = parse_line(line, &i, NULL, 0);
 
     assert(routed == true);
     assert(i.op_type == OP_TYPE_ORR);
@@ -296,7 +296,7 @@ void test_parse_madd_standard(void) {
     Instruction i;
     char line[] = "madd x0, x1, x2, x3";
 
-    bool routed = parse_line(line, &i, NULL);
+    bool routed = parse_line(line, &i, NULL, 0);
 
     assert(routed == true);
     assert(i.op_type == OP_TYPE_MADD);
@@ -313,7 +313,7 @@ void test_parse_msub_standard(void) {
     Instruction i;
     char line[] = "msub w4, w5, w6, w7";
 
-    bool routed = parse_line(line, &i, NULL);
+    bool routed = parse_line(line, &i, NULL, 0);
 
     assert(routed == true);
     assert(i.op_type == OP_TYPE_MSUB);
@@ -331,7 +331,7 @@ void test_parse_mul_alias(void) {
 
     char line[] = "mul x8, x9, x10";
 
-    bool routed = parse_line(line, &i, NULL);
+    bool routed = parse_line(line, &i, NULL, 0);
 
     assert(routed == true);
     assert(i.op_type == OP_TYPE_MADD);
@@ -349,7 +349,7 @@ void test_parse_mneg_alias(void) {
 
     char line[] = "mneg w11, w12, w13";
 
-    bool routed = parse_line(line, &i, NULL);
+    bool routed = parse_line(line, &i, NULL, 0);
 
     assert(routed == true);
     assert(i.op_type == OP_TYPE_MSUB);
@@ -360,6 +360,77 @@ void test_parse_mneg_alias(void) {
     assert(i.data.multiply.sf == false);
 
     printf("Test parse mneg alias: OK\n");
+}
+
+void test_parse_b_forward(void) {
+    Instruction i;
+    char line[] = "b my_loop";
+    uint64 current_pc = 0x10;
+
+    SymbolTable *table = create_symbol_table();
+    symbol_table_add(table, "my_loop", 0x24);
+
+    bool routed = parse_line(line, &i, table, current_pc);
+
+    assert(routed == true);
+    assert(i.op_type == OP_TYPE_UNCONDITIONAL_BRANCH);
+
+    assert(i.data.uncond_branch.simm26 == 5);
+
+    printf("Test parse b forward: OK\n");
+
+    free_symbol_table(table);
+}
+
+void test_parse_b_backward(void) {
+    Instruction i;
+    char line[] = "b start_func";
+    uint64 current_pc = 0x100;
+
+    SymbolTable *table = create_symbol_table();
+    symbol_table_add(table, "start_func", 0x40);
+
+    bool routed = parse_line(line, &i, table, current_pc);
+
+    assert(routed == true);
+    assert(i.op_type == OP_TYPE_UNCONDITIONAL_BRANCH);
+
+    assert(i.data.uncond_branch.simm26 == -48);
+
+    printf("Test parse b backward: OK\n");
+    free_symbol_table(table);
+}
+
+void test_parse_br_register(void) {
+    Instruction i;
+    char line[] = "br x8";
+
+    bool routed = parse_line(line, &i, NULL, 0);
+
+    assert(routed == true);
+    assert(i.op_type == OP_TYPE_BR);
+    assert(i.data.reg_branch.xn == 8);
+
+    printf("Test parse br register: OK\n");
+}
+
+void test_parse_b_cond_forward(void) {
+    Instruction i;
+    char line[] = "b.eq exit_label";
+    uint64 current_pc = 0x8;
+
+    SymbolTable *table = create_symbol_table();
+    symbol_table_add(table, "exit_label", 0x20);
+
+    bool routed = parse_line(line, &i, table, current_pc);
+
+    assert(routed == true);
+    assert(i.op_type == OP_TYPE_EQ);
+
+    assert(i.data.cond_branch.simm19 == 6);
+
+    printf("Test parse b.eq forward: OK\n");
+    free_symbol_table(table);
 }
 
 int main(void) {
@@ -391,6 +462,11 @@ int main(void) {
     test_parse_msub_standard();
     test_parse_mul_alias();
     test_parse_mneg_alias();
+
+    test_parse_b_forward();
+    test_parse_b_backward();
+    test_parse_br_register();
+    test_parse_b_cond_forward();
 
     printf("----------------------------------\n");
     printf("All Parser tests passed successfully\n");
