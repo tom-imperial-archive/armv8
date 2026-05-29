@@ -251,13 +251,15 @@ void parse_b_cond(char *operands, Instruction *i, SymbolTable *table, uint64 cur
 void parse_memory(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc, bool is_load) {
     char *saveptr;
 
-    char *rt_str = strtok_r(operands, " ,", &saveptr);
+    char *rt_str = strtok_r(operands, " ,\t\n", &saveptr);
     bool sf_rt;
     int rt = parse_register(rt_str, &sf_rt);
 
+    // Strip leading whitespace
     while (*saveptr == ' ' || *saveptr == '\t') saveptr++;
     char *address_str = saveptr;
-
+    // Strip trailing newlines
+    address_str[strcspn(address_str, "\n")] = '\0';
     // Literal
     if (strchr(address_str, '[') == NULL) {
         if (!is_load) {
@@ -293,8 +295,8 @@ void parse_memory(char *operands, Instruction *i, SymbolTable *table, uint64 cur
     bool is_post_indexed = (strstr(address_str, "],") != NULL);
 
     char *token_ptr;
-    char *xn_str = strtok_r(address_str, "[],! \t", &token_ptr);
-    char *op2_str = strtok_r(NULL, "[],! \t", &token_ptr);
+    char *xn_str = strtok_r(address_str, "[],! \t\n", &token_ptr);
+    char *op2_str = strtok_r(NULL, "[],! \t\n", &token_ptr);
 
     bool sf_xn;
     i->data.single_data_transfer.xn = parse_register(xn_str, &sf_xn);
