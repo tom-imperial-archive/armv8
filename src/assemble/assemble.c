@@ -65,7 +65,7 @@ int main(int argc, char **argv)
         printf("Failed to open file %s\n", out);
     }
 
-    fwrite(res, output_size / sizeof(uint32), sizeof(uint32), file_out);
+    fwrite(res, sizeof(uint32), instr_index, file_out);
     fclose(file_out);
     return EXIT_SUCCESS;
 }
