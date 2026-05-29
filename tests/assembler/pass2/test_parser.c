@@ -563,6 +563,19 @@ void test_parse_wide_move_with_shift(void) {
     printf("Test parse wide move with shift: OK\n");
 }
 
+void test_parse_directive_int(void) {
+    Instruction i;
+    char line[] = ".int 0xDEADBEEF";
+
+    bool routed = parse_line(line, &i, NULL, 0);
+
+    assert(routed == true);
+    assert(i.op_type == OP_TYPE_DIRECTIVE_INT);
+    assert(i.data.directive_int.value == (int)0xDEADBEEF);
+
+    printf("Test parse directive .int: OK\n");
+}
+
 int main(void) {
     printf("Assembler Arithmetic Parsing Tests\n");
     printf("----------------------------------\n");
@@ -605,6 +618,8 @@ int main(void) {
 
     test_parse_wide_move_no_shift();
     test_parse_wide_move_with_shift();
+
+    test_parse_directive_int();
 
     printf("----------------------------------\n");
     printf("All Parser tests passed successfully\n");

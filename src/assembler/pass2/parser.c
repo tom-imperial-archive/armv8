@@ -552,6 +552,22 @@ void parse_movz(char *operands, Instruction *i, SymbolTable *table, uint64 curre
     parse_wide_move(operands, i, OP_TYPE_MOVZ);
 }
 
+void parse_directive_int(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+    char *saveptr;
+    char *val_str = strtok_r(operands, " \t\n", &saveptr);
+
+    if (val_str == NULL) {
+        printf("Error: .int directive requires a value\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // parse_immediate() is unsuitable here, since directives do not use the # prefix
+    long val = strtol(val_str, NULL, 0);
+
+    i->op_type = OP_TYPE_DIRECTIVE_INT;
+    i->data.directive_int.value = (int)val;
+}
+
 MnemonicMap router[] = {
     {"add", parse_add},
     {"adds", parse_adds},
@@ -590,6 +606,7 @@ MnemonicMap router[] = {
     {"movk", parse_movk},
     {"movn", parse_movn},
     {"movz", parse_movz},
+    {".int", parse_directive_int},
 };
 
 // Takes a single line of assembly
