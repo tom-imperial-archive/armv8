@@ -248,6 +248,137 @@ void parse_b_cond(char *operands, Instruction *i, SymbolTable *table, uint64 cur
     build_b_cond(i, offset, opcode);
 }
 
+void parse_memory(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc, bool is_load) {
+    char *saveptr;
+
+    char *rt_str = strtok_r(operands, " ,", &saveptr);
+    bool sf_rt;
+    int rt = parse_register(rt_str, &sf_rt);
+
+    while (*saveptr == ' ' || *saveptr == '\t') saveptr++;
+    char *address_str = saveptr;
+
+    // Literal
+    if (strchr(address_str, '[') == NULL) {
+        if (!is_load) {
+            printf("Error: str cannot use literal addressing\n");
+            exit(EXIT_FAILURE);
+        }
+
+        i->op_type = OP_TYPE_LOAD_LITERAL;
+        i->data.load_literal.rt = rt;
+        i->data.load_literal.sf = sf_rt;
+
+        uint64 target;
+        if (address_str[0] == '#') {
+            target = parse_immediate(address_str);
+        } else {
+            target = symbol_table_lookup(table, address_str);
+        }
+
+        int64 offset = calculate_offset(current_pc, target);
+
+        i->data.load_literal.simm19 = offset;
+
+        return;
+    }
+
+    // Single data transfer
+    i->op_type = OP_TYPE_SINGLE_DATA_TRANSFER;
+    i->data.single_data_transfer.rt = rt;
+    i->data.single_data_transfer.sf = sf_rt;
+    i->data.single_data_transfer.L = is_load;
+
+    bool is_pre_indexed = (strchr(address_str, '!') != NULL);
+    bool is_post_indexed = (strstr(address_str, "],") != NULL);
+
+    char *token_ptr;
+    char *xn_str = strtok_r(address_str, "[],! \t", &token_ptr);
+    char *op2_str = strtok_r(NULL, "[],! \t", &token_ptr);
+
+    bool sf_xn;
+    i->data.single_data_transfer.xn = parse_register(xn_str, &sf_xn);
+
+    // Register offset
+    if (op2_str != NULL && op2_str[0] != '#') {
+        bool sf_xm;
+        i->data.single_data_transfer.mode = ADDR_REGISTER_OFFSET;
+        i->data.single_data_transfer.xm = parse_register(op2_str, &sf_xm);
+        i->data.single_data_transfer.offset = 0; // Unused in this case
+    } else {
+        // Immediate offset - Pre, Post, or Unsigned
+        long imm = (op2_str != NULL) ? parse_immediate(op2_str) : 0;
+
+        if (is_pre_indexed) {
+            i->data.single_data_transfer.mode = ADDR_PRE_INDEXED;
+            i->data.single_data_transfer.offset = imm;
+
+        } else if (is_post_indexed) {
+            i->data.single_data_transfer.mode = ADDR_POST_INDEXED;
+            i->data.single_data_transfer.offset = imm;
+
+        } else {
+            i->data.single_data_transfer.mode = ADDR_UNSIGNED_OFFSET;
+
+            // Scaling rules
+            int scale = sf_rt ? 8 : 4;
+            if (imm % scale != 0) {
+                printf("Error: Offset must be multiple of %d\n", scale);
+                exit(EXIT_FAILURE);
+            }
+            i->data.single_data_transfer.offset = imm / scale;
+        }
+    }
+}
+
+void parse_wide_move(char *operands, Instruction *i, OpType opcode) {
+    char *saveptr;
+
+    char *rd_str = strtok_r(operands, " ,", &saveptr);
+    bool sf_rd;
+    int rd = parse_register(rd_str, &sf_rd);
+
+    char *imm_str = strtok_r(NULL, " ,", &saveptr);
+    long imm16 = parse_immediate(imm_str);
+
+    if (imm16 < 0 || imm16 > 0xFFFF) {
+        printf("Error: Wide move immediate must be a 16-bit unsigned value (0 to 65535)\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int hw = 0;
+    char *lsl_str = strtok_r(NULL, " ,", &saveptr);
+
+    if (lsl_str != NULL) {
+        if (strcmp(lsl_str, "lsl") != 0 && strcmp(lsl_str, "LSL") != 0) {
+            printf("Error: Wide move shift type must be LSL\n");
+            exit(EXIT_FAILURE);
+        }
+
+        char *shift_amount_str = strtok_r(NULL, " ,\t\n", &saveptr);
+        long shift_amount = parse_immediate(shift_amount_str);
+
+        if (shift_amount == 0) {
+            hw = 0;
+        } else if (shift_amount == 16) {
+            hw = 1;
+        } else if (shift_amount == 32 && sf_rd) { // 32 is only valid for 64-bit
+            hw = 2;
+        } else if (shift_amount == 48 && sf_rd) { // 48 is only valid for 64-bit
+            hw = 3;
+        } else {
+            printf("Error: Invalid shift amount for wide move (must be 0, 16, 32, or 48)\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    i->op_type = opcode;
+    i->data.wide_move.sf = sf_rd;
+    i->data.wide_move.rd = rd;
+    i->data.wide_move.imm16 = imm16;
+    i->data.wide_move.hw = hw;
+}
+
 void parse_add(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_arithmetic(operands, i, OP_TYPE_ADD, OP_TYPE_REG_ADD);
 }
@@ -401,6 +532,26 @@ void parse_b_al(char *operands, Instruction *i, SymbolTable *table, uint64 curre
     parse_b_cond(operands, i, table, current_pc, OP_TYPE_AL);
 }
 
+void parse_ldr(char *operands, Instruction *i, SymbolTable *table, uint64_t current_pc) {
+    parse_memory(operands, i, table, current_pc, true);
+}
+
+void parse_str(char *operands, Instruction *i, SymbolTable *table, uint64_t current_pc) {
+    parse_memory(operands, i, table, current_pc, false);
+}
+
+void parse_movk(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+    parse_wide_move(operands, i, OP_TYPE_MOVK);
+}
+
+void parse_movn(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+    parse_wide_move(operands, i, OP_TYPE_MOVN);
+}
+
+void parse_movz(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+    parse_wide_move(operands, i, OP_TYPE_MOVZ);
+}
+
 MnemonicMap router[] = {
     {"add", parse_add},
     {"adds", parse_adds},
@@ -434,6 +585,11 @@ MnemonicMap router[] = {
     {"b.gt", parse_b_gt},
     {"b.le", parse_b_le},
     {"b.al", parse_b_al},
+    {"ldr", parse_ldr},
+    {"str", parse_str},
+    {"movk", parse_movk},
+    {"movn", parse_movn},
+    {"movz", parse_movz},
 };
 
 // Takes a single line of assembly

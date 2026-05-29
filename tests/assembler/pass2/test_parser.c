@@ -433,6 +433,136 @@ void test_parse_b_cond_forward(void) {
     free_symbol_table(table);
 }
 
+void test_parse_memory_unsigned(void) {
+    Instruction i;
+    char line[] = "ldr x0, [x1, #16]";
+
+    bool routed = parse_line(line, &i, NULL, 0);
+
+    assert(routed == true);
+    assert(i.op_type == OP_TYPE_SINGLE_DATA_TRANSFER);
+    assert(i.data.single_data_transfer.L == true);
+    assert(i.data.single_data_transfer.sf == true);
+    assert(i.data.single_data_transfer.mode == ADDR_UNSIGNED_OFFSET);
+    assert(i.data.single_data_transfer.rt == 0);
+    assert(i.data.single_data_transfer.xn == 1);
+
+    assert(i.data.single_data_transfer.offset == 2);
+
+    printf("Test parse memory unsigned: OK\n");
+}
+
+void test_parse_memory_pre_indexed(void) {
+    Instruction i;
+    char line[] = "str w2, [x3, #-4]!";
+
+    bool routed = parse_line(line, &i, NULL, 0);
+
+    assert(routed == true);
+    assert(i.op_type == OP_TYPE_SINGLE_DATA_TRANSFER);
+    assert(i.data.single_data_transfer.L == false);
+    assert(i.data.single_data_transfer.sf == false);
+    assert(i.data.single_data_transfer.mode == ADDR_PRE_INDEXED);
+    assert(i.data.single_data_transfer.rt == 2);
+    assert(i.data.single_data_transfer.xn == 3);
+
+    assert(i.data.single_data_transfer.offset == -4);
+
+    printf("Test parse memory pre-indexed: OK\n");
+}
+
+void test_parse_memory_post_indexed(void) {
+    Instruction i;
+    char line[] = "ldr x4, [x5], #8";
+
+    bool routed = parse_line(line, &i, NULL, 0);
+
+    assert(routed == true);
+    assert(i.op_type == OP_TYPE_SINGLE_DATA_TRANSFER);
+    assert(i.data.single_data_transfer.L == true);
+    assert(i.data.single_data_transfer.mode == ADDR_POST_INDEXED);
+    assert(i.data.single_data_transfer.rt == 4);
+    assert(i.data.single_data_transfer.xn == 5);
+    assert(i.data.single_data_transfer.offset == 8);
+
+    printf("Test parse memory post-indexed: OK\n");
+}
+
+void test_parse_memory_register(void) {
+    Instruction i;
+    char line[] = "str x6, [x7, x8]";
+
+    bool routed = parse_line(line, &i, NULL, 0);
+
+    assert(routed == true);
+    assert(i.op_type == OP_TYPE_SINGLE_DATA_TRANSFER);
+    assert(i.data.single_data_transfer.L == false);
+    assert(i.data.single_data_transfer.mode == ADDR_REGISTER_OFFSET);
+    assert(i.data.single_data_transfer.rt == 6);
+    assert(i.data.single_data_transfer.xn == 7);
+    assert(i.data.single_data_transfer.xm == 8);
+
+    printf("Test parse memory register: OK\n");
+}
+
+void test_parse_memory_literal(void) {
+    Instruction i;
+    char line[] = "ldr x9, target_data";
+    uint64_t current_pc = 0x10;
+
+    SymbolTable *table = create_symbol_table();
+    symbol_table_add(table, "target_data", 0x30);
+
+    bool routed = parse_line(line, &i, table, current_pc);
+
+    assert(routed == true);
+    assert(i.op_type == OP_TYPE_LOAD_LITERAL);
+    assert(i.data.load_literal.sf == true);
+    assert(i.data.load_literal.rt == 9);
+
+    printf("\nDEBUG --> current_pc: %ld, target_pc: %ld, simm19: %d\n",
+       current_pc,
+       symbol_table_lookup(table, "target_data"),
+       i.data.load_literal.simm19);
+
+    assert(i.data.load_literal.simm19 == 8);
+
+    printf("Test parse memory literal: OK\n");
+    free_symbol_table(table);
+}
+
+void test_parse_wide_move_no_shift(void) {
+    Instruction i;
+    char line[] = "movz w5, #0x1234";
+
+    bool routed = parse_line(line, &i, NULL, 0);
+
+    assert(routed == true);
+    assert(i.op_type == OP_TYPE_MOVZ);
+    assert(i.data.wide_move.sf == false);
+    assert(i.data.wide_move.rd == 5);
+    assert(i.data.wide_move.imm16 == 0x1234);
+    assert(i.data.wide_move.hw == 0);
+
+    printf("Test parse wide move no shift: OK\n");
+}
+
+void test_parse_wide_move_with_shift(void) {
+    Instruction i;
+    char line[] = "movk x7, #0xABCD, lsl #32";
+
+    bool routed = parse_line(line, &i, NULL, 0);
+
+    assert(routed == true);
+    assert(i.op_type == OP_TYPE_MOVK);
+    assert(i.data.wide_move.sf == true);
+    assert(i.data.wide_move.rd == 7);
+    assert(i.data.wide_move.imm16 == 0xABCD);
+    assert(i.data.wide_move.hw == 2);
+
+    printf("Test parse wide move with shift: OK\n");
+}
+
 int main(void) {
     printf("Assembler Arithmetic Parsing Tests\n");
     printf("----------------------------------\n");
@@ -467,6 +597,14 @@ int main(void) {
     test_parse_b_backward();
     test_parse_br_register();
     test_parse_b_cond_forward();
+
+    test_parse_memory_unsigned();
+    test_parse_memory_pre_indexed();
+    test_parse_memory_register();
+    test_parse_memory_literal();
+
+    test_parse_wide_move_no_shift();
+    test_parse_wide_move_with_shift();
 
     printf("----------------------------------\n");
     printf("All Parser tests passed successfully\n");
