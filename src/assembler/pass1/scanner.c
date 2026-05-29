@@ -22,7 +22,7 @@ This accepts any preceeding whitespace
 static void read_line(char *buf, uint64 *address, SymbolTable *table)
 {
     // Remove whitespace
-    while (*buf == '\t' || *buf == ' ') buf++;
+    while (*buf == '\t' || *buf == ' ' || *buf == '\n') buf++;
 
     regex_t labelRegex;
     const char labelExp[] = "^[a-zA-Z_.][a-zA-Z0-9_$.]*:";
@@ -61,7 +61,7 @@ static void read_line(char *buf, uint64 *address, SymbolTable *table)
 
 // This should read through the file, and populate a SymbolTable mapping labels to addresses
 // Note this is def not the best way to pass the file around, but it's sufficient for this sketch.
-void scan_file(char *filename, SymbolTable *table)
+uint64 scan_file(char *filename, SymbolTable *table)
 {
     FILE *f = fopen(filename, "rb");
     if (f == NULL)
@@ -72,11 +72,13 @@ void scan_file(char *filename, SymbolTable *table)
 
     char buf[MAX_FILE_LINE_LENGTH];
 
-    uint64 address = 0;
+    uint64 binary_size = 0;
     while (fgets(buf, MAX_FILE_LINE_LENGTH, f))
     {
-        read_line(buf, &address, table);
+        read_line(buf, &binary_size, table);
     }
 
-    return;
+    fclose(f);
+
+    return binary_size;
 }
