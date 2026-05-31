@@ -6,6 +6,7 @@
 #include "emulator/state/state.h"
 #include "emulator/decode/decode.h"
 #include <stdio.h>
+#include "common/error.h"
 
 uint64 shift_value(uint64 val, ShiftType type, int amount, bool sf) {
     if (amount == 0) return val;
@@ -304,8 +305,9 @@ uint64 find_address(State* state, SingleDataTransfer data_transfer) {
             return xn;
         }
         default:
-            printf("Error: addressing mode not recognized.\n");
-            exit(EXIT_FAILURE);
+            error(ADDRESSING_MODE_NOT_RECOGNISED, NULL);
+            // Dummy return for C compiler
+            return 0;
     }
 }
 
