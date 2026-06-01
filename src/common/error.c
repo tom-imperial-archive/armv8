@@ -86,7 +86,7 @@ void print_err(ErrorType error, ErrorInfo info)
             fprintf(stderr, "Addressing mode not recognised\n");
             break;
         case INCORRECT_OP_TYPE:
-            fprintf(stderr, "Incorrect OP_TYPE\n\n");
+            fprintf(stderr, "Incorrect OP_TYPE\n");
             break;
         case UNRECOGNISED_INSTRUCTION_TYPE:
             fprintf(stderr, "Unrecognised instruction type\n");
