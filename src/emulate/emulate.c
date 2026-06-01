@@ -20,7 +20,7 @@ int main(int argc, char **argv)
     uint32 *fileBuffer = readfile(argv[1], &size);
     if (fileBuffer == NULL)
     {
-        print_err(ERROR_READING_FILE, file_error_info(argv[1]));
+        print_err(ERROR_READING_FILE, str_error_info(argv[1]));
         return EXIT_FAILURE;
     }
 

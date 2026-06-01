@@ -1,5 +1,5 @@
 #include <assert.h>
-
+#include "common/error.h"
 #include "utils/types.h"
 #include "common/instruction.h"
 
@@ -110,10 +110,7 @@ uint32 encode_immediate_arithmetic(Instruction* i) {
         case OP_TYPE_ADDS: instruction |= MASK_ADDS << OFFSET_OPC; break;
         case OP_TYPE_SUB:  instruction |= MASK_SUB << OFFSET_OPC;  break;
         case OP_TYPE_SUBS: instruction |= MASK_SUBS << OFFSET_OPC; break;
-        default:
-            // Wrong op_type
-            assert(false);
-            break;
+        default: error(INCORRECT_OP_TYPE, NULL); break;
     }
 
     // OPI
@@ -160,7 +157,7 @@ uint32 encode_wide_move(Instruction* i) {
         case OP_TYPE_MOVZ: instruction |= MASK_MOVZ << OFFSET_OPC; break;
         case OP_TYPE_MOVK: instruction |= MASK_MOVK << OFFSET_OPC; break;
         // Wrong op_type
-        default: assert(false); break;
+        default: error(INCORRECT_OP_TYPE, NULL); break;
     }
 
     // OPI
@@ -486,7 +483,7 @@ uint32 encode_conditional_branch(Instruction* i) {
         case OP_TYPE_LE: instruction |= MASK_COND_LE; break;
         case OP_TYPE_AL: instruction |= MASK_COND_AL; break;
         // Wrong op_type
-        default: assert(false); break;
+        default: error(INCORRECT_OP_TYPE, NULL); break;
     }
 
     return instruction;
@@ -559,6 +556,7 @@ uint32 encode_instruction(Instruction* i) {
         return encode_directive_int(i);
     } else {
         // ERROR: Unrecognized instruction type
-        assert(false);
+        error(UNRECOGNISED_INSTRUCTION_TYPE, NULL);
+        return 0;
     }
 }

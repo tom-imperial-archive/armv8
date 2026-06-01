@@ -4,6 +4,7 @@
 #include "assembler/symbol_table/symbol_table.h"
 #include "assembler/pass2/parser.h"
 #include "assembler/encode/encode.h"
+#include "common/error.h"
 #define MAX_FILE_LINE_LENGTH 120
 
 int main(int argc, char **argv)
@@ -19,8 +20,7 @@ int main(int argc, char **argv)
 
     if (argc < 2)
     {
-        fprintf(stderr, "Require file in: <file_in> [file_out]\n");
-        return EXIT_FAILURE;
+        error(REQUIRE_CORRECT_ARGS, NULL);
     }
 
     char *in = argv[1];
@@ -36,15 +36,17 @@ int main(int argc, char **argv)
     FILE *file_in = fopen(in, "rb");
     if (file_in == NULL)
     {
-        printf("Failed to open file %s\n", in);
-        exit(EXIT_FAILURE);
+        error(ERROR_READING_FILE, str_error_info(in));
     }
 
     char buf[MAX_FILE_LINE_LENGTH];
 
     uint32 *res = malloc(output_size);
+    if (res == NULL) {
+        error(FAILED_TO_ALLOCATE, NULL);
+    }
     //todo graceful error handling if over line length
-    //todo no hard upper limit on lines
+    //todo no hard upper limit on liness
     int64 PC = 0;
     int instr_index = 0;
     while(fgets(buf, MAX_FILE_LINE_LENGTH, file_in) != NULL) {
@@ -62,7 +64,7 @@ int main(int argc, char **argv)
     // Write results to file
     FILE *file_out = fopen(out, "wb");
     if (file_out == NULL) {
-        printf("Failed to open file %s\n", out);
+        error(ERROR_WRITING_FILE, str_error_info(out));
     }
 
     fwrite(res, sizeof(uint32), instr_index, file_out);

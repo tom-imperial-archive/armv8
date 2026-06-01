@@ -4,6 +4,7 @@
 #include <string.h>
 #include "operands.h"
 #include "common/instruction.h"
+#include "common/error.h"
 #include "assembler/symbol_table/symbol_table.h"
 #include "utils/types.h"
 
@@ -62,8 +63,7 @@ void build_arithmetic(Instruction *i, OpType immediate_opcode, OpType register_o
             } else if (shift_amount == 0) {
                 i->data.immediate_arithmetic.sh = 0;
             } else {
-                printf("Error: DPI shift must be 0 or 12\n");
-                exit(EXIT_FAILURE);
+                error(DPI_INVALID_SHIFT, shift_error_info(shift_amount));
             }
         }
     } else {
@@ -105,8 +105,7 @@ void parse_arithmetic(char *operands, Instruction *i, OpType immediate_opcode, O
     int rn = parse_register(rn_str, &sf_rn);
 
     if (sf_rd != sf_rn) {
-        printf("Error: register size mismatch between Rd and Rn\n");
-        exit(EXIT_FAILURE);
+        error(REGISTER_SIZE_MISMATCH, NULL);
     }
 
     build_arithmetic(i, immediate_opcode, register_opcode, rd, rn, sf_rd, op2_str, saveptr);
@@ -149,8 +148,7 @@ void parse_logical(char *operands, Instruction *i, OpType opcode) {
     int rm = parse_register(rm_str, &sf_rm);
 
     if (sf_rd != sf_rn || sf_rd != sf_rm) {
-        printf("Error: register size mismatch in logical operation\n");
-        exit(EXIT_FAILURE);
+        error(REGISTER_SIZE_MISMATCH, NULL);
     }
 
     build_logical(i, opcode, rd, rn, rm, sf_rd, saveptr);
@@ -167,8 +165,7 @@ void parse_move(char *operands, Instruction *i, OpType opcode) {
     int rm = parse_register(rm_str, &sf_rm);
 
     if (sf_rd != sf_rm) {
-        printf("Error: register size mismatch between Rd and Rm\n");
-        exit(EXIT_FAILURE);
+        error(REGISTER_SIZE_MISMATCH, NULL);
     }
 
     build_logical(i, opcode, rd, ZERO_REG, rm, sf_rd, saveptr);
@@ -197,8 +194,7 @@ void parse_multiply(char *operands, Instruction *i, OpType opcode) {
     int ra = parse_register(ra_str, &sf_ra);
 
     if (sf_rd != sf_rn || sf_rd != sf_rm || sf_rd != sf_ra) {
-        printf("Error: register size mismatch in multiply instruction\n");
-        exit(EXIT_FAILURE);
+        error(REGISTER_SIZE_MISMATCH, NULL);
     }
 
     build_multiply(i, opcode, rd, rn, rm, ra, sf_rd);
@@ -216,8 +212,7 @@ void parse_multiply_alias(char *operands, Instruction *i, OpType opcode) {
     int rm = parse_register(rm_str, &sf_rm);
 
     if (sf_rd != sf_rn || sf_rd != sf_rm) {
-        printf("Error: register size mismatch in multiply instruction\n");
-        exit(EXIT_FAILURE);
+        error(REGISTER_SIZE_MISMATCH, NULL);
     }
 
     build_multiply(i, opcode, rd, rn, rm, ZERO_REG, sf_rd);
@@ -263,8 +258,7 @@ void parse_memory(char *operands, Instruction *i, SymbolTable *table, uint64 cur
     // Literal
     if (strchr(address_str, '[') == NULL) {
         if (!is_load) {
-            printf("Error: str cannot use literal addressing\n");
-            exit(EXIT_FAILURE);
+            error(ILLEGAL_STR_ADDRESSING, str_error_info(address_str));
         }
 
         i->op_type = OP_TYPE_LOAD_LITERAL;
@@ -325,8 +319,7 @@ void parse_memory(char *operands, Instruction *i, SymbolTable *table, uint64 cur
             // Scaling rules
             int scale = sf_rt ? 8 : 4;
             if (imm % scale != 0) {
-                printf("Error: Offset must be multiple of %d\n", scale);
-                exit(EXIT_FAILURE);
+                error(OFFSET_MULTIPLE_N, int_error_info(scale));
             }
             i->data.single_data_transfer.offset = imm / scale;
         }
@@ -344,8 +337,7 @@ void parse_wide_move(char *operands, Instruction *i, OpType opcode) {
     long imm16 = parse_immediate(imm_str);
 
     if (imm16 < 0 || imm16 > 0xFFFF) {
-        printf("Error: Wide move immediate must be a 16-bit unsigned value (0 to 65535)\n");
-        exit(EXIT_FAILURE);
+        error(ILLEGAL_WIDE_MOVE_SIZE, shift_error_info(imm16));
     }
 
     int hw = 0;
@@ -353,8 +345,7 @@ void parse_wide_move(char *operands, Instruction *i, OpType opcode) {
 
     if (lsl_str != NULL) {
         if (strcmp(lsl_str, "lsl") != 0 && strcmp(lsl_str, "LSL") != 0) {
-            printf("Error: Wide move shift type must be LSL\n");
-            exit(EXIT_FAILURE);
+            error(WIDE_MOVE_REQUIRES_LSL, NULL);
         }
 
         char *shift_amount_str = strtok_r(NULL, " ,\t\n", &saveptr);
@@ -369,8 +360,7 @@ void parse_wide_move(char *operands, Instruction *i, OpType opcode) {
         } else if (shift_amount == 48 && sf_rd) { // 48 is only valid for 64-bit
             hw = 3;
         } else {
-            printf("Error: Invalid shift amount for wide move (must be 0, 16, 32, or 48)\n");
-            exit(EXIT_FAILURE);
+            error(INVALID_SHIFT_AMOUNT, shift_error_info(shift_amount));
         }
     }
 
@@ -455,8 +445,7 @@ void parse_tst(char *operands, Instruction *i, SymbolTable *table, uint64 curren
     int rm = parse_register(rm_str, &sf_rm);
 
     if (sf_rn != sf_rm) {
-        printf("Error: register size mismatch between Rn and Rm\n");
-        exit(EXIT_FAILURE);
+        error(REGISTER_SIZE_MISMATCH, NULL);
     }
 
     build_logical(i, OP_TYPE_ANDS, ZERO_REG, rn, rm, sf_rn, saveptr);
@@ -559,8 +548,7 @@ void parse_directive_int(char *operands, Instruction *i, SymbolTable *table, uin
     char *val_str = strtok_r(operands, " \t\n", &saveptr);
 
     if (val_str == NULL) {
-        printf("Error: .int directive requires a value\n");
-        exit(EXIT_FAILURE);
+        error(INT_DIRECTIVE_REQUIRES_VALUE, NULL);
     }
 
     // parse_immediate() is unsuitable here, since directives do not use the # prefix
@@ -642,6 +630,6 @@ bool parse_line(char *line, Instruction *i, SymbolTable *table, uint64 current_p
         }
     }
     // Unrecognised instruction
-    printf("Error: Unknown mnemonic '%s'\n", mnemonic);
+    error(UNKNOWN_MNENOMIC, str_error_info(mnemonic));
     return false;
 }

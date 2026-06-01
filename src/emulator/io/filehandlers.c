@@ -11,7 +11,7 @@ This pointer is guaranteed not to be NULL.
 uint32 *readfile(char *path, size_t *count) {
     FILE *f = fopen(path, "rb");
     if (!f) {
-        error(ERROR_READING_FILE, file_error_info(path));
+        error(ERROR_READING_FILE, str_error_info(path));
         return NULL;
     }
 
@@ -21,7 +21,7 @@ uint32 *readfile(char *path, size_t *count) {
 
     if ((size % 4) != 0) {
         fclose(f);
-        error(FILE_SIZE_NOT_MULTIPLE_OF_4, file_error_info(path));
+        error(FILE_SIZE_NOT_MULTIPLE_OF_4, str_error_info(path));
         return NULL;
     }
 
@@ -36,7 +36,7 @@ uint32 *readfile(char *path, size_t *count) {
     if (fread(instrs, sizeof(uint32), *count, f) != *count) {
         fclose(f);
         free(instrs);
-        error(NOT_ALL_WORDS_READ, file_error_info(path));
+        error(NOT_ALL_WORDS_READ, str_error_info(path));
         return NULL;
     }
 
@@ -49,7 +49,7 @@ bool writefile(char *path, char *registers_out, char *nonzero_out) {
     FILE *f = fopen(path, "w");
 
     if (f == NULL) {
-        error(ERROR_WRITING_FILE, file_error_info(path));
+        error(ERROR_WRITING_FILE, str_error_info(path));
         return false;
     }
 
