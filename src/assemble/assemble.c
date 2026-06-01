@@ -25,13 +25,10 @@ int main(int argc, char **argv)
 
     char *in = argv[1];
     char *out = argv[2];
-    if (out == NULL) {
-        //todo check for a memory leak here
+    if (out == NULL)
+    {
         out = "out.bin";
     }
-
-    SymbolTable *table = create_symbol_table();
-    uint64 output_size = scan_file(in, table);
 
     FILE *file_in = fopen(in, "rb");
     if (file_in == NULL)
@@ -41,16 +38,20 @@ int main(int argc, char **argv)
     }
 
     char buf[MAX_FILE_LINE_LENGTH];
-
+    SymbolTable *table = create_symbol_table();
+    uint64 output_size = scan_file(in, table);
     uint32 *res = malloc(output_size);
-    //todo graceful error handling if over line length
-    //todo no hard upper limit on lines
+
+    // todo graceful error handling if over line length
+    // todo no hard upper limit on lines
     int64 PC = 0;
     int instr_index = 0;
-    while(fgets(buf, MAX_FILE_LINE_LENGTH, file_in) != NULL) {
+    while (fgets(buf, MAX_FILE_LINE_LENGTH, file_in) != NULL)
+    {
         Instruction instr;
         bool instruction = parse_line(buf, &instr, table, PC);
-        if (instruction) {
+        if (instruction)
+        {
             res[instr_index] = encode_instruction(&instr);
             printf("Instruction %d: %08x\n", instr_index, res[instr_index]);
             PC += 4;
@@ -61,11 +62,17 @@ int main(int argc, char **argv)
 
     // Write results to file
     FILE *file_out = fopen(out, "wb");
-    if (file_out == NULL) {
+    if (file_out == NULL)
+    {
         printf("Failed to open file %s\n", out);
     }
+    else
+    {
+        fwrite(res, sizeof(uint32), instr_index, file_out);
+        fclose(file_out);
+    }
 
-    fwrite(res, sizeof(uint32), instr_index, file_out);
-    fclose(file_out);
+    free(res);
+    free_symbol_table(table);
     return EXIT_SUCCESS;
 }
