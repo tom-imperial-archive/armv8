@@ -1,0 +1,1 @@
+cd ../armv8_testsuite && echo "Running Tests:" && ./run -p && cd ../armv8_58
