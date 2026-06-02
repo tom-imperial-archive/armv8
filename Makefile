@@ -89,7 +89,7 @@ TEST_SYMBOL_TABLE_OBJS = $(TEST_SYMBOL_TABLE_SRCS:.c=.o)
 
 
 # BUILD TARGETS AND RULES
-.PHONY: all clean test test_execute
+.PHONY: all clean test
 
 all: bin/emulate bin/assemble
 
@@ -160,6 +160,9 @@ test-operands: bin/test_operands
 
 test-symbol-table: bin/test_symbol_table
 	./bin/test_symbol_table
+
+testsuite:
+	./run-testsuite
 
 # COMBINED TESTS
 test-emulator: test-state test-decode test-execute
