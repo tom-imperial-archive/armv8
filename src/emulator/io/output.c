@@ -1,10 +1,10 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <assert.h>
-#include "emulator/state/state.h"
-#include "emulator/io/filehandlers.h"
 #include "common/error.h"
+#include "emulator/io/filehandlers.h"
+#include "emulator/state/state.h"
+#include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 void fwrite_all(State *state, char *path) {
     char registers_out[REG_PRINT_BUFFER_SIZE] = {0};

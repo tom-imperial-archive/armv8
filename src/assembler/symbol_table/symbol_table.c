@@ -1,6 +1,6 @@
+#include "symbol_table.h"
 #include <stdlib.h>
 #include <string.h>
-#include "symbol_table.h"
 
 #define INITIAL_CAPACITY 10
 
@@ -14,7 +14,7 @@ Since there will be a very low number of labels, it suffices to implement this
 // PLACEHOLDERS TO BE IMPLEMENTED
 
 // Allocates memory and initialises
-SymbolTable* create_symbol_table(void) {
+SymbolTable *create_symbol_table(void) {
     SymbolTable *table = malloc(sizeof(SymbolTable));
     Symbol *entries = malloc(INITIAL_CAPACITY * sizeof(Symbol));
     table->entries = entries;
@@ -30,7 +30,8 @@ void symbol_table_add(SymbolTable *table, char *label, uint64 address) {
     // Table is full so reallocate
     if (table->count == table->capacity) {
         table->capacity *= 2;
-        table->entries = realloc(table->entries, table->capacity * sizeof(Symbol));
+        table->entries =
+            realloc(table->entries, table->capacity * sizeof(Symbol));
     }
     table->entries[table->count].label = strdup(label);
     table->entries[table->count].address = address;

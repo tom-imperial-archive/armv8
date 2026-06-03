@@ -1,12 +1,12 @@
+#include "common/error.h"
+#include "utils/types.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
-#include "utils/types.h"
-#include "common/error.h"
 
 /*
-Returns a pointer to an array of uint32 representing *count instructions from the file at *path.
-This pointer is guaranteed not to be NULL.
+Returns a pointer to an array of uint32 representing *count instructions from
+the file at *path. This pointer is guaranteed not to be NULL.
 */
 uint32 *readfile(char *path, size_t *count) {
     FILE *f = fopen(path, "rb");
@@ -25,7 +25,7 @@ uint32 *readfile(char *path, size_t *count) {
         return NULL;
     }
 
-    *count = size/4;
+    *count = size / 4;
     uint32 *instrs = malloc(*count * sizeof(uint32));
     if (!instrs) {
         fclose(f);
@@ -42,7 +42,6 @@ uint32 *readfile(char *path, size_t *count) {
 
     fclose(f);
     return instrs;
-
 }
 
 bool writefile(char *path, char *registers_out, char *nonzero_out) {
@@ -58,4 +57,3 @@ bool writefile(char *path, char *registers_out, char *nonzero_out) {
 
     return true;
 }
-

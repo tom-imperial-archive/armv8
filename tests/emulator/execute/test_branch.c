@@ -1,27 +1,27 @@
-#include <stdio.h>
+#include "emulator/decode/decode.h"
+#include "emulator/state/state.h"
 #include <assert.h>
 #include <stdbool.h>
-#include "emulator/state/state.h"
-#include "emulator/decode/decode.h"
+#include <stdio.h>
 
 // Forward declaration of the main execute function
 bool execute_instruction(State *state, OpType op, Instruction *i);
 
 // Instruction builder helpers
 Instruction create_uncond_branch_inst(int32_t simm26) {
-    Instruction i = { .op_type = OP_TYPE_AL };
+    Instruction i = {.op_type = OP_TYPE_AL};
     i.data.uncond_branch.simm26 = simm26;
     return i;
 }
 
 Instruction create_cond_branch_inst(OpType op, int32_t simm19) {
-    Instruction i = { .op_type = op };
+    Instruction i = {.op_type = op};
     i.data.cond_branch.simm19 = simm19;
     return i;
 }
 
 Instruction create_reg_branch_inst(Register xn) {
-    Instruction i = { .op_type = OP_TYPE_BR };
+    Instruction i = {.op_type = OP_TYPE_BR};
     i.data.reg_branch.xn = xn;
     return i;
 }
@@ -62,7 +62,8 @@ void test_conditional_branch_taken() {
     State state = {0};
     state.PC = 0x1000;
 
-    // Setup: We want to test BEQ (Branch if Equal). This requires Z flag to be 1.
+    // Setup: We want to test BEQ (Branch if Equal). This requires Z flag to
+    // be 1.
     write_pstate_flag(&state, Z, true);
 
     // Build: b.eq #-3 (Branch backwards by 3 instructions)

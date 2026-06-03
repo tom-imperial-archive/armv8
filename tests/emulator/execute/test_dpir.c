@@ -1,15 +1,16 @@
-#include <stdio.h>
+#include "emulator/decode/decode.h"
+#include "emulator/state/state.h"
 #include <assert.h>
 #include <stdbool.h>
-#include "emulator/state/state.h"
-#include "emulator/decode/decode.h"
+#include <stdio.h>
 
 // Forward declaration of the main execution dispatcher
 bool execute_instruction(State *state, OpType op, Instruction *i);
 
 // Instruction builder helper for arithmetic & logical
-Instruction create_arithmetic_inst(OpType op, bool sf, Register rd, Register rn, Register rm, ShiftType shift, int operand) {
-    Instruction i = { .op_type = op };
+Instruction create_arithmetic_inst(OpType op, bool sf, Register rd, Register rn,
+                                   Register rm, ShiftType shift, int operand) {
+    Instruction i = {.op_type = op};
     i.data.register_arithmetic_logic.sf = sf;
     i.data.register_arithmetic_logic.rd = rd;
     i.data.register_arithmetic_logic.rn = rn;
@@ -20,8 +21,9 @@ Instruction create_arithmetic_inst(OpType op, bool sf, Register rd, Register rn,
 }
 
 // Instruction builder helper for multiplication
-Instruction create_multiply_inst(OpType op, bool sf, Register rd, Register rn, Register rm, Register ra) {
-    Instruction i = { .op_type = op };
+Instruction create_multiply_inst(OpType op, bool sf, Register rd, Register rn,
+                                 Register rm, Register ra) {
+    Instruction i = {.op_type = op};
     i.data.multiply.sf = sf;
     i.data.multiply.rd = rd;
     i.data.multiply.rn = rn;
@@ -38,7 +40,8 @@ void test_standard_add() {
     write_reg_64(&state, R2, 25);
 
     // Build: ADD X0, X1, X2 (sf=true, shift=LSL, amount=0)
-    Instruction i = create_arithmetic_inst(OP_TYPE_REG_ADD, true, R0, R1, R2, SHIFT_LSL, 0);
+    Instruction i =
+        create_arithmetic_inst(OP_TYPE_REG_ADD, true, R0, R1, R2, SHIFT_LSL, 0);
 
     // Execute via main dispatcher
     execute_instruction(&state, i.op_type, &i);
@@ -56,7 +59,8 @@ void test_edge_case_32bit_asr() {
     write_reg_32(&state, R2, 0xFFFFFFFC); // -4 in 32-bit Two's Complement
 
     // Build: SUB W0, W1, W2, ASR #1 (sf=false, shift=ASR, amount=1)
-    Instruction i = create_arithmetic_inst(OP_TYPE_REG_SUB, false, R0, R1, R2, SHIFT_ASR, 1);
+    Instruction i = create_arithmetic_inst(OP_TYPE_REG_SUB, false, R0, R1, R2,
+                                           SHIFT_ASR, 1);
 
     execute_instruction(&state, i.op_type, &i);
 
@@ -78,7 +82,8 @@ void test_flags_subs_borrow() {
     write_reg_64(&state, R2, 10);
 
     // Build: SUBS X0, X1, X2 (sf=true, shift=LSL, amount=0)
-    Instruction i = create_arithmetic_inst(OP_TYPE_REG_SUBS, true, R0, R1, R2, SHIFT_LSL, 0);
+    Instruction i = create_arithmetic_inst(OP_TYPE_REG_SUBS, true, R0, R1, R2,
+                                           SHIFT_LSL, 0);
 
     execute_instruction(&state, i.op_type, &i);
 
@@ -102,7 +107,8 @@ void test_flags_unsigned_overflow() {
     write_reg_64(&state, R2, 5);
 
     // Build: ADDS X0, X1, X2
-    Instruction i = create_arithmetic_inst(OP_TYPE_REG_ADDS, true, R0, R1, R2, SHIFT_LSL, 0);
+    Instruction i = create_arithmetic_inst(OP_TYPE_REG_ADDS, true, R0, R1, R2,
+                                           SHIFT_LSL, 0);
 
     execute_instruction(&state, i.op_type, &i);
 
@@ -124,7 +130,8 @@ void test_flags_signed_overflow_add() {
     write_reg_64(&state, R2, 1);
 
     // Build: ADDS X0, X1, X2
-    Instruction i = create_arithmetic_inst(OP_TYPE_REG_ADDS, true, R0, R1, R2, SHIFT_LSL, 0);
+    Instruction i = create_arithmetic_inst(OP_TYPE_REG_ADDS, true, R0, R1, R2,
+                                           SHIFT_LSL, 0);
 
     execute_instruction(&state, i.op_type, &i);
 
@@ -147,7 +154,8 @@ void test_flags_signed_underflow_sub() {
     write_reg_64(&state, R2, 1);
 
     // Build: SUBS X0, X1, X2
-    Instruction i = create_arithmetic_inst(OP_TYPE_REG_SUBS, true, R0, R1, R2, SHIFT_LSL, 0);
+    Instruction i = create_arithmetic_inst(OP_TYPE_REG_SUBS, true, R0, R1, R2,
+                                           SHIFT_LSL, 0);
 
     execute_instruction(&state, i.op_type, &i);
 
@@ -170,7 +178,8 @@ void test_logical_orr() {
     write_reg_64(&state, R2, 0x5555555555555555ULL);
 
     // Build: ORR X0, X1, X2
-    Instruction i = create_arithmetic_inst(OP_TYPE_ORR, true, R0, R1, R2, SHIFT_LSL, 0);
+    Instruction i =
+        create_arithmetic_inst(OP_TYPE_ORR, true, R0, R1, R2, SHIFT_LSL, 0);
 
     execute_instruction(&state, i.op_type, &i);
 
@@ -187,7 +196,8 @@ void test_logical_bic_32bit() {
     write_reg_32(&state, R2, 0x0000FFFF);
 
     // Build: BIC W0, W1, W2 (Bitwise Clear: W1 AND NOT W2)
-    Instruction i = create_arithmetic_inst(OP_TYPE_BIC, false, R0, R1, R2, SHIFT_LSL, 0);
+    Instruction i =
+        create_arithmetic_inst(OP_TYPE_BIC, false, R0, R1, R2, SHIFT_LSL, 0);
 
     execute_instruction(&state, i.op_type, &i);
 
@@ -195,7 +205,8 @@ void test_logical_bic_32bit() {
     // 0xFFFFFFFF & 0xFFFF0000 = 0xFFFF0000.
     assert(read_reg_32(&state, R0) == 0xFFFF0000);
 
-    // CRITICAL: Ensure the top 32 bits of the 64-bit register are completely zero!
+    // CRITICAL: Ensure the top 32 bits of the 64-bit register are completely
+    // zero!
     assert(read_reg_64(&state, R0) == 0x00000000FFFF0000ULL);
     printf("test_logical_bic_32bit: OK\n");
 }
@@ -208,7 +219,8 @@ void test_logical_ands_flags() {
     write_reg_64(&state, R2, 0x8000000000000000ULL);
 
     // Build: ANDS X0, X1, X2
-    Instruction i = create_arithmetic_inst(OP_TYPE_ANDS, true, R0, R1, R2, SHIFT_LSL, 0);
+    Instruction i =
+        create_arithmetic_inst(OP_TYPE_ANDS, true, R0, R1, R2, SHIFT_LSL, 0);
 
     execute_instruction(&state, i.op_type, &i);
 
@@ -216,10 +228,10 @@ void test_logical_ands_flags() {
     assert(read_reg_64(&state, R0) == 0x8000000000000000ULL);
 
     // Verify Flags
-    assert(read_pstate_flag(&state, N) == true);   // Sign bit is 1
-    assert(read_pstate_flag(&state, Z) == false);  // Result is not zero
-    assert(read_pstate_flag(&state, C) == false);  // Always 0 for logic
-    assert(read_pstate_flag(&state, V) == false);  // Always 0 for logic
+    assert(read_pstate_flag(&state, N) == true);  // Sign bit is 1
+    assert(read_pstate_flag(&state, Z) == false); // Result is not zero
+    assert(read_pstate_flag(&state, C) == false); // Always 0 for logic
+    assert(read_pstate_flag(&state, V) == false); // Always 0 for logic
 
     printf("test_logical_ands_flags: OK\n");
 }

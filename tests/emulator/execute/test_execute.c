@@ -1,16 +1,14 @@
 #include "test_execute.h"
-#include <stdio.h>
-#include "utils/types.h"
 #include "emulator/execute/execute.h"
+#include "test_branch.h"
 #include "test_dpii.h"
 #include "test_dpir.h"
-#include "test_branch.h"
 #include "test_load_literal.h"
 #include "test_single_data_transfer.h"
+#include "utils/types.h"
+#include <stdio.h>
 
-
-int main(void)
-{
+int main(void) {
     printf("Execute Tests\n");
     printf("-------------\n");
 

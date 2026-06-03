@@ -1,14 +1,13 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include "assembler/pass1/scanner.h"
-#include "assembler/symbol_table/symbol_table.h"
-#include "assembler/pass2/parser.h"
 #include "assembler/encode/encode.h"
+#include "assembler/pass1/scanner.h"
+#include "assembler/pass2/parser.h"
+#include "assembler/symbol_table/symbol_table.h"
 #include "common/error.h"
+#include <stdio.h>
+#include <stdlib.h>
 #define MAX_FILE_LINE_LENGTH 120
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     /*
     MAIN LOOP RUNS AS FOLLOWS
     1. First pass - use scanner.c to populate SymbolTable
@@ -18,21 +17,18 @@ int main(int argc, char **argv)
         then write the result to the output file
     */
 
-    if (argc < 2)
-    {
+    if (argc < 2) {
         ERROR((Error){.type = REQUIRE_CORRECT_ARGS});
     }
 
     char *in = argv[1];
     char *out = argv[2];
-    if (out == NULL)
-    {
+    if (out == NULL) {
         out = "out.bin";
     }
 
     FILE *file_in = fopen(in, "rb");
-    if (file_in == NULL)
-    {
+    if (file_in == NULL) {
         ERROR((Error){.type = ERROR_READING_FILE, .str = in});
     }
 
@@ -41,20 +37,17 @@ int main(int argc, char **argv)
     uint64 output_size = scan_file(in, table);
     uint32 *res = malloc(output_size);
 
-    if (res == NULL)
-    {
+    if (res == NULL) {
         ERROR((Error){.type = FAILED_TO_ALLOCATE});
     }
     // todo graceful error handling if over line length
     // todo no hard upper limit on lines
     int64 PC = 0;
     int instr_index = 0;
-    while (fgets(buf, MAX_FILE_LINE_LENGTH, file_in) != NULL)
-    {
+    while (fgets(buf, MAX_FILE_LINE_LENGTH, file_in) != NULL) {
         Instruction instr;
         bool instruction = parse_line(buf, &instr, table, PC);
-        if (instruction)
-        {
+        if (instruction) {
             res[instr_index] = encode_instruction(&instr);
             printf("Instruction %d: %08x\n", instr_index, res[instr_index]);
             PC += 4;
@@ -65,12 +58,9 @@ int main(int argc, char **argv)
 
     // Write results to file
     FILE *file_out = fopen(out, "wb");
-    if (file_out == NULL)
-    {
+    if (file_out == NULL) {
         ERROR((Error){.type = ERROR_WRITING_FILE, .str = out});
-    }
-    else
-    {
+    } else {
         fwrite(res, sizeof(uint32), instr_index, file_out);
         fclose(file_out);
     }

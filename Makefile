@@ -100,7 +100,7 @@ TEST_SYMBOL_TABLE_OBJS = $(TEST_SYMBOL_TABLE_SRCS:.c=.o)
 
 
 # BUILD TARGETS AND RULES
-.PHONY: all clean test
+.PHONY: all clean test format
 
 all: bin/emulate bin/assemble
 
@@ -182,6 +182,10 @@ test-pass2: test-parser test-operands
 test-assembler: test-encode test-pass1 test-pass2 test-symbol-table
 
 test-all: test-utils test-emulator test-assembler
+
+# FORMAT
+format:
+	git ls-files '*.c' '*.h' | xargs clang-format -i
 
 # CLEAN
 clean:

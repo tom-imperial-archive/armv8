@@ -1,11 +1,10 @@
-#include <stdlib.h>
 #include "hashset.h"
+#include <stdlib.h>
 
 #define BIG_PRIME 26544357617u
 #define INITIAL_CAPACITY 1024
 
-
-AddressSet* create_set(void) {
+AddressSet *create_set(void) {
     AddressSet *set = malloc(sizeof(AddressSet));
 
     set->capacity = INITIAL_CAPACITY;
@@ -43,7 +42,8 @@ static void resize_set(AddressSet *set) {
 }
 
 void insert_address(AddressSet *set, uint8 *address) {
-    if (address == NULL) return;
+    if (address == NULL)
+        return;
 
     // Check if resize is required
     if (set->size >= (set->capacity * 3) / 4) {
@@ -67,7 +67,8 @@ void insert_address(AddressSet *set, uint8 *address) {
 }
 
 void free_set(AddressSet *set) {
-    if (set == NULL) return;
+    if (set == NULL)
+        return;
 
     if (set->entries != NULL) {
         free(set->entries);
@@ -76,8 +77,8 @@ void free_set(AddressSet *set) {
     free(set);
 }
 
-uint8** get_all_addresses(AddressSet *set) {
-    if (set == NULL || set-> size == 0) {
+uint8 **get_all_addresses(AddressSet *set) {
+    if (set == NULL || set->size == 0) {
         return NULL;
     }
 

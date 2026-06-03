@@ -3,8 +3,9 @@
 
 #include "assembler/symbol_table/symbol_table.h"
 
-// This should read through the file, and populate a SymbolTable mapping labels to addresses
-// Note this is def not the best way to pass the file around, but it's sufficient for this sketch.
+// This should read through the file, and populate a SymbolTable mapping labels
+// to addresses Note this is def not the best way to pass the file around, but
+// it's sufficient for this sketch.
 uint64 scan_file(char *filename, SymbolTable *table);
 
 #endif

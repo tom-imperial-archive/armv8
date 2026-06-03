@@ -1,14 +1,15 @@
 #ifndef INSTRUCTION_H
 #define INSTRUCTION_H
 
-#include <stdbool.h>
 #include "utils/types.h"
+#include <stdbool.h>
 
 typedef enum OpType {
     // Halt
     OP_TYPE_HALT,
 
-    // Data processing instruction (immediate). Correspond to `ImmediateArithmeticInstruction`.
+    // Data processing instruction (immediate). Correspond to
+    // `ImmediateArithmeticInstruction`.
 
     // Arithmetic
     OP_TYPE_ADD,
@@ -21,7 +22,8 @@ typedef enum OpType {
     OP_TYPE_MOVZ,
     OP_TYPE_MOVK,
 
-    // Data processing instruction (register). Correspond to `RegisterArithmeticLogicInstruction`
+    // Data processing instruction (register). Correspond to
+    // `RegisterArithmeticLogicInstruction`
 
     // Arithmetic
     OP_TYPE_REG_ADD,
@@ -127,7 +129,7 @@ typedef enum AddressingMode {
     ADDR_REGISTER_OFFSET
 } AddressingMode;
 
-typedef struct SingleDataTransfer {
+typedef struct SingleDataTransferInstruction {
     bool sf;
     bool L;
     AddressingMode mode;
@@ -135,13 +137,13 @@ typedef struct SingleDataTransfer {
     int xm;
     int xn;
     int rt;
-} SingleDataTransfer;
+} SingleDataTransferInstruction;
 
-typedef struct LoadLiteral {
+typedef struct LoadLiteralInstruction {
     bool sf;
     int simm19;
     int rt;
-} LoadLiteral;
+} LoadLiteralInstruction;
 
 // Directive
 typedef struct DirectiveInt {
@@ -159,8 +161,8 @@ typedef struct Instruction {
         UnconditionalBranchInstruction uncond_branch;
         RegisterBranchInstruction reg_branch;
         ConditionalBranchInstruction cond_branch;
-        SingleDataTransfer single_data_transfer;
-        LoadLiteral load_literal;
+        SingleDataTransferInstruction single_data_transfer;
+        LoadLiteralInstruction load_literal;
         DirectiveInt directive_int;
     } data;
 } Instruction;

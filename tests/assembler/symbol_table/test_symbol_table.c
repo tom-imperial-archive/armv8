@@ -1,8 +1,8 @@
+#include "assembler/symbol_table/symbol_table.h"
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
-#include "assembler/symbol_table/symbol_table.h"
 
 void test_create(void) {
     SymbolTable *table = create_symbol_table();

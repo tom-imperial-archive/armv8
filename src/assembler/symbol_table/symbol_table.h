@@ -17,7 +17,7 @@ typedef struct {
 } SymbolTable;
 
 // Allocates memory and initialises
-SymbolTable* create_symbol_table(void);
+SymbolTable *create_symbol_table(void);
 
 // Adds new label, and resizes array if needed
 // Note we must store the label ourselves,

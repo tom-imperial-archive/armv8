@@ -1,11 +1,12 @@
 #include <stdbool.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include "operands.h"
-#include "common/instruction.h"
-#include "common/error.h"
+
 #include "assembler/symbol_table/symbol_table.h"
+#include "common/error.h"
+#include "common/instruction.h"
+#include "operands.h"
 #include "utils/types.h"
 
 #define ZERO_REG 31
@@ -29,7 +30,8 @@ static void apply_register_shift(Instruction *i, char *saveptr) {
     } else {
         i->data.register_arithmetic_logic.shift = parse_shift(shift_type);
         char *shift_amount_str = strtok_r(NULL, " ,\t\n", &saveptr);
-        i->data.register_arithmetic_logic.operand = parse_immediate(shift_amount_str);
+        i->data.register_arithmetic_logic.operand =
+            parse_immediate(shift_amount_str);
     }
 }
 
@@ -38,8 +40,9 @@ static void apply_register_shift(Instruction *i, char *saveptr) {
 // These functions take the relevant data, and
 // populate the instruction struct with it.
 // --------------------------------------------------------------
-void build_arithmetic(Instruction *i, OpType immediate_opcode, OpType register_opcode,
-                      int rd, int rn, bool sf, char *op2_str, char *saveptr) {
+void build_arithmetic(Instruction *i, OpType immediate_opcode,
+                      OpType register_opcode, int rd, int rn, bool sf,
+                      char *op2_str, char *saveptr) {
     if (op2_str[0] == '#') {
         // Immediate
         i->op_type = immediate_opcode;
@@ -61,7 +64,8 @@ void build_arithmetic(Instruction *i, OpType immediate_opcode, OpType register_o
             } else if (shift_amount == 0) {
                 i->data.immediate_arithmetic.sh = 0;
             } else {
-                ERROR((Error){.type = DPI_INVALID_SHIFT, .shift_amount = shift_amount});
+                ERROR((Error){.type = DPI_INVALID_SHIFT,
+                              .shift_amount = shift_amount});
             }
         }
     } else {
@@ -76,11 +80,11 @@ void build_arithmetic(Instruction *i, OpType immediate_opcode, OpType register_o
 
         // Check for shift
         apply_register_shift(i, saveptr);
-
     }
 }
 
-void build_logical(Instruction *i, OpType opcode, int rd, int rn, int rm, bool sf, char *saveptr) {
+void build_logical(Instruction *i, OpType opcode, int rd, int rn, int rm,
+                   bool sf, char *saveptr) {
     i->op_type = opcode;
     i->data.register_arithmetic_logic.rd = rd;
     i->data.register_arithmetic_logic.rn = rn;
@@ -91,7 +95,8 @@ void build_logical(Instruction *i, OpType opcode, int rd, int rn, int rm, bool s
     apply_register_shift(i, saveptr);
 }
 
-void build_multiply(Instruction *i, OpType opcode, int rd, int rn, int rm, int ra, bool sf) {
+void build_multiply(Instruction *i, OpType opcode, int rd, int rn, int rm,
+                    int ra, bool sf) {
     i->op_type = opcode;
     i->data.multiply.rd = rd;
     i->data.multiply.rn = rn;
@@ -122,7 +127,9 @@ void build_literal(Instruction *i, int rt, bool sf, int64 offset) {
     i->data.load_literal.simm19 = offset;
 }
 
-void build_single_data_transfer(Instruction *i, OpType opcode, int rt, bool sf, bool is_load, AddressingMode mode, int xm, int64 offset) {
+void build_single_data_transfer(Instruction *i, OpType opcode, int rt, bool sf,
+                                bool is_load, AddressingMode mode, int xm,
+                                int64 offset) {
     i->op_type = opcode;
     i->data.single_data_transfer.rt = rt;
     i->data.single_data_transfer.sf = sf;
@@ -132,7 +139,8 @@ void build_single_data_transfer(Instruction *i, OpType opcode, int rt, bool sf, 
     i->data.single_data_transfer.offset = offset;
 }
 
-void build_wide_move(Instruction *i, OpType opcode, bool sf, int rd, int64 imm16, int hw) {
+void build_wide_move(Instruction *i, OpType opcode, bool sf, int rd,
+                     int64 imm16, int hw) {
     i->op_type = opcode;
     i->data.wide_move.sf = sf;
     i->data.wide_move.rd = rd;
@@ -140,7 +148,7 @@ void build_wide_move(Instruction *i, OpType opcode, bool sf, int rd, int64 imm16
     i->data.wide_move.hw = hw;
 }
 
-void build_directive(Instruction *i,int value) {
+void build_directive(Instruction *i, int value) {
     i->op_type = OP_TYPE_DIRECTIVE_INT;
     i->data.directive_int.value = value;
 }
@@ -148,11 +156,13 @@ void build_directive(Instruction *i,int value) {
 // --------------------------------------------------------------
 // INTERMEDIATE PARSING FUNCTIONS
 // These are called as an intermediate step between the initial parse function
-// and the final build function, and handle multiple highly similar instructions.
+// and the final build function, and handle multiple highly similar
+// instructions.
 // --------------------------------------------------------------
 
 // Intermediate parser for standard arithmetic instructions - add(s) and sub(s)
-void parse_arithmetic(char *operands, Instruction *i, OpType immediate_opcode, OpType register_opcode) {
+void parse_arithmetic(char *operands, Instruction *i, OpType immediate_opcode,
+                      OpType register_opcode) {
     char *saveptr;
     char *rd_str = strtok_r(operands, " ,", &saveptr);
     char *rn_str = strtok_r(NULL, " ,", &saveptr);
@@ -166,11 +176,13 @@ void parse_arithmetic(char *operands, Instruction *i, OpType immediate_opcode, O
         ERROR((Error){.type = REGISTER_SIZE_MISMATCH});
     }
 
-    build_arithmetic(i, immediate_opcode, register_opcode, rd, rn, sf_rd, op2_str, saveptr);
+    build_arithmetic(i, immediate_opcode, register_opcode, rd, rn, sf_rd,
+                     op2_str, saveptr);
 }
 
 // Intermediate parser for compare aliases - cmp and cmn
-void parse_compare(char *operands, Instruction *i, OpType immediate_opcode, OpType register_opcode) {
+void parse_compare(char *operands, Instruction *i, OpType immediate_opcode,
+                   OpType register_opcode) {
     char *saveptr;
     char *rn_str = strtok_r(operands, " ,", &saveptr);
     char *op2_str = strtok_r(NULL, " ,\t\n", &saveptr);
@@ -178,11 +190,13 @@ void parse_compare(char *operands, Instruction *i, OpType immediate_opcode, OpTy
     bool sf_rn;
     int rn = parse_register(rn_str, &sf_rn);
 
-    build_arithmetic(i, immediate_opcode, register_opcode, ZERO_REG, rn, sf_rn, op2_str, saveptr);
+    build_arithmetic(i, immediate_opcode, register_opcode, ZERO_REG, rn, sf_rn,
+                     op2_str, saveptr);
 }
 
 // Intermediate parser for negate aliases - neg(s)
-void parse_negate(char *operands, Instruction *i, OpType immediate_opcode, OpType register_opcode) {
+void parse_negate(char *operands, Instruction *i, OpType immediate_opcode,
+                  OpType register_opcode) {
     char *saveptr;
     char *rd_str = strtok_r(operands, " ,", &saveptr);
     char *op2_str = strtok_r(NULL, " ,\t\n", &saveptr);
@@ -190,10 +204,12 @@ void parse_negate(char *operands, Instruction *i, OpType immediate_opcode, OpTyp
     bool sf_rd;
     int rd = parse_register(rd_str, &sf_rd);
 
-    build_arithmetic(i, immediate_opcode, register_opcode, rd, ZERO_REG, sf_rd, op2_str, saveptr);
+    build_arithmetic(i, immediate_opcode, register_opcode, rd, ZERO_REG, sf_rd,
+                     op2_str, saveptr);
 }
 
-// Intermediate parser for standard logical operations - and(s), bic(s), eor, orr, eon, and orn
+// Intermediate parser for standard logical operations - and(s), bic(s), eor,
+// orr, eon, and orn
 void parse_logical(char *operands, Instruction *i, OpType opcode) {
     char *saveptr;
     char *rd_str = strtok_r(operands, " ,", &saveptr);
@@ -269,8 +285,10 @@ void parse_multiply_alias(char *operands, Instruction *i, OpType opcode) {
     build_multiply(i, opcode, rd, rn, rm, ZERO_REG, sf_rd);
 }
 
-// Intermediate parser for conditional branch instructions - b.eq, b.ne, b.ge, b.lt, b.gt, b.le, and b.al
-void parse_b_cond(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc, OpType opcode) {
+// Intermediate parser for conditional branch instructions - b.eq, b.ne, b.ge,
+// b.lt, b.gt, b.le, and b.al
+void parse_b_cond(char *operands, Instruction *i, SymbolTable *table,
+                  uint64 current_pc, OpType opcode) {
     char *saveptr;
     char *label = strtok_r(operands, " \t\n", &saveptr);
     uint64 target = symbol_table_lookup(table, label);
@@ -281,7 +299,8 @@ void parse_b_cond(char *operands, Instruction *i, SymbolTable *table, uint64 cur
 }
 
 // Intermediate parser for memory instructions - ldr and str
-void parse_memory(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc, bool is_load) {
+void parse_memory(char *operands, Instruction *i, SymbolTable *table,
+                  uint64 current_pc, bool is_load) {
     char *saveptr;
 
     char *rt_str = strtok_r(operands, " ,\t\n", &saveptr);
@@ -289,7 +308,8 @@ void parse_memory(char *operands, Instruction *i, SymbolTable *table, uint64 cur
     int rt = parse_register(rt_str, &sf_rt);
 
     // Strip leading whitespace
-    while (*saveptr == ' ' || *saveptr == '\t') saveptr++;
+    while (*saveptr == ' ' || *saveptr == '\t')
+        saveptr++;
     char *address_str = saveptr;
     // Strip trailing newlines
     address_str[strcspn(address_str, "\n")] = '\0';
@@ -306,7 +326,7 @@ void parse_memory(char *operands, Instruction *i, SymbolTable *table, uint64 cur
         }
         int64 offset = calculate_offset(current_pc, target);
 
-        build_literal(i,rt, sf_rt, offset);
+        build_literal(i, rt, sf_rt, offset);
         return;
     }
 
@@ -325,15 +345,20 @@ void parse_memory(char *operands, Instruction *i, SymbolTable *table, uint64 cur
     if (op2_str != NULL && op2_str[0] != '#') {
         bool sf_xm;
         int xm = parse_register(op2_str, &sf_xm);
-        build_single_data_transfer(i, OP_TYPE_SINGLE_DATA_TRANSFER, rt, sf_rt, is_load, ADDR_REGISTER_OFFSET, xm, 0);
+        build_single_data_transfer(i, OP_TYPE_SINGLE_DATA_TRANSFER, rt, sf_rt,
+                                   is_load, ADDR_REGISTER_OFFSET, xm, 0);
     } else {
         // Immediate offset - Pre, Post, or Unsigned
         long imm = (op2_str != NULL) ? parse_immediate(op2_str) : 0;
 
         if (is_pre_indexed) {
-            build_single_data_transfer(i, OP_TYPE_SINGLE_DATA_TRANSFER, rt, sf_rt, is_load, ADDR_PRE_INDEXED, 0, imm);
+            build_single_data_transfer(i, OP_TYPE_SINGLE_DATA_TRANSFER, rt,
+                                       sf_rt, is_load, ADDR_PRE_INDEXED, 0,
+                                       imm);
         } else if (is_post_indexed) {
-            build_single_data_transfer(i, OP_TYPE_SINGLE_DATA_TRANSFER, rt, sf_rt, is_load, ADDR_POST_INDEXED, 0, imm);
+            build_single_data_transfer(i, OP_TYPE_SINGLE_DATA_TRANSFER, rt,
+                                       sf_rt, is_load, ADDR_POST_INDEXED, 0,
+                                       imm);
         } else {
             // Scaling rules
             int scale = sf_rt ? 8 : 4;
@@ -341,7 +366,9 @@ void parse_memory(char *operands, Instruction *i, SymbolTable *table, uint64 cur
                 ERROR((Error){.type = OFFSET_MULTIPLE_N, .index = scale});
             }
             int64 offset = imm / scale;
-            build_single_data_transfer(i, OP_TYPE_SINGLE_DATA_TRANSFER, rt, sf_rt, is_load, ADDR_UNSIGNED_OFFSET, 0, offset);
+            build_single_data_transfer(i, OP_TYPE_SINGLE_DATA_TRANSFER, rt,
+                                       sf_rt, is_load, ADDR_UNSIGNED_OFFSET, 0,
+                                       offset);
         }
     }
 }
@@ -380,7 +407,8 @@ void parse_wide_move(char *operands, Instruction *i, OpType opcode) {
         } else if (shift_amount == 48 && sf_rd) { // 48 is only valid for 64-bit
             hw = 3;
         } else {
-            ERROR((Error){.type = INVALID_SHIFT_AMOUNT, .shift_amount = shift_amount});
+            ERROR((Error){.type = INVALID_SHIFT_AMOUNT,
+                          .shift_amount = shift_amount});
         }
     }
 
@@ -395,71 +423,88 @@ void parse_wide_move(char *operands, Instruction *i, OpType opcode) {
 //     logic before directly calling a building function.
 // --------------------------------------------------------------
 
-void parse_add(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_add(char *operands, Instruction *i, SymbolTable *table,
+               uint64 current_pc) {
     parse_arithmetic(operands, i, OP_TYPE_ADD, OP_TYPE_REG_ADD);
 }
 
-void parse_adds(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_adds(char *operands, Instruction *i, SymbolTable *table,
+                uint64 current_pc) {
     parse_arithmetic(operands, i, OP_TYPE_ADDS, OP_TYPE_REG_ADDS);
 }
 
-void parse_sub(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_sub(char *operands, Instruction *i, SymbolTable *table,
+               uint64 current_pc) {
     parse_arithmetic(operands, i, OP_TYPE_SUB, OP_TYPE_REG_SUB);
 }
 
-void parse_subs(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_subs(char *operands, Instruction *i, SymbolTable *table,
+                uint64 current_pc) {
     parse_arithmetic(operands, i, OP_TYPE_SUBS, OP_TYPE_REG_SUBS);
 }
 
-void parse_cmp(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_cmp(char *operands, Instruction *i, SymbolTable *table,
+               uint64 current_pc) {
     parse_compare(operands, i, OP_TYPE_SUBS, OP_TYPE_REG_SUBS);
 }
 
-void parse_cmn(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_cmn(char *operands, Instruction *i, SymbolTable *table,
+               uint64 current_pc) {
     parse_compare(operands, i, OP_TYPE_ADDS, OP_TYPE_REG_ADDS);
 }
 
-void parse_neg(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_neg(char *operands, Instruction *i, SymbolTable *table,
+               uint64 current_pc) {
     parse_negate(operands, i, OP_TYPE_SUB, OP_TYPE_REG_SUB);
 }
 
-void parse_negs(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_negs(char *operands, Instruction *i, SymbolTable *table,
+                uint64 current_pc) {
     parse_negate(operands, i, OP_TYPE_SUBS, OP_TYPE_REG_SUBS);
 }
 
-void parse_and(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_and(char *operands, Instruction *i, SymbolTable *table,
+               uint64 current_pc) {
     parse_logical(operands, i, OP_TYPE_AND);
 }
 
-void parse_ands(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_ands(char *operands, Instruction *i, SymbolTable *table,
+                uint64 current_pc) {
     parse_logical(operands, i, OP_TYPE_ANDS);
 }
 
-void parse_bic(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_bic(char *operands, Instruction *i, SymbolTable *table,
+               uint64 current_pc) {
     parse_logical(operands, i, OP_TYPE_BIC);
 }
 
-void parse_bics(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_bics(char *operands, Instruction *i, SymbolTable *table,
+                uint64 current_pc) {
     parse_logical(operands, i, OP_TYPE_BICS);
 }
 
-void parse_eor(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_eor(char *operands, Instruction *i, SymbolTable *table,
+               uint64 current_pc) {
     parse_logical(operands, i, OP_TYPE_EOR);
 }
 
-void parse_orr(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_orr(char *operands, Instruction *i, SymbolTable *table,
+               uint64 current_pc) {
     parse_logical(operands, i, OP_TYPE_ORR);
 }
 
-void parse_eon(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_eon(char *operands, Instruction *i, SymbolTable *table,
+               uint64 current_pc) {
     parse_logical(operands, i, OP_TYPE_EON);
 }
 
-void parse_orn(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_orn(char *operands, Instruction *i, SymbolTable *table,
+               uint64 current_pc) {
     parse_logical(operands, i, OP_TYPE_ORN);
 }
 
-void parse_tst(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_tst(char *operands, Instruction *i, SymbolTable *table,
+               uint64 current_pc) {
     char *saveptr;
     char *rn_str = strtok_r(operands, " ,", &saveptr);
     char *rm_str = strtok_r(NULL, " ,", &saveptr);
@@ -475,31 +520,38 @@ void parse_tst(char *operands, Instruction *i, SymbolTable *table, uint64 curren
     build_logical(i, OP_TYPE_ANDS, ZERO_REG, rn, rm, sf_rn, saveptr);
 }
 
-void parse_mvn(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_mvn(char *operands, Instruction *i, SymbolTable *table,
+               uint64 current_pc) {
     parse_move(operands, i, OP_TYPE_ORN);
 }
 
-void parse_mov(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_mov(char *operands, Instruction *i, SymbolTable *table,
+               uint64 current_pc) {
     parse_move(operands, i, OP_TYPE_ORR);
 }
 
-void parse_madd(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_madd(char *operands, Instruction *i, SymbolTable *table,
+                uint64 current_pc) {
     parse_multiply(operands, i, OP_TYPE_MADD);
 }
 
-void parse_msub(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_msub(char *operands, Instruction *i, SymbolTable *table,
+                uint64 current_pc) {
     parse_multiply(operands, i, OP_TYPE_MSUB);
 }
 
-void parse_mul(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_mul(char *operands, Instruction *i, SymbolTable *table,
+               uint64 current_pc) {
     parse_multiply_alias(operands, i, OP_TYPE_MADD);
 }
 
-void parse_mneg(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_mneg(char *operands, Instruction *i, SymbolTable *table,
+                uint64 current_pc) {
     parse_multiply_alias(operands, i, OP_TYPE_MSUB);
 }
 
-void parse_b(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_b(char *operands, Instruction *i, SymbolTable *table,
+             uint64 current_pc) {
     char *saveptr;
     char *label = strtok_r(operands, " \t\n", &saveptr);
     uint64 target = symbol_table_lookup(table, label);
@@ -509,7 +561,8 @@ void parse_b(char *operands, Instruction *i, SymbolTable *table, uint64 current_
     build_b(i, offset);
 }
 
-void parse_br(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_br(char *operands, Instruction *i, SymbolTable *table,
+              uint64 current_pc) {
     char *saveptr;
     char *xn_str = strtok_r(operands, " ,\t\n", &saveptr);
 
@@ -519,55 +572,68 @@ void parse_br(char *operands, Instruction *i, SymbolTable *table, uint64 current
     build_br(i, xn);
 }
 
-void parse_b_eq(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_b_eq(char *operands, Instruction *i, SymbolTable *table,
+                uint64 current_pc) {
     parse_b_cond(operands, i, table, current_pc, OP_TYPE_EQ);
 }
 
-void parse_b_ne(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_b_ne(char *operands, Instruction *i, SymbolTable *table,
+                uint64 current_pc) {
     parse_b_cond(operands, i, table, current_pc, OP_TYPE_NE);
 }
 
-void parse_b_ge(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_b_ge(char *operands, Instruction *i, SymbolTable *table,
+                uint64 current_pc) {
     parse_b_cond(operands, i, table, current_pc, OP_TYPE_GE);
 }
 
-void parse_b_lt(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_b_lt(char *operands, Instruction *i, SymbolTable *table,
+                uint64 current_pc) {
     parse_b_cond(operands, i, table, current_pc, OP_TYPE_LT);
 }
 
-void parse_b_gt(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_b_gt(char *operands, Instruction *i, SymbolTable *table,
+                uint64 current_pc) {
     parse_b_cond(operands, i, table, current_pc, OP_TYPE_GT);
 }
 
-void parse_b_le(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_b_le(char *operands, Instruction *i, SymbolTable *table,
+                uint64 current_pc) {
     parse_b_cond(operands, i, table, current_pc, OP_TYPE_LE);
 }
 
-void parse_b_al(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_b_al(char *operands, Instruction *i, SymbolTable *table,
+                uint64 current_pc) {
     parse_b_cond(operands, i, table, current_pc, OP_TYPE_AL);
 }
 
-void parse_ldr(char *operands, Instruction *i, SymbolTable *table, uint64_t current_pc) {
+void parse_ldr(char *operands, Instruction *i, SymbolTable *table,
+               uint64_t current_pc) {
     parse_memory(operands, i, table, current_pc, true);
 }
 
-void parse_str(char *operands, Instruction *i, SymbolTable *table, uint64_t current_pc) {
+void parse_str(char *operands, Instruction *i, SymbolTable *table,
+               uint64_t current_pc) {
     parse_memory(operands, i, table, current_pc, false);
 }
 
-void parse_movk(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_movk(char *operands, Instruction *i, SymbolTable *table,
+                uint64 current_pc) {
     parse_wide_move(operands, i, OP_TYPE_MOVK);
 }
 
-void parse_movn(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_movn(char *operands, Instruction *i, SymbolTable *table,
+                uint64 current_pc) {
     parse_wide_move(operands, i, OP_TYPE_MOVN);
 }
 
-void parse_movz(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_movz(char *operands, Instruction *i, SymbolTable *table,
+                uint64 current_pc) {
     parse_wide_move(operands, i, OP_TYPE_MOVZ);
 }
 
-void parse_directive_int(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
+void parse_directive_int(char *operands, Instruction *i, SymbolTable *table,
+                         uint64 current_pc) {
     char *saveptr;
     char *val_str = strtok_r(operands, " \t\n", &saveptr);
 
@@ -575,7 +641,8 @@ void parse_directive_int(char *operands, Instruction *i, SymbolTable *table, uin
         ERROR((Error){.type = INT_DIRECTIVE_REQUIRES_VALUE});
     }
 
-    // parse_immediate() is unsuitable here, since directives do not use the # prefix
+    // parse_immediate() is unsuitable here, since directives do not use the #
+    // prefix
     long val = strtol(val_str, NULL, 0);
 
     build_directive(i, (int)val);
@@ -586,51 +653,33 @@ void parse_directive_int(char *operands, Instruction *i, SymbolTable *table, uin
 // Stores each instruction's corresponding parsing function.
 // --------------------------------------------------------------
 MnemonicMap router[] = {
-    {"add", parse_add},
-    {"adds", parse_adds},
-    {"sub", parse_sub},
-    {"subs", parse_subs},
-    {"cmp", parse_cmp},
-    {"cmn", parse_cmn},
-    {"neg", parse_neg},
-    {"negs", parse_negs},
-    {"and", parse_and},
-    {"ands", parse_ands},
-    {"bic", parse_bic},
-    {"bics", parse_bics},
-    {"eor", parse_eor},
-    {"orr", parse_orr},
-    {"eon", parse_eon},
-    {"orn", parse_orn},
-    {"tst", parse_tst},
-    {"mvn", parse_mvn},
-    {"mov", parse_mov},
-    {"madd", parse_madd},
-    {"msub", parse_msub},
-    {"mul", parse_mul},
-    {"mneg", parse_mneg},
-    {"b", parse_b},
-    {"br", parse_br},
-    {"b.eq", parse_b_eq},
-    {"b.ne", parse_b_ne},
-    {"b.ge", parse_b_ge},
-    {"b.lt", parse_b_lt},
-    {"b.gt", parse_b_gt},
-    {"b.le", parse_b_le},
-    {"b.al", parse_b_al},
-    {"ldr", parse_ldr},
-    {"str", parse_str},
-    {"movk", parse_movk},
-    {"movn", parse_movn},
-    {"movz", parse_movz},
-    {".int", parse_directive_int},
+    {"add", parse_add},   {"adds", parse_adds},
+    {"sub", parse_sub},   {"subs", parse_subs},
+    {"cmp", parse_cmp},   {"cmn", parse_cmn},
+    {"neg", parse_neg},   {"negs", parse_negs},
+    {"and", parse_and},   {"ands", parse_ands},
+    {"bic", parse_bic},   {"bics", parse_bics},
+    {"eor", parse_eor},   {"orr", parse_orr},
+    {"eon", parse_eon},   {"orn", parse_orn},
+    {"tst", parse_tst},   {"mvn", parse_mvn},
+    {"mov", parse_mov},   {"madd", parse_madd},
+    {"msub", parse_msub}, {"mul", parse_mul},
+    {"mneg", parse_mneg}, {"b", parse_b},
+    {"br", parse_br},     {"b.eq", parse_b_eq},
+    {"b.ne", parse_b_ne}, {"b.ge", parse_b_ge},
+    {"b.lt", parse_b_lt}, {"b.gt", parse_b_gt},
+    {"b.le", parse_b_le}, {"b.al", parse_b_al},
+    {"ldr", parse_ldr},   {"str", parse_str},
+    {"movk", parse_movk}, {"movn", parse_movn},
+    {"movz", parse_movz}, {".int", parse_directive_int},
 };
 
 // Takes a single line of assembly, an empty instruction struct,
 //     a SymbolTable, and the current program counter
 // If it's an instruction, we populate the instruction struct and return true.
 // If the line is blank, a comment, or a label, we simply return false
-bool parse_line(char *line, Instruction *i, SymbolTable *table, uint64 current_pc) {
+bool parse_line(char *line, Instruction *i, SymbolTable *table,
+                uint64 current_pc) {
     char *saveptr;
 
     // Take the first word (the mnemonic or label)
@@ -639,7 +688,8 @@ bool parse_line(char *line, Instruction *i, SymbolTable *table, uint64 current_p
         return false;
     }
 
-    // If the first word is a label, there may be an instruction on the same line
+    // If the first word is a label, there may be an instruction on the same
+    // line
     if (mnemonic[strlen(mnemonic) - 1] == ':') {
         // Inspect next word on line
         mnemonic = strtok_r(NULL, " \t\n", &saveptr);
@@ -649,7 +699,7 @@ bool parse_line(char *line, Instruction *i, SymbolTable *table, uint64 current_p
     }
 
     // Use the routing table to call the correct function
-    for (int cnt = 0; cnt < (sizeof(router)/sizeof(MnemonicMap)); cnt++){
+    for (int cnt = 0; cnt < (sizeof(router) / sizeof(MnemonicMap)); cnt++) {
         if (!strcmp(mnemonic, router[cnt].mnemonic)) {
             router[cnt].func(saveptr, i, table, current_pc);
 

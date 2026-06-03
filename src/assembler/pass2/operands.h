@@ -1,12 +1,13 @@
 #ifndef OPERANDS_H
 #define OPERANDS_H
 
-#include <stdbool.h>
-#include "utils/types.h"
 #include "common/instruction.h"
+#include "utils/types.h"
+#include <stdbool.h>
 
 // Parses a register string e.g. "x0" or "w12"
-// Returns the register number, and sets the boolean pointer depending on the register size
+// Returns the register number, and sets the boolean pointer depending on the
+// register size
 int parse_register(char *token, bool *is_64_bit);
 
 // Parses an immediate value string in decimal or hex e.g. #5, #0x1A, or #-12
