@@ -180,77 +180,6 @@ uint32 encode_wide_move(Instruction *i) {
     return instruction;
 }
 
-// uint32 encode_register_arithmetic_logic(Instruction* i) {
-//     uint32 instruction = 0;
-//     RegisterArithmeticLogicInstruction data =
-//     i->data.register_arithmetic_logic;
-
-//     // OP0
-//     instruction |= MASK_OP0_DPIR << OFFSET_OP0;
-
-//     // SF
-//     if (data.sf) {
-//         instruction |= 1 << OFFSET_SF_DPII_DPIR;
-//     }
-
-//     // OPC
-//     const int MASK_ADDS = 0x1; // 0b01
-//     const int MASK_SUB = 0x2;  // 0b10
-//     const int MASK_SUBS = 0x3; // 0b11
-//     switch (i->op_type) {
-//         // OPC is 0b00
-//         case OP_TYPE_REG_ADD:
-//         case OP_TYPE_AND:
-//         case OP_TYPE_BIC:
-//             break;
-
-//         case OP_TYPE_REG_ADDS:
-//         case OP_TYPE_ORR:
-//         case OP_TYPE_ORN:
-//             instruction |= MASK_ADDS << OFFSET_OPC; // 0b01
-//             break;
-
-//         case OP_TYPE_REG_SUB:
-//         case OP_TYPE_EOR:
-//         case OP_TYPE_EON:
-//             instruction |= MASK_SUB << OFFSET_OPC; // 0b10
-//             break;
-
-//         case OP_TYPE_REG_SUBS:
-//         case OP_TYPE_ANDS:
-//         case OP_TYPE_BICS:
-//             instruction |= MASK_SUBS << OFFSET_OPC; // 0b11
-//             break;
-
-//         // Wrong op_type
-//         default: assert(false); break;
-//     }
-
-//     // M
-//     // Only set for multiply
-
-//     // OPR
-//     const int MASK_ARITHMETIC_OPR = 0x8; // 0b1000
-//     const int OFFSET_SHIFT = 22;
-//     instruction |= MASK_ARITHMETIC_OPR << OFFSET_OPR;
-//     instruction |= data.shift << OFFSET_SHIFT;
-
-//     // RM
-//     instruction |= data.rm << OFFSET_RM;
-
-//     // OPERAND
-//     const int OFFSET_OPERAND = 10;
-//     instruction |= data.operand << OFFSET_OPERAND;
-
-//     // RN
-//     instruction |= data.rn << OFFSET_RN;
-
-//     // RD
-//     instruction |= data.rd;
-
-//     return instruction;
-// }
-
 uint32 encode_register_arithmetic_logic(Instruction *i) {
     uint32 instruction = 0;
     RegisterArithmeticLogicInstruction data = i->data.register_arithmetic_logic;
@@ -335,27 +264,26 @@ uint32 encode_register_arithmetic_logic(Instruction *i) {
     }
 
     // Apply OPC
-    instruction |= opc << 29;
+    instruction |= opc << OFFSET_OPC;
 
     // Apply OPR (Bits 24-21)
     uint32 opr = 0;
     if (!is_logical) {
-        // Arithmetic: (1 << 3) | (shift << 1) | 0
         opr = (1 << 3) | (data.shift << 1);
     } else {
-        // Logical: (0 << 3) | (shift << 1) | N
         opr = (data.shift << 1) | n_bit;
     }
-    instruction |= opr << 21;
+    instruction |= opr << OFFSET_OPR;
 
     // RM (Bits 20-16)
-    instruction |= data.rm << 16;
+    instruction |= data.rm << OFFSET_RM;
 
-    // OPERAND (Bits 15-10) -> Was incorrectly set to 9!
-    instruction |= data.operand << 10;
+    // OPERAND (Bits 15-10)
+    const int OFFSET_OPERAND = 10;
+    instruction |= data.operand << OFFSET_OPERAND;
 
     // RN (Bits 9-5)
-    instruction |= data.rn << 5;
+    instruction |= data.rn << OFFSET_RN;
 
     // RD (Bits 4-0)
     instruction |= data.rd;
@@ -410,7 +338,7 @@ uint32 encode_register_multiply(Instruction *i) {
 
 uint32 encode_single_data_transfer(Instruction *i) {
     uint32 instruction = 0;
-    SingleDataTransfer data = i->data.single_data_transfer;
+    SingleDataTransferInstruction data = i->data.single_data_transfer;
 
     // Top bits
     const int MASK_TOP_BITS = 0x5; // 0b101
@@ -473,7 +401,7 @@ uint32 encode_single_data_transfer(Instruction *i) {
 
 uint32 encode_load_literal(Instruction *i) {
     uint32 instruction = 0;
-    LoadLiteral data = i->data.load_literal;
+    LoadLiteralInstruction data = i->data.load_literal;
 
     // OP0
     instruction |= MASK_OP0_LOAD_STORE << OFFSET_OP0;
@@ -566,15 +494,7 @@ uint32 encode_register_branch(Instruction *i) {
     uint32 instruction = 0;
     RegisterBranchInstruction data = i->data.reg_branch;
 
-    // Top bits
-    // const int MASK_TOP_BITS_CONDITIONAL_BRANCH = 0x6; // 0b110
-    // instruction |= MASK_TOP_BITS_CONDITIONAL_BRANCH << OFFSET_TOP_BITS;
-
-    // // Middle bits
-    // const int MASK_MIDDLE_BITS = 0x1F; // 0b111111
-    // const int OFFSET_MIDDLE_BITS = 15;
-    // instruction |= MASK_MIDDLE_BITS << OFFSET_MIDDLE_BITS;
-
+    // UPPER BITS
     const int MASK_UPPER_BITS = 0xD61F0000;
     instruction |= MASK_UPPER_BITS;
 

@@ -294,7 +294,7 @@ void execute_wide_move(State *state, Instruction *i) {
 
 // Used in `execute_single_data_transfer` to calculate the source address in the
 // load/store.
-uint64 find_address(State *state, SingleDataTransfer data_transfer) {
+uint64 find_address(State *state, SingleDataTransferInstruction data_transfer) {
     uint64 xn = read_reg_64(state, data_transfer.xn);
 
     switch (data_transfer.mode) {
@@ -322,7 +322,7 @@ uint64 find_address(State *state, SingleDataTransfer data_transfer) {
 
 // PRE: op == OP_TYPE_SINGLE_DATA_TRANSFER
 void execute_single_data_transfer(State *state, Instruction *i) {
-    SingleDataTransfer data_transfer = i->data.single_data_transfer;
+    SingleDataTransferInstruction data_transfer = i->data.single_data_transfer;
     uint64 address = find_address(state, data_transfer);
     int rt = i->data.single_data_transfer.rt;
 
@@ -353,7 +353,7 @@ void execute_single_data_transfer(State *state, Instruction *i) {
 }
 
 void execute_load_literal(State *state, Instruction *i) {
-    LoadLiteral instruction_data = i->data.load_literal;
+    LoadLiteralInstruction instruction_data = i->data.load_literal;
     uint64 transfer_address = state->PC + instruction_data.simm19 * 4;
     if (instruction_data.sf) {
         uint64 data = read_mem_64(state, transfer_address);

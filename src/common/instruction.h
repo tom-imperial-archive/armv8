@@ -129,7 +129,7 @@ typedef enum AddressingMode {
     ADDR_REGISTER_OFFSET
 } AddressingMode;
 
-typedef struct SingleDataTransfer {
+typedef struct SingleDataTransferInstruction {
     bool sf;
     bool L;
     AddressingMode mode;
@@ -137,13 +137,13 @@ typedef struct SingleDataTransfer {
     int xm;
     int xn;
     int rt;
-} SingleDataTransfer;
+} SingleDataTransferInstruction;
 
-typedef struct LoadLiteral {
+typedef struct LoadLiteralInstruction {
     bool sf;
     int simm19;
     int rt;
-} LoadLiteral;
+} LoadLiteralInstruction;
 
 // Directive
 typedef struct DirectiveInt {
@@ -161,8 +161,8 @@ typedef struct Instruction {
         UnconditionalBranchInstruction uncond_branch;
         RegisterBranchInstruction reg_branch;
         ConditionalBranchInstruction cond_branch;
-        SingleDataTransfer single_data_transfer;
-        LoadLiteral load_literal;
+        SingleDataTransferInstruction single_data_transfer;
+        LoadLiteralInstruction load_literal;
         DirectiveInt directive_int;
     } data;
 } Instruction;
