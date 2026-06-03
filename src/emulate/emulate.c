@@ -12,7 +12,7 @@ int main(int argc, char **argv)
 {
     if (argc < 2)
     {
-        error(REQUIRE_CORRECT_ARGS, NULL);
+        ERROR((Error){ .type = REQUIRE_CORRECT_ARGS});
         return EXIT_FAILURE;
     }
 
@@ -20,7 +20,7 @@ int main(int argc, char **argv)
     uint32 *fileBuffer = readfile(argv[1], &size);
     if (fileBuffer == NULL)
     {
-        print_err(ERROR_READING_FILE, str_error_info(argv[1]));
+        ERROR((Error){ .type = ERROR_READING_FILE, .str = argv[1]});
         return EXIT_FAILURE;
     }
 
@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     if (i == NULL)
     {
         destroy_state(state);
-        print_err(FAILED_TO_ALLOCATE, NULL);
+        ERROR((Error){.type = FAILED_TO_ALLOCATE});
         return EXIT_FAILURE;
     }
 
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
         case DECODE_UNDEFINED_OPCODE:
         {
             shouldHalt = true;
-            print_err(UNDEFINED_OPCODE, instruction_error_info(instruction));
+            ERROR((Error){.type = UNDEFINED_OPCODE, .instruction = instruction});
         }
         break;
         }

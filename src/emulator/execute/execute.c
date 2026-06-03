@@ -305,7 +305,7 @@ uint64 find_address(State* state, SingleDataTransfer data_transfer) {
             return xn;
         }
         default:
-            error(ADDRESSING_MODE_NOT_RECOGNISED, NULL);
+            ERROR((Error){.type = ADDRESSING_MODE_NOT_RECOGNISED});
             // Dummy return for C compiler
             return 0;
     }

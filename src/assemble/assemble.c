@@ -20,7 +20,7 @@ int main(int argc, char **argv)
 
     if (argc < 2)
     {
-        error(REQUIRE_CORRECT_ARGS, NULL);
+        ERROR((Error){.type = REQUIRE_CORRECT_ARGS});
     }
 
     char *in = argv[1];
@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     FILE *file_in = fopen(in, "rb");
     if (file_in == NULL)
     {
-        error(ERROR_READING_FILE, str_error_info(in));
+        ERROR((Error){.type = ERROR_READING_FILE, .str = in});
     }
 
     char buf[MAX_FILE_LINE_LENGTH];
@@ -43,10 +43,10 @@ int main(int argc, char **argv)
 
     if (res == NULL)
     {
-        error(FAILED_TO_ALLOCATE, NULL);
+        ERROR((Error){.type = FAILED_TO_ALLOCATE});
     }
     // todo graceful error handling if over line length
-    // todo no hard upper limit on liness
+    // todo no hard upper limit on lines
     int64 PC = 0;
     int instr_index = 0;
     while (fgets(buf, MAX_FILE_LINE_LENGTH, file_in) != NULL)
@@ -67,7 +67,7 @@ int main(int argc, char **argv)
     FILE *file_out = fopen(out, "wb");
     if (file_out == NULL)
     {
-        error(ERROR_WRITING_FILE, str_error_info(out));
+        ERROR((Error){.type = ERROR_WRITING_FILE, .str = out});
     }
     else
     {

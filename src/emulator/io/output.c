@@ -13,7 +13,7 @@ void fwrite_all(State *state, char *path) {
     sprint_all_registers(state, registers_out);
 
     if (!writefile(path, registers_out, nonzero_out)) {
-        print_err(ERROR_WRITING_FILE, str_error_info(path));
+        ERROR((Error){.type = ERROR_WRITING_FILE, .str = path});
     }
 
     free(nonzero_out);

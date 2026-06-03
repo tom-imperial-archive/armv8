@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include "utils/types.h"
 
+#define ERROR(...) _error(__VA_ARGS__, __FILE__, __LINE__, __func__)
+
 static const int max_file_name_length = 32;
 
 typedef enum
@@ -35,23 +37,17 @@ typedef enum
     INVALID_IMMEDIATE_FORMAT_HASH
 } ErrorType;
 
-union ErrorReason
-{
-    int index;
-    // Must have length <= max_file_name_length (including the string terminator \0)
-    char *str;
-    uint32 instruction;
-    long shift_amount;
-};
+typedef struct {
+    ErrorType type;
+    union {
+        int index;
+        // Must have length <= max_file_name_length (including the string terminator \0)
+        char *str;
+        uint32 instruction;
+        long shift_amount;
+    };
+} Error;
 
-typedef union ErrorReason* ErrorInfo;
-
-void error(ErrorType error, ErrorInfo info);
-void print_err(ErrorType error, ErrorInfo info);
-
-ErrorInfo int_error_info(int index);
-ErrorInfo str_error_info(char *path);
-ErrorInfo instruction_error_info(uint32 instruction);
-ErrorInfo shift_error_info(uint64 shift_amount);
+void _error(Error error, const char *file, int line, const char *func);
 
 #endif

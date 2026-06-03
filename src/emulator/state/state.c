@@ -6,7 +6,6 @@
 #include "utils/bitmasks.h"
 #include "common/error.h"
 #define INSTRUCTION_LENGTH 4
-#define fail_register(em, r) error(em, int_error_info(r))
 
 
 static uint64 *get_register(State *state, Register reg)
@@ -46,7 +45,7 @@ static void check_register(Register reg)
 {
     if ((reg < R0) || (reg > SP))
     {
-        fail_register(STATE_REG_NOT_EXISTS, reg);
+        ERROR((Error){.type = STATE_REG_NOT_EXISTS, .index = reg});
     }
 }
 
@@ -55,7 +54,7 @@ static void check_writeable_register(Register reg)
     check_register(reg);
     if (reg == PC)
     {
-        fail_register(STATE_WRITE_NOT_ALLOWED, reg);
+        ERROR((Error){.type = STATE_WRITE_NOT_ALLOWED, .index = reg});
     }
 }
 
@@ -97,7 +96,7 @@ uint32 read_reg_32(State *state, Register reg)
 {
     if (reg == PC)
     {
-        fail_register(STATE_32_BIT_READ_FROM_PC, reg);
+        ERROR((Error){.type = STATE_32_BIT_READ_FROM_PC, .index = reg});
     }
     check_register(reg);
     return *get_register(state, reg) & BITMASK_LOWER_32_BITS;
@@ -263,7 +262,7 @@ char *sprint_nonzero_memory(State *state)
 
     char *out = malloc(30 + (25*nonzero_count));
     if (out == NULL) {
-        error(FAILED_TO_ALLOCATE, NULL);
+        ERROR((Error){.type = FAILED_TO_ALLOCATE});
     }
     sprintf(out, "Non-zero memory:\n");
 

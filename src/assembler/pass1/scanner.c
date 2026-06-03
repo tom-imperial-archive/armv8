@@ -67,7 +67,7 @@ uint64 scan_file(char *filename, SymbolTable *table)
     FILE *f = fopen(filename, "rb");
     if (f == NULL)
     {
-        error(ERROR_READING_FILE, str_error_info(filename));
+        ERROR((Error){.type = ERROR_READING_FILE, .str = filename});
 
     }
 

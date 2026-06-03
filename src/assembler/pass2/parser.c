@@ -63,7 +63,7 @@ void build_arithmetic(Instruction *i, OpType immediate_opcode, OpType register_o
             } else if (shift_amount == 0) {
                 i->data.immediate_arithmetic.sh = 0;
             } else {
-                error(DPI_INVALID_SHIFT, shift_error_info(shift_amount));
+                ERROR((Error){.type = DPI_INVALID_SHIFT, .shift_amount = shift_amount});
             }
         }
     } else {
@@ -105,7 +105,7 @@ void parse_arithmetic(char *operands, Instruction *i, OpType immediate_opcode, O
     int rn = parse_register(rn_str, &sf_rn);
 
     if (sf_rd != sf_rn) {
-        error(REGISTER_SIZE_MISMATCH, NULL);
+        ERROR((Error){.type = REGISTER_SIZE_MISMATCH});
     }
 
     build_arithmetic(i, immediate_opcode, register_opcode, rd, rn, sf_rd, op2_str, saveptr);
@@ -148,7 +148,7 @@ void parse_logical(char *operands, Instruction *i, OpType opcode) {
     int rm = parse_register(rm_str, &sf_rm);
 
     if (sf_rd != sf_rn || sf_rd != sf_rm) {
-        error(REGISTER_SIZE_MISMATCH, NULL);
+        ERROR((Error){.type = REGISTER_SIZE_MISMATCH});
     }
 
     build_logical(i, opcode, rd, rn, rm, sf_rd, saveptr);
@@ -165,7 +165,7 @@ void parse_move(char *operands, Instruction *i, OpType opcode) {
     int rm = parse_register(rm_str, &sf_rm);
 
     if (sf_rd != sf_rm) {
-        error(REGISTER_SIZE_MISMATCH, NULL);
+        ERROR((Error){.type = REGISTER_SIZE_MISMATCH});
     }
 
     build_logical(i, opcode, rd, ZERO_REG, rm, sf_rd, saveptr);
@@ -194,7 +194,7 @@ void parse_multiply(char *operands, Instruction *i, OpType opcode) {
     int ra = parse_register(ra_str, &sf_ra);
 
     if (sf_rd != sf_rn || sf_rd != sf_rm || sf_rd != sf_ra) {
-        error(REGISTER_SIZE_MISMATCH, NULL);
+        ERROR((Error){.type = REGISTER_SIZE_MISMATCH});
     }
 
     build_multiply(i, opcode, rd, rn, rm, ra, sf_rd);
@@ -212,7 +212,7 @@ void parse_multiply_alias(char *operands, Instruction *i, OpType opcode) {
     int rm = parse_register(rm_str, &sf_rm);
 
     if (sf_rd != sf_rn || sf_rd != sf_rm) {
-        error(REGISTER_SIZE_MISMATCH, NULL);
+        ERROR((Error){.type = REGISTER_SIZE_MISMATCH});
     }
 
     build_multiply(i, opcode, rd, rn, rm, ZERO_REG, sf_rd);
@@ -258,7 +258,7 @@ void parse_memory(char *operands, Instruction *i, SymbolTable *table, uint64 cur
     // Literal
     if (strchr(address_str, '[') == NULL) {
         if (!is_load) {
-            error(ILLEGAL_STR_ADDRESSING, str_error_info(address_str));
+            ERROR((Error){.type = ILLEGAL_STR_ADDRESSING, .str = address_str});
         }
 
         i->op_type = OP_TYPE_LOAD_LITERAL;
@@ -319,7 +319,7 @@ void parse_memory(char *operands, Instruction *i, SymbolTable *table, uint64 cur
             // Scaling rules
             int scale = sf_rt ? 8 : 4;
             if (imm % scale != 0) {
-                error(OFFSET_MULTIPLE_N, int_error_info(scale));
+                ERROR((Error){.type = OFFSET_MULTIPLE_N, .index = scale});
             }
             i->data.single_data_transfer.offset = imm / scale;
         }
@@ -337,7 +337,7 @@ void parse_wide_move(char *operands, Instruction *i, OpType opcode) {
     long imm16 = parse_immediate(imm_str);
 
     if (imm16 < 0 || imm16 > 0xFFFF) {
-        error(ILLEGAL_WIDE_MOVE_SIZE, shift_error_info(imm16));
+        ERROR((Error){.type = ILLEGAL_WIDE_MOVE_SIZE, .shift_amount = imm16});
     }
 
     int hw = 0;
@@ -345,7 +345,7 @@ void parse_wide_move(char *operands, Instruction *i, OpType opcode) {
 
     if (lsl_str != NULL) {
         if (strcmp(lsl_str, "lsl") != 0 && strcmp(lsl_str, "LSL") != 0) {
-            error(WIDE_MOVE_REQUIRES_LSL, NULL);
+            ERROR((Error){.type = WIDE_MOVE_REQUIRES_LSL});
         }
 
         char *shift_amount_str = strtok_r(NULL, " ,\t\n", &saveptr);
@@ -360,7 +360,7 @@ void parse_wide_move(char *operands, Instruction *i, OpType opcode) {
         } else if (shift_amount == 48 && sf_rd) { // 48 is only valid for 64-bit
             hw = 3;
         } else {
-            error(INVALID_SHIFT_AMOUNT, shift_error_info(shift_amount));
+            ERROR((Error){.type = INVALID_SHIFT_AMOUNT, .shift_amount = shift_amount});
         }
     }
 
@@ -445,7 +445,7 @@ void parse_tst(char *operands, Instruction *i, SymbolTable *table, uint64 curren
     int rm = parse_register(rm_str, &sf_rm);
 
     if (sf_rn != sf_rm) {
-        error(REGISTER_SIZE_MISMATCH, NULL);
+        ERROR((Error){.type = REGISTER_SIZE_MISMATCH});
     }
 
     build_logical(i, OP_TYPE_ANDS, ZERO_REG, rn, rm, sf_rn, saveptr);
@@ -548,7 +548,7 @@ void parse_directive_int(char *operands, Instruction *i, SymbolTable *table, uin
     char *val_str = strtok_r(operands, " \t\n", &saveptr);
 
     if (val_str == NULL) {
-        error(INT_DIRECTIVE_REQUIRES_VALUE, NULL);
+        ERROR((Error){.type = INT_DIRECTIVE_REQUIRES_VALUE});
     }
 
     // parse_immediate() is unsuitable here, since directives do not use the # prefix
@@ -630,6 +630,6 @@ bool parse_line(char *line, Instruction *i, SymbolTable *table, uint64 current_p
         }
     }
     // Unrecognised instruction
-    error(UNKNOWN_MNENOMIC, str_error_info(mnemonic));
+    ERROR((Error){.type = UNKNOWN_MNENOMIC, .str = mnemonic});
     return false;
 }

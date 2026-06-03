@@ -28,7 +28,7 @@ int parse_register(char *token, bool *is_64_bit) {
             *is_64_bit = false;
             break;
         default:
-            error(INVALID_REGISTER_PREFIX, str_error_info(token));
+            ERROR((Error){.type = INVALID_REGISTER_PREFIX, .str = token});
     }
 
     if (strcmp(token + 1, "zr") == 0) {
@@ -41,7 +41,7 @@ int parse_register(char *token, bool *is_64_bit) {
 // Parses an immediate value string in decimal or hex e.g. #5, #0x1A, or #-12
 long parse_immediate(char *token) {
     if (token[0] != '#') {
-        error(INVALID_IMMEDIATE_FORMAT_HASH, str_error_info(token));
+        ERROR((Error){.type = INVALID_IMMEDIATE_FORMAT_HASH, .str = token});
     }
 
     return strtol(token + 1, NULL, 0);
@@ -60,6 +60,6 @@ ShiftType parse_shift(char *token) {
     if (strcmp(token, "asr") == 0) return SHIFT_ASR;
     if (strcmp(token, "ror") == 0) return SHIFT_ROR;
 
-    error(INVALID_SHIFT_TYPE, str_error_info(token));
+    ERROR((Error){.type = INVALID_SHIFT_TYPE, .str = token});
     return -1;
 }

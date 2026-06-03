@@ -110,7 +110,7 @@ uint32 encode_immediate_arithmetic(Instruction* i) {
         case OP_TYPE_ADDS: instruction |= MASK_ADDS << OFFSET_OPC; break;
         case OP_TYPE_SUB:  instruction |= MASK_SUB << OFFSET_OPC;  break;
         case OP_TYPE_SUBS: instruction |= MASK_SUBS << OFFSET_OPC; break;
-        default: error(INCORRECT_OP_TYPE, NULL); break;
+        default: ERROR((Error){.type = INCORRECT_OP_TYPE}); break;
     }
 
     // OPI
@@ -157,7 +157,7 @@ uint32 encode_wide_move(Instruction* i) {
         case OP_TYPE_MOVZ: instruction |= MASK_MOVZ << OFFSET_OPC; break;
         case OP_TYPE_MOVK: instruction |= MASK_MOVK << OFFSET_OPC; break;
         // Wrong op_type
-        default: error(INCORRECT_OP_TYPE, NULL); break;
+        default: ERROR((Error){.type = INCORRECT_OP_TYPE}); break;
     }
 
     // OPI
@@ -483,7 +483,7 @@ uint32 encode_conditional_branch(Instruction* i) {
         case OP_TYPE_LE: instruction |= MASK_COND_LE; break;
         case OP_TYPE_AL: instruction |= MASK_COND_AL; break;
         // Wrong op_type
-        default: error(INCORRECT_OP_TYPE, NULL); break;
+        default: ERROR((Error){.type = INCORRECT_OP_TYPE}); break;
     }
 
     return instruction;
@@ -556,7 +556,7 @@ uint32 encode_instruction(Instruction* i) {
         return encode_directive_int(i);
     } else {
         // ERROR: Unrecognized instruction type
-        error(UNRECOGNISED_INSTRUCTION_TYPE, NULL);
+        ERROR((Error){.type = UNRECOGNISED_INSTRUCTION_TYPE});
         return 0;
     }
 }
