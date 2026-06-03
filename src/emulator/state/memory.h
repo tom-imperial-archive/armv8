@@ -1,3 +1,6 @@
+#ifndef MEMORY_H
+#define MEMORY_H
+
 #include "utils/hashset.h"
 #include "utils/types.h"
 
@@ -37,3 +40,5 @@ NonZeroMemory *get_non_zero_memory(Memory m, int *out_size);
 
 Memory init_mem();
 void destroy_mem(Memory m);
+
+#endif

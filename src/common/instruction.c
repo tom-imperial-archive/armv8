@@ -45,7 +45,8 @@ bool is_unconditional_branch(OpType op_type) {
 bool is_register_branch(OpType op_type) { return op_type == OP_TYPE_BR; }
 
 bool is_branch(OpType op_type) {
-    return is_conditional_branch(op_type) || is_unconditional_branch(op_type) || is_register_branch(op_type);
+    return is_conditional_branch(op_type) || is_unconditional_branch(op_type) ||
+           is_register_branch(op_type);
 }
 
 bool is_directive_int(OpType op_type) {
