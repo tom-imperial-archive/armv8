@@ -14,7 +14,8 @@ EMULATE_SRCS = \
 	src/emulator/execute/execute.c \
 	src/emulator/decode/decode.c \
 	src/emulator/io/filehandlers.c \
-	src/emulator/io/output.c
+	src/emulator/io/output.c \
+	src/common/error.c
 
 ASSEMBLE_SRCS = \
 	src/assemble/assemble.c \
@@ -22,21 +23,25 @@ ASSEMBLE_SRCS = \
 	src/assembler/pass1/scanner.c \
 	src/assembler/pass2/parser.c \
 	src/assembler/pass2/operands.c \
-	src/assembler/symbol_table/symbol_table.c
+	src/assembler/symbol_table/symbol_table.c \
+	src/common/error.c
 
 TEST_UTILS_SRCS = \
 	tests/utils/test_hashset.c \
-	src/utils/hashset.c
+	src/utils/hashset.c \
+	src/common/error.c
 
 TEST_STATE_SRCS = \
 	tests/emulator/state/test_state.c \
 	src/emulator/state/memory.c \
 	src/emulator/state/state.c \
-	src/utils/hashset.c
+	src/utils/hashset.c \
+	src/common/error.c
 
 TEST_DECODE_SRCS = \
 	tests/emulator/decode/test_decode.c \
-	src/emulator/decode/decode.c
+	src/emulator/decode/decode.c \
+	src/common/error.c
 
 TEST_EXECUTE_SRCS = \
 	tests/emulator/execute/test_execute.c \
@@ -48,30 +53,36 @@ TEST_EXECUTE_SRCS = \
 	src/emulator/execute/execute.c \
 	src/emulator/state/state.c \
 	src/emulator/state/memory.c \
-	src/utils/hashset.c
+	src/utils/hashset.c \
+	src/common/error.c
 
 TEST_ENCODE_SRCS = \
 	tests/assembler/encode/test_encode.c \
-	src/assembler/encode/encode.c
+	src/assembler/encode/encode.c \
+	src/common/error.c
 
 TEST_PASS1_SRCS = \
 	tests/assembler/pass1/test_scanner.c \
 	src/assembler/pass1/scanner.c \
-	src/assembler/symbol_table/symbol_table.c
+	src/assembler/symbol_table/symbol_table.c \
+	src/common/error.c
 
 TEST_PARSER_SRCS = \
     tests/assembler/pass2/test_parser.c \
     src/assembler/pass2/parser.c \
     src/assembler/pass2/operands.c \
-	src/assembler/symbol_table/symbol_table.c
+	src/assembler/symbol_table/symbol_table.c \
+	src/common/error.c
 
 TEST_OPERANDS_SRCS = \
     tests/assembler/pass2/test_operands.c \
-    src/assembler/pass2/operands.c
+    src/assembler/pass2/operands.c \
+	src/common/error.c
 
 TEST_SYMBOL_TABLE_SRCS = \
 	tests/assembler/symbol_table/test_symbol_table.c \
-	src/assembler/symbol_table/symbol_table.c
+	src/assembler/symbol_table/symbol_table.c \
+	src/common/error.c
 
 # OBJECT FILES (source files with extensions changed)
 EMULATE_OBJS = $(EMULATE_SRCS:.c=.o)

@@ -4,6 +4,7 @@
 #include "assembler/symbol_table/symbol_table.h"
 #include "assembler/pass2/parser.h"
 #include "assembler/encode/encode.h"
+#include "common/error.h"
 #define MAX_FILE_LINE_LENGTH 120
 
 int main(int argc, char **argv)
@@ -19,8 +20,7 @@ int main(int argc, char **argv)
 
     if (argc < 2)
     {
-        fprintf(stderr, "Require file in: <file_in> [file_out]\n");
-        return EXIT_FAILURE;
+        ERROR((Error){.type = REQUIRE_CORRECT_ARGS});
     }
 
     char *in = argv[1];
@@ -33,8 +33,7 @@ int main(int argc, char **argv)
     FILE *file_in = fopen(in, "rb");
     if (file_in == NULL)
     {
-        printf("Failed to open file %s\n", in);
-        exit(EXIT_FAILURE);
+        ERROR((Error){.type = ERROR_READING_FILE, .str = in});
     }
 
     char buf[MAX_FILE_LINE_LENGTH];
@@ -42,6 +41,10 @@ int main(int argc, char **argv)
     uint64 output_size = scan_file(in, table);
     uint32 *res = malloc(output_size);
 
+    if (res == NULL)
+    {
+        ERROR((Error){.type = FAILED_TO_ALLOCATE});
+    }
     // todo graceful error handling if over line length
     // todo no hard upper limit on lines
     int64 PC = 0;
@@ -64,7 +67,7 @@ int main(int argc, char **argv)
     FILE *file_out = fopen(out, "wb");
     if (file_out == NULL)
     {
-        printf("Failed to open file %s\n", out);
+        ERROR((Error){.type = ERROR_WRITING_FILE, .str = out});
     }
     else
     {

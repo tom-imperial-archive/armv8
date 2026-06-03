@@ -6,6 +6,7 @@
 #include <assert.h>
 #include "assembler/symbol_table/symbol_table.h"
 #include "utils/types.h"
+#include "common/error.h"
 #define INSTRUCTION_SIZE 4
 #define MAX_FILE_LINE_LENGTH 120
 #define REGEX_FLAGS (REG_EXTENDED | REG_ICASE)
@@ -66,8 +67,8 @@ uint64 scan_file(char *filename, SymbolTable *table)
     FILE *f = fopen(filename, "rb");
     if (f == NULL)
     {
-        printf("Failed to open file %s\n", filename);
-        exit(EXIT_FAILURE);
+        ERROR((Error){.type = ERROR_READING_FILE, .str = filename});
+
     }
 
     char buf[MAX_FILE_LINE_LENGTH];

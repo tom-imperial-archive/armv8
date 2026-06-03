@@ -4,21 +4,8 @@
 #include <string.h>
 #include <assert.h>
 #include "utils/bitmasks.h"
+#include "common/error.h"
 #define INSTRUCTION_LENGTH 4
-
-typedef enum {STATE_REG_NOT_EXISTS, STATE_WRITE_NOT_ALLOWED, STATE_READ_32_FROM_PC, STATE_FLAG_NOT_EXISTS} StateError;
-
-//todo refactor errors accross the project
-void error(StateError error) {
-    switch(error) {
-        case STATE_REG_NOT_EXISTS: printf("Register does not exist"); break;
-        case STATE_WRITE_NOT_ALLOWED: printf("Illegal write to register"); break;
-        case STATE_READ_32_FROM_PC: printf("Illegal 32-bit read from PC"); break;
-        case STATE_FLAG_NOT_EXISTS: printf("PSTATE flag does not exist"); break;
-        default: printf("Unknown error accessing registers");
-    }
-    exit(1);
-}
 
 
 static uint64 *get_register(State *state, Register reg)
@@ -58,7 +45,7 @@ static void check_register(Register reg)
 {
     if ((reg < R0) || (reg > SP))
     {
-        error(STATE_REG_NOT_EXISTS);
+        ERROR((Error){.type = STATE_REG_NOT_EXISTS, .index = reg});
     }
 }
 
@@ -67,7 +54,7 @@ static void check_writeable_register(Register reg)
     check_register(reg);
     if (reg == PC)
     {
-        error(STATE_WRITE_NOT_ALLOWED);
+        ERROR((Error){.type = STATE_WRITE_NOT_ALLOWED, .index = reg});
     }
 }
 
@@ -109,10 +96,10 @@ uint32 read_reg_32(State *state, Register reg)
 {
     if (reg == PC)
     {
-        error(STATE_READ_32_FROM_PC);
+        ERROR((Error){.type = STATE_32_BIT_READ_FROM_PC, .index = reg});
     }
-
-    return read_reg_64(state, reg) & BITMASK_LOWER_32_BITS;
+    check_register(reg);
+    return *get_register(state, reg) & BITMASK_LOWER_32_BITS;
 }
 
 /*
@@ -274,6 +261,9 @@ char *sprint_nonzero_memory(State *state)
     NonZeroMemory *memory_data = get_non_zero_memory(state->m, &nonzero_count);
 
     char *out = malloc(30 + (25*nonzero_count));
+    if (out == NULL) {
+        ERROR((Error){.type = FAILED_TO_ALLOCATE});
+    }
     sprintf(out, "Non-zero memory:\n");
 
     if (memory_data == NULL) {
