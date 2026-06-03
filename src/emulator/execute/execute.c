@@ -368,8 +368,8 @@ void execute_load_literal(State *state, Instruction *i) {
     Executes the given instruction.
     If we encounter a halt instruction, we return true, otherwise return false;
 */
-bool execute_instruction(State *state, OpType op, Instruction *i) {
-    switch (op) {
+bool execute_instruction(State *state, Instruction *i) {
+    switch (i->op_type) {
     // Halt instruction
     case OP_TYPE_HALT:
         return true;
@@ -431,7 +431,7 @@ bool execute_instruction(State *state, OpType op, Instruction *i) {
 
         // Check condition
         bool condition_met = false;
-        switch (op) {
+        switch (i->op_type) {
         case OP_TYPE_EQ:
             condition_met = (z == 1);
             break;
@@ -480,7 +480,7 @@ bool execute_instruction(State *state, OpType op, Instruction *i) {
     default:
         break;
     }
-
+    OpType op = i->op_type;
     if (!(op == OP_TYPE_EQ || op == OP_TYPE_NE || op == OP_TYPE_GE ||
           op == OP_TYPE_LT || op == OP_TYPE_GT || op == OP_TYPE_LE ||
           op == OP_TYPE_AL || op == OP_TYPE_BR ||

@@ -1,11 +1,9 @@
 #include "emulator/decode/decode.h"
+#include "emulator/execute/execute.h"
 #include "emulator/state/state.h"
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
-
-// Forward declaration of the main execute function
-bool execute_instruction(State *state, OpType op, Instruction *i);
 
 // Instruction builder helpers
 Instruction create_uncond_branch_inst(int32_t simm26) {
@@ -34,7 +32,7 @@ void test_unconditional_branch() {
     // Offset should be 5 * 4 = 20
     Instruction i = create_uncond_branch_inst(5);
 
-    execute_instruction(&state, i.op_type, &i);
+    execute_instruction(&state, &i);
 
     // Verify PC advanced by 20 bytes
     assert(state.PC == 0x1014); // 0x1000 + 20(decimal) = 0x1014
@@ -51,7 +49,7 @@ void test_register_branch() {
     // Build: br X5
     Instruction i = create_reg_branch_inst(R5);
 
-    execute_instruction(&state, i.op_type, &i);
+    execute_instruction(&state, &i);
 
     // Verify PC jumped directly to the address inside X5
     assert(state.PC == 0x8048000);
@@ -70,7 +68,7 @@ void test_conditional_branch_taken() {
     // Offset should be -3 * 4 = -12
     Instruction i = create_cond_branch_inst(OP_TYPE_EQ, -3);
 
-    execute_instruction(&state, i.op_type, &i);
+    execute_instruction(&state, &i);
 
     // Verify PC went backwards by 12 bytes
     assert(state.PC == 0x1000 - 12);
@@ -88,7 +86,7 @@ void test_conditional_branch_not_taken() {
     // Build: b.ne #10
     Instruction i = create_cond_branch_inst(OP_TYPE_NE, 10);
 
-    execute_instruction(&state, i.op_type, &i);
+    execute_instruction(&state, &i);
 
     // Verify PC did NOT change because the condition failed, only incremented
     assert(state.PC == 0x1000 + 0x4);
@@ -106,7 +104,7 @@ void test_conditional_branch_lt_taken() {
     // Build: b.lt #2
     Instruction i = create_cond_branch_inst(OP_TYPE_LT, 2);
 
-    execute_instruction(&state, i.op_type, &i);
+    execute_instruction(&state, &i);
 
     // Verify PC advanced by 8 bytes
     assert(state.PC == 0x1008);
