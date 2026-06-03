@@ -8,17 +8,7 @@
 #include "assembler/symbol_table/symbol_table.h"
 #include "utils/types.h"
 
-#define ZERO_REG 31 // TODO - MAYBE FACTOR OUT
-
-/*
-THIS IS PASS 2 OF THE TWO PASS APPROACH
-
-Here, we tokenise each line in the file, and build it into a struct
-We are reusing the same structs as we did in deocde (now stored in common/instruction.h)
-Note operands.c provides helpers that we should use here.
-
-We should use function pointers here (as suggested in the spec) to avoid a very messy if/then/else structure.
-*/
+#define ZERO_REG 31
 
 typedef void (*ParseFunc)(char *, Instruction *, SymbolTable *, uint64);
 
@@ -27,7 +17,10 @@ typedef struct {
     ParseFunc func;
 } MnemonicMap;
 
-void apply_register_shift(Instruction *i, char *saveptr) {
+// --------------------------------------------------------------
+// HELPER FUNCTIONS
+// --------------------------------------------------------------
+static void apply_register_shift(Instruction *i, char *saveptr) {
     char *shift_type = strtok_r(NULL, " ,\t\n", &saveptr);
     if (shift_type == NULL) {
         // Default behaviour - has no effect
@@ -40,6 +33,11 @@ void apply_register_shift(Instruction *i, char *saveptr) {
     }
 }
 
+// --------------------------------------------------------------
+// BUILD FUNCTIONS
+// These functions take the relevant data, and
+// populate the instruction struct with it.
+// --------------------------------------------------------------
 void build_arithmetic(Instruction *i, OpType immediate_opcode, OpType register_opcode,
                       int rd, int rn, bool sf, char *op2_str, char *saveptr) {
     if (op2_str[0] == '#') {
@@ -92,6 +90,66 @@ void build_logical(Instruction *i, OpType opcode, int rd, int rn, int rm, bool s
     // Check for shift
     apply_register_shift(i, saveptr);
 }
+
+void build_multiply(Instruction *i, OpType opcode, int rd, int rn, int rm, int ra, bool sf) {
+    i->op_type = opcode;
+    i->data.multiply.rd = rd;
+    i->data.multiply.rn = rn;
+    i->data.multiply.rm = rm;
+    i->data.multiply.ra = ra;
+    i->data.multiply.sf = sf;
+}
+
+void build_b(Instruction *i, uint64 offset) {
+    i->op_type = OP_TYPE_UNCONDITIONAL_BRANCH;
+    i->data.uncond_branch.simm26 = offset;
+}
+
+void build_br(Instruction *i, int xn) {
+    i->op_type = OP_TYPE_BR;
+    i->data.reg_branch.xn = xn;
+}
+
+void build_b_cond(Instruction *i, uint64 offset, OpType opcode) {
+    i->op_type = opcode;
+    i->data.cond_branch.simm19 = offset;
+}
+
+void build_literal(Instruction *i, int rt, bool sf, int64 offset) {
+    i->op_type = OP_TYPE_LOAD_LITERAL;
+    i->data.load_literal.rt = rt;
+    i->data.load_literal.sf = sf;
+    i->data.load_literal.simm19 = offset;
+}
+
+void build_single_data_transfer(Instruction *i, OpType opcode, int rt, bool sf, bool is_load, AddressingMode mode, int xm, int64 offset) {
+    i->op_type = opcode;
+    i->data.single_data_transfer.rt = rt;
+    i->data.single_data_transfer.sf = sf;
+    i->data.single_data_transfer.L = is_load;
+    i->data.single_data_transfer.mode = mode;
+    i->data.single_data_transfer.xm = xm;
+    i->data.single_data_transfer.offset = offset;
+}
+
+void build_wide_move(Instruction *i, OpType opcode, bool sf, int rd, int64 imm16, int hw) {
+    i->op_type = opcode;
+    i->data.wide_move.sf = sf;
+    i->data.wide_move.rd = rd;
+    i->data.wide_move.imm16 = imm16;
+    i->data.wide_move.hw = hw;
+}
+
+void build_directive(Instruction *i,int value) {
+    i->op_type = OP_TYPE_DIRECTIVE_INT;
+    i->data.directive_int.value = value;
+}
+
+// --------------------------------------------------------------
+// INTERMEDIATE PARSING FUNCTIONS
+// These are called as an intermediate step between the initial parse function
+// and the final build function, and handle multiple highly similar instructions.
+// --------------------------------------------------------------
 
 // Intermediate parser for standard arithmetic instructions - add(s) and sub(s)
 void parse_arithmetic(char *operands, Instruction *i, OpType immediate_opcode, OpType register_opcode) {
@@ -171,15 +229,7 @@ void parse_move(char *operands, Instruction *i, OpType opcode) {
     build_logical(i, opcode, rd, ZERO_REG, rm, sf_rd, saveptr);
 }
 
-void build_multiply(Instruction *i, OpType opcode, int rd, int rn, int rm, int ra, bool sf) {
-    i->op_type = opcode;
-    i->data.multiply.rd = rd;
-    i->data.multiply.rn = rn;
-    i->data.multiply.rm = rm;
-    i->data.multiply.ra = ra;
-    i->data.multiply.sf = sf;
-}
-
+// Intermediate parser for multiply instructions - madd and msub
 void parse_multiply(char *operands, Instruction *i, OpType opcode) {
     char *saveptr;
     char *rd_str = strtok_r(operands, " ,", &saveptr);
@@ -200,6 +250,7 @@ void parse_multiply(char *operands, Instruction *i, OpType opcode) {
     build_multiply(i, opcode, rd, rn, rm, ra, sf_rd);
 }
 
+// Intermediate parser for multiply alias instructions - mul and mneg
 void parse_multiply_alias(char *operands, Instruction *i, OpType opcode) {
     char *saveptr;
     char *rd_str = strtok_r(operands, " ,", &saveptr);
@@ -218,21 +269,7 @@ void parse_multiply_alias(char *operands, Instruction *i, OpType opcode) {
     build_multiply(i, opcode, rd, rn, rm, ZERO_REG, sf_rd);
 }
 
-void build_b(Instruction *i, uint64 offset) {
-    i->op_type = OP_TYPE_UNCONDITIONAL_BRANCH;
-    i->data.uncond_branch.simm26 = offset;
-}
-
-void build_br(Instruction *i, int xn) {
-    i->op_type = OP_TYPE_BR;
-    i->data.reg_branch.xn = xn;
-}
-
-void build_b_cond(Instruction *i, uint64 offset, OpType opcode) {
-    i->op_type = opcode;
-    i->data.cond_branch.simm19 = offset;
-}
-
+// Intermediate parser for conditional branch instructions - b.eq, b.ne, b.ge, b.lt, b.gt, b.le, and b.al
 void parse_b_cond(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc, OpType opcode) {
     char *saveptr;
     char *label = strtok_r(operands, " \t\n", &saveptr);
@@ -243,6 +280,7 @@ void parse_b_cond(char *operands, Instruction *i, SymbolTable *table, uint64 cur
     build_b_cond(i, offset, opcode);
 }
 
+// Intermediate parser for memory instructions - ldr and str
 void parse_memory(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc, bool is_load) {
     char *saveptr;
 
@@ -260,31 +298,19 @@ void parse_memory(char *operands, Instruction *i, SymbolTable *table, uint64 cur
         if (!is_load) {
             ERROR((Error){.type = ILLEGAL_STR_ADDRESSING, .str = address_str});
         }
-
-        i->op_type = OP_TYPE_LOAD_LITERAL;
-        i->data.load_literal.rt = rt;
-        i->data.load_literal.sf = sf_rt;
-
         uint64 target;
         if (address_str[0] == '#') {
             target = parse_immediate(address_str);
         } else {
             target = symbol_table_lookup(table, address_str);
         }
-
         int64 offset = calculate_offset(current_pc, target);
 
-        i->data.load_literal.simm19 = offset;
-
+        build_literal(i,rt, sf_rt, offset);
         return;
     }
 
     // Single data transfer
-    i->op_type = OP_TYPE_SINGLE_DATA_TRANSFER;
-    i->data.single_data_transfer.rt = rt;
-    i->data.single_data_transfer.sf = sf_rt;
-    i->data.single_data_transfer.L = is_load;
-
     bool is_pre_indexed = (strchr(address_str, '!') != NULL);
     bool is_post_indexed = (strstr(address_str, "],") != NULL);
 
@@ -298,34 +324,29 @@ void parse_memory(char *operands, Instruction *i, SymbolTable *table, uint64 cur
     // Register offset
     if (op2_str != NULL && op2_str[0] != '#') {
         bool sf_xm;
-        i->data.single_data_transfer.mode = ADDR_REGISTER_OFFSET;
-        i->data.single_data_transfer.xm = parse_register(op2_str, &sf_xm);
-        i->data.single_data_transfer.offset = 0; // Unused in this case
+        int xm = parse_register(op2_str, &sf_xm);
+        build_single_data_transfer(i, OP_TYPE_SINGLE_DATA_TRANSFER, rt, sf_rt, is_load, ADDR_REGISTER_OFFSET, xm, 0);
     } else {
         // Immediate offset - Pre, Post, or Unsigned
         long imm = (op2_str != NULL) ? parse_immediate(op2_str) : 0;
 
         if (is_pre_indexed) {
-            i->data.single_data_transfer.mode = ADDR_PRE_INDEXED;
-            i->data.single_data_transfer.offset = imm;
-
+            build_single_data_transfer(i, OP_TYPE_SINGLE_DATA_TRANSFER, rt, sf_rt, is_load, ADDR_PRE_INDEXED, 0, imm);
         } else if (is_post_indexed) {
-            i->data.single_data_transfer.mode = ADDR_POST_INDEXED;
-            i->data.single_data_transfer.offset = imm;
-
+            build_single_data_transfer(i, OP_TYPE_SINGLE_DATA_TRANSFER, rt, sf_rt, is_load, ADDR_POST_INDEXED, 0, imm);
         } else {
-            i->data.single_data_transfer.mode = ADDR_UNSIGNED_OFFSET;
-
             // Scaling rules
             int scale = sf_rt ? 8 : 4;
             if (imm % scale != 0) {
                 ERROR((Error){.type = OFFSET_MULTIPLE_N, .index = scale});
             }
-            i->data.single_data_transfer.offset = imm / scale;
+            int64 offset = imm / scale;
+            build_single_data_transfer(i, OP_TYPE_SINGLE_DATA_TRANSFER, rt, sf_rt, is_load, ADDR_UNSIGNED_OFFSET, 0, offset);
         }
     }
 }
 
+// Intermediate parser for wide move instructions - movk, movn, and movz
 void parse_wide_move(char *operands, Instruction *i, OpType opcode) {
     char *saveptr;
 
@@ -334,7 +355,7 @@ void parse_wide_move(char *operands, Instruction *i, OpType opcode) {
     int rd = parse_register(rd_str, &sf_rd);
 
     char *imm_str = strtok_r(NULL, " ,", &saveptr);
-    long imm16 = parse_immediate(imm_str);
+    int64 imm16 = parse_immediate(imm_str);
 
     if (imm16 < 0 || imm16 > 0xFFFF) {
         ERROR((Error){.type = ILLEGAL_WIDE_MOVE_SIZE, .shift_amount = imm16});
@@ -342,7 +363,6 @@ void parse_wide_move(char *operands, Instruction *i, OpType opcode) {
 
     int hw = 0;
     char *lsl_str = strtok_r(NULL, " ,", &saveptr);
-
     if (lsl_str != NULL) {
         if (strcmp(lsl_str, "lsl") != 0 && strcmp(lsl_str, "LSL") != 0) {
             ERROR((Error){.type = WIDE_MOVE_REQUIRES_LSL});
@@ -364,12 +384,16 @@ void parse_wide_move(char *operands, Instruction *i, OpType opcode) {
         }
     }
 
-    i->op_type = opcode;
-    i->data.wide_move.sf = sf_rd;
-    i->data.wide_move.rd = rd;
-    i->data.wide_move.imm16 = imm16;
-    i->data.wide_move.hw = hw;
+    build_wide_move(i, opcode, sf_rd, rd, imm16, hw);
 }
+
+// --------------------------------------------------------------
+// INDIVIDUAL PARSING FUNCTIONS
+// There is a single function for each possible instruction.
+// Most simply call an intermediate function, providing an opcode or similar.
+// Some are unique with no intermediate, so feature a small amount of parsing
+//     logic before directly calling a building function.
+// --------------------------------------------------------------
 
 void parse_add(char *operands, Instruction *i, SymbolTable *table, uint64 current_pc) {
     parse_arithmetic(operands, i, OP_TYPE_ADD, OP_TYPE_REG_ADD);
@@ -554,10 +578,13 @@ void parse_directive_int(char *operands, Instruction *i, SymbolTable *table, uin
     // parse_immediate() is unsuitable here, since directives do not use the # prefix
     long val = strtol(val_str, NULL, 0);
 
-    i->op_type = OP_TYPE_DIRECTIVE_INT;
-    i->data.directive_int.value = (int)val;
+    build_directive(i, (int)val);
 }
 
+// --------------------------------------------------------------
+// ROUTING TABLE
+// Stores each instruction's corresponding parsing function.
+// --------------------------------------------------------------
 MnemonicMap router[] = {
     {"add", parse_add},
     {"adds", parse_adds},
@@ -599,15 +626,15 @@ MnemonicMap router[] = {
     {".int", parse_directive_int},
 };
 
-// Takes a single line of assembly
+// Takes a single line of assembly, an empty instruction struct,
+//     a SymbolTable, and the current program counter
 // If it's an instruction, we populate the instruction struct and return true.
-// If the line is blank, a comment, or a label, we simply return false.
+// If the line is blank, a comment, or a label, we simply return false
 bool parse_line(char *line, Instruction *i, SymbolTable *table, uint64 current_pc) {
     char *saveptr;
 
     // Take the first word (the mnemonic or label)
     char *mnemonic = strtok_r(line, " \t\n", &saveptr);
-
     if (mnemonic == NULL) {
         return false;
     }
