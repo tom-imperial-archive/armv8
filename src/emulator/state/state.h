@@ -1,5 +1,5 @@
-#ifndef STATE_H_
-#define STATE_H_
+#ifndef STATE_H
+#define STATE_H
 #include "emulator/state/memory.h"
 #include "utils/types.h"
 #include <stdbool.h>
@@ -135,4 +135,5 @@ void write_mem_32(State *state, uint64 addr, uint32 val);
 uint64 read_mem_64(State *state, uint64 addr);
 
 uint32 read_mem_32(State *state, uint64 addr);
+
 #endif

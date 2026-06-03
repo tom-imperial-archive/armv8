@@ -1,5 +1,5 @@
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef TYPES_H
+#define TYPES_H
 
 #include <stdint.h>
 
