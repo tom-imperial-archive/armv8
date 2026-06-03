@@ -15,6 +15,7 @@ EMULATE_SRCS = \
 	src/emulator/decode/decode.c \
 	src/emulator/io/filehandlers.c \
 	src/emulator/io/output.c \
+	src/common/instruction.c \
 	src/common/error.c
 
 ASSEMBLE_SRCS = \
@@ -24,6 +25,7 @@ ASSEMBLE_SRCS = \
 	src/assembler/pass2/parser.c \
 	src/assembler/pass2/operands.c \
 	src/assembler/symbol_table/symbol_table.c \
+	src/common/instruction.c \
 	src/common/error.c
 
 TEST_UTILS_SRCS = \
@@ -54,11 +56,13 @@ TEST_EXECUTE_SRCS = \
 	src/emulator/state/state.c \
 	src/emulator/state/memory.c \
 	src/utils/hashset.c \
+	src/common/instruction.c \
 	src/common/error.c
 
 TEST_ENCODE_SRCS = \
 	tests/assembler/encode/test_encode.c \
 	src/assembler/encode/encode.c \
+	src/common/instruction.c \
 	src/common/error.c
 
 TEST_PASS1_SRCS = \

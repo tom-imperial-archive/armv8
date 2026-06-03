@@ -33,7 +33,7 @@ void test_add_imm_standard() {
 
     Instruction i =
         create_imm_arithmetic_inst(OP_TYPE_ADD, true, R1, R0, val1, false);
-    execute_instruction(state, i.op_type, &i);
+    execute_instruction(state, &i);
 
     assert(read_reg_64(state, R1) == 2 * val1);
 
@@ -49,7 +49,7 @@ void test_adds_imm_flags_shifted() {
 
     Instruction i =
         create_imm_arithmetic_inst(OP_TYPE_ADDS, true, R2, R0, val1, true);
-    execute_instruction(state, i.op_type, &i);
+    execute_instruction(state, &i);
 
     assert(read_reg_64(state, R2) == val2 + (val1 << 12));
     assert(read_pstate_flag(state, N) == false);
@@ -69,7 +69,7 @@ void test_subs_imm_standard() {
 
     Instruction i =
         create_imm_arithmetic_inst(OP_TYPE_SUBS, true, R3, R0, val1, false);
-    execute_instruction(state, i.op_type, &i);
+    execute_instruction(state, &i);
 
     assert(read_reg_64(state, R3) == val2 - val1);
     assert(read_pstate_flag(state, N) == true);
@@ -86,12 +86,12 @@ void test_wide_move_movk() {
     write_reg_32(state, R0, 0x12345678UL);
 
     Instruction i = create_wide_move_inst(OP_TYPE_MOVK, false, R0, 0xABCD, 0);
-    execute_instruction(state, i.op_type, &i);
+    execute_instruction(state, &i);
     assert(read_reg_32(state, R0) == 0x1234ABCDU);
 
     write_reg_64(state, R0, 0x12345678UL);
     Instruction i2 = create_wide_move_inst(OP_TYPE_MOVK, true, R0, 0xABCD, 2);
-    execute_instruction(state, i2.op_type, &i2);
+    execute_instruction(state, &i2);
     assert(read_reg_64(state, R0) == 0xABCD12345678ULL);
 
     printf("test_wide_move_movk: OK\n");
@@ -104,7 +104,7 @@ void test_subs_imm_carry_flag_no_borrow() {
 
     Instruction i =
         create_imm_arithmetic_inst(OP_TYPE_SUBS, true, R1, R0, 0, false);
-    execute_instruction(state, i.op_type, &i);
+    execute_instruction(state, &i);
 
     assert(read_pstate_flag(state, C) == true);
 
@@ -119,7 +119,7 @@ void test_subs_imm_overflow_flag_underflow() {
     // SUBS R1, R0, #1
     Instruction i =
         create_imm_arithmetic_inst(OP_TYPE_SUBS, true, R1, R0, 1, false);
-    execute_instruction(state, i.op_type, &i);
+    execute_instruction(state, &i);
 
     assert(read_pstate_flag(state, V) == true);
 
@@ -131,7 +131,7 @@ void test_movz_applies_shift_correctly() {
     State *state = init_state();
 
     Instruction i = create_wide_move_inst(OP_TYPE_MOVZ, true, R0, 0xABCD, 1);
-    execute_instruction(state, i.op_type, &i);
+    execute_instruction(state, &i);
 
     assert(read_reg_64(state, R0) == 0xABCD0000ULL);
 
@@ -143,7 +143,7 @@ void test_movn_64bit_shift_prevents_truncation() {
     State *state = init_state();
 
     Instruction i = create_wide_move_inst(OP_TYPE_MOVN, true, R0, 0xFFFF, 3);
-    execute_instruction(state, i.op_type, &i);
+    execute_instruction(state, &i);
 
     assert(read_reg_64(state, R0) == 0x0000FFFFFFFFFFFFULL);
 

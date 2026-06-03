@@ -167,4 +167,27 @@ typedef struct Instruction {
     };
 } Instruction;
 
+// Opcode grouping functions
+bool is_immediate_arithmetic(OpType op_type);
+
+bool is_wide_move(OpType op_type);
+
+bool is_register_arithmetic_logic(OpType op_type);
+
+bool is_register_multiply(OpType op_type);
+
+bool is_single_data_transfer(OpType op_type);
+
+bool is_load_literal(OpType op_type);
+
+bool is_conditional_branch(OpType op_type);
+
+bool is_unconditional_branch(OpType op_type);
+
+bool is_register_branch(OpType op_type);
+
+bool is_branch(OpType op_type);
+
+bool is_directive_int(OpType op_type);
+
 #endif

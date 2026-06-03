@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
         DecodeResult r = decode(instruction, i);
         switch (r) {
         case DECODE_SUCCESS: {
-            shouldHalt = execute_instruction(state, i->op_type, i);
+            shouldHalt = execute_instruction(state, i);
         }; break;
         case DECODE_UNDEFINED_OPCODE: {
             shouldHalt = true;
