@@ -25,12 +25,12 @@ static void apply_register_shift(Instruction *i, char *saveptr) {
     char *shift_type = strtok_r(NULL, " ,\t\n", &saveptr);
     if (shift_type == NULL) {
         // Default behaviour - has no effect
-        i->data.register_arithmetic_logic.shift = SHIFT_LSL;
-        i->data.register_arithmetic_logic.operand = 0;
+        i->register_arithmetic_logic.shift = SHIFT_LSL;
+        i->register_arithmetic_logic.operand = 0;
     } else {
-        i->data.register_arithmetic_logic.shift = parse_shift(shift_type);
+        i->register_arithmetic_logic.shift = parse_shift(shift_type);
         char *shift_amount_str = strtok_r(NULL, " ,\t\n", &saveptr);
-        i->data.register_arithmetic_logic.operand =
+        i->register_arithmetic_logic.operand =
             parse_immediate(shift_amount_str);
     }
 }
@@ -46,23 +46,23 @@ void build_arithmetic(Instruction *i, OpType immediate_opcode,
     if (op2_str[0] == '#') {
         // Immediate
         i->op_type = immediate_opcode;
-        i->data.immediate_arithmetic.rd = rd;
-        i->data.immediate_arithmetic.rn = rn;
-        i->data.immediate_arithmetic.sf = sf;
-        i->data.immediate_arithmetic.imm12 = parse_immediate(op2_str);
+        i->immediate_arithmetic.rd = rd;
+        i->immediate_arithmetic.rn = rn;
+        i->immediate_arithmetic.sf = sf;
+        i->immediate_arithmetic.imm12 = parse_immediate(op2_str);
 
         // Check for shift
         char *shift_type = strtok_r(NULL, " ,\t\n", &saveptr);
         if (shift_type == NULL) {
-            i->data.immediate_arithmetic.sh = 0;
+            i->immediate_arithmetic.sh = 0;
         } else {
             char *shift_amount_str = strtok_r(NULL, " ,\t\n", &saveptr);
             long shift_amount = parse_immediate(shift_amount_str);
 
             if (shift_amount == 12) {
-                i->data.immediate_arithmetic.sh = 1;
+                i->immediate_arithmetic.sh = 1;
             } else if (shift_amount == 0) {
-                i->data.immediate_arithmetic.sh = 0;
+                i->immediate_arithmetic.sh = 0;
             } else {
                 ERROR((Error){.type = DPI_INVALID_SHIFT,
                               .shift_amount = shift_amount});
@@ -71,12 +71,12 @@ void build_arithmetic(Instruction *i, OpType immediate_opcode,
     } else {
         // Register
         i->op_type = register_opcode;
-        i->data.register_arithmetic_logic.rd = rd;
-        i->data.register_arithmetic_logic.rn = rn;
-        i->data.register_arithmetic_logic.sf = sf;
+        i->register_arithmetic_logic.rd = rd;
+        i->register_arithmetic_logic.rn = rn;
+        i->register_arithmetic_logic.sf = sf;
 
         bool sf_rm;
-        i->data.register_arithmetic_logic.rm = parse_register(op2_str, &sf_rm);
+        i->register_arithmetic_logic.rm = parse_register(op2_str, &sf_rm);
 
         // Check for shift
         apply_register_shift(i, saveptr);
@@ -86,10 +86,10 @@ void build_arithmetic(Instruction *i, OpType immediate_opcode,
 void build_logical(Instruction *i, OpType opcode, int rd, int rn, int rm,
                    bool sf, char *saveptr) {
     i->op_type = opcode;
-    i->data.register_arithmetic_logic.rd = rd;
-    i->data.register_arithmetic_logic.rn = rn;
-    i->data.register_arithmetic_logic.rm = rm;
-    i->data.register_arithmetic_logic.sf = sf;
+    i->register_arithmetic_logic.rd = rd;
+    i->register_arithmetic_logic.rn = rn;
+    i->register_arithmetic_logic.rm = rm;
+    i->register_arithmetic_logic.sf = sf;
 
     // Check for shift
     apply_register_shift(i, saveptr);
@@ -98,59 +98,59 @@ void build_logical(Instruction *i, OpType opcode, int rd, int rn, int rm,
 void build_multiply(Instruction *i, OpType opcode, int rd, int rn, int rm,
                     int ra, bool sf) {
     i->op_type = opcode;
-    i->data.multiply.rd = rd;
-    i->data.multiply.rn = rn;
-    i->data.multiply.rm = rm;
-    i->data.multiply.ra = ra;
-    i->data.multiply.sf = sf;
+    i->multiply.rd = rd;
+    i->multiply.rn = rn;
+    i->multiply.rm = rm;
+    i->multiply.ra = ra;
+    i->multiply.sf = sf;
 }
 
 void build_b(Instruction *i, uint64 offset) {
     i->op_type = OP_TYPE_UNCONDITIONAL_BRANCH;
-    i->data.uncond_branch.simm26 = offset;
+    i->uncond_branch.simm26 = offset;
 }
 
 void build_br(Instruction *i, int xn) {
     i->op_type = OP_TYPE_BR;
-    i->data.reg_branch.xn = xn;
+    i->reg_branch.xn = xn;
 }
 
 void build_b_cond(Instruction *i, uint64 offset, OpType opcode) {
     i->op_type = opcode;
-    i->data.cond_branch.simm19 = offset;
+    i->cond_branch.simm19 = offset;
 }
 
 void build_literal(Instruction *i, int rt, bool sf, int64 offset) {
     i->op_type = OP_TYPE_LOAD_LITERAL;
-    i->data.load_literal.rt = rt;
-    i->data.load_literal.sf = sf;
-    i->data.load_literal.simm19 = offset;
+    i->load_literal.rt = rt;
+    i->load_literal.sf = sf;
+    i->load_literal.simm19 = offset;
 }
 
 void build_single_data_transfer(Instruction *i, OpType opcode, int rt, bool sf,
                                 bool is_load, AddressingMode mode, int xm,
                                 int64 offset) {
     i->op_type = opcode;
-    i->data.single_data_transfer.rt = rt;
-    i->data.single_data_transfer.sf = sf;
-    i->data.single_data_transfer.L = is_load;
-    i->data.single_data_transfer.mode = mode;
-    i->data.single_data_transfer.xm = xm;
-    i->data.single_data_transfer.offset = offset;
+    i->single_data_transfer.rt = rt;
+    i->single_data_transfer.sf = sf;
+    i->single_data_transfer.L = is_load;
+    i->single_data_transfer.mode = mode;
+    i->single_data_transfer.xm = xm;
+    i->single_data_transfer.offset = offset;
 }
 
 void build_wide_move(Instruction *i, OpType opcode, bool sf, int rd,
                      int64 imm16, int hw) {
     i->op_type = opcode;
-    i->data.wide_move.sf = sf;
-    i->data.wide_move.rd = rd;
-    i->data.wide_move.imm16 = imm16;
-    i->data.wide_move.hw = hw;
+    i->wide_move.sf = sf;
+    i->wide_move.rd = rd;
+    i->wide_move.imm16 = imm16;
+    i->wide_move.hw = hw;
 }
 
 void build_directive(Instruction *i, int value) {
     i->op_type = OP_TYPE_DIRECTIVE_INT;
-    i->data.directive_int.value = value;
+    i->directive_int.value = value;
 }
 
 // --------------------------------------------------------------
@@ -339,7 +339,7 @@ void parse_memory(char *operands, Instruction *i, SymbolTable *table,
     char *op2_str = strtok_r(NULL, "[],! \t\n", &token_ptr);
 
     bool sf_xn;
-    i->data.single_data_transfer.xn = parse_register(xn_str, &sf_xn);
+    i->single_data_transfer.xn = parse_register(xn_str, &sf_xn);
 
     // Register offset
     if (op2_str != NULL && op2_str[0] != '#') {

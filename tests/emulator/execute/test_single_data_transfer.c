@@ -17,12 +17,12 @@ int test_single_data_transfer(void) {
     // Expected: Address = Base + 16. Writeback Base = Base + 16.
     Instruction instr_pre = {
         .op_type = OP_TYPE_SINGLE_DATA_TRANSFER,
-        .data.single_data_transfer = {.rt = RT,
-                                      .xn = XN,
-                                      .L = true,
-                                      .sf = true,
-                                      .mode = ADDR_PRE_INDEXED,
-                                      .offset = 16},
+        .single_data_transfer = {.rt = RT,
+                                 .xn = XN,
+                                 .L = true,
+                                 .sf = true,
+                                 .mode = ADDR_PRE_INDEXED,
+                                 .offset = 16},
     };
 
     state = init_state();
@@ -39,12 +39,12 @@ int test_single_data_transfer(void) {
     // Expected: Address = Base. Writeback Base = Base + 24.
     Instruction instr_post = {
         .op_type = OP_TYPE_SINGLE_DATA_TRANSFER,
-        .data.single_data_transfer = {.rt = RT,
-                                      .xn = XN,
-                                      .L = false,
-                                      .sf = true,
-                                      .mode = ADDR_POST_INDEXED,
-                                      .offset = 24},
+        .single_data_transfer = {.rt = RT,
+                                 .xn = XN,
+                                 .L = false,
+                                 .sf = true,
+                                 .mode = ADDR_POST_INDEXED,
+                                 .offset = 24},
     };
 
     state = init_state();
@@ -64,12 +64,12 @@ int test_single_data_transfer(void) {
     // Expected: Address = Base - 8. Writeback Base = Base - 8.
     Instruction instr_pre_neg = {
         .op_type = OP_TYPE_SINGLE_DATA_TRANSFER,
-        .data.single_data_transfer = {.rt = RT,
-                                      .xn = XN,
-                                      .L = true,
-                                      .sf = true,
-                                      .mode = ADDR_PRE_INDEXED,
-                                      .offset = -8},
+        .single_data_transfer = {.rt = RT,
+                                 .xn = XN,
+                                 .L = true,
+                                 .sf = true,
+                                 .mode = ADDR_PRE_INDEXED,
+                                 .offset = -8},
     };
 
     state = init_state();

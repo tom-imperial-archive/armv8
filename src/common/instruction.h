@@ -153,7 +153,7 @@ typedef struct DirectiveInt {
 // Main Instruction Struct
 typedef struct Instruction {
     OpType op_type;
-    union InstructionData {
+    union {
         ImmediateArithmeticInstruction immediate_arithmetic;
         WideMoveInstruction wide_move;
         RegisterMultiplyInstruction multiply;
@@ -164,7 +164,7 @@ typedef struct Instruction {
         SingleDataTransferInstruction single_data_transfer;
         LoadLiteralInstruction load_literal;
         DirectiveInt directive_int;
-    } data;
+    };
 } Instruction;
 
 #endif

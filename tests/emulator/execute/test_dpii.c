@@ -8,21 +8,21 @@
 Instruction create_imm_arithmetic_inst(OpType op, bool sf, Register rd,
                                        Register rn, uint16_t imm12, bool sh) {
     Instruction i = {.op_type = op};
-    i.data.immediate_arithmetic.sf = sf;
-    i.data.immediate_arithmetic.rd = rd;
-    i.data.immediate_arithmetic.rn = rn;
-    i.data.immediate_arithmetic.imm12 = imm12;
-    i.data.immediate_arithmetic.sh = sh;
+    i.immediate_arithmetic.sf = sf;
+    i.immediate_arithmetic.rd = rd;
+    i.immediate_arithmetic.rn = rn;
+    i.immediate_arithmetic.imm12 = imm12;
+    i.immediate_arithmetic.sh = sh;
     return i;
 }
 
 Instruction create_wide_move_inst(OpType op, bool sf, Register rd,
                                   uint16_t imm16, uint8_t hw) {
     Instruction i = {.op_type = op};
-    i.data.wide_move.sf = sf;
-    i.data.wide_move.rd = rd;
-    i.data.wide_move.imm16 = imm16;
-    i.data.wide_move.hw = hw;
+    i.wide_move.sf = sf;
+    i.wide_move.rd = rd;
+    i.wide_move.imm16 = imm16;
+    i.wide_move.hw = hw;
     return i;
 }
 

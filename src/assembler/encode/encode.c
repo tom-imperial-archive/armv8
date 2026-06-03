@@ -75,7 +75,7 @@ const int OFFSET_TOP_BITS = 29;
 
 uint32 encode_immediate_arithmetic(Instruction *i) {
     uint32 instruction = 0;
-    ImmediateArithmeticInstruction data = i->data.immediate_arithmetic;
+    ImmediateArithmeticInstruction data = i->immediate_arithmetic;
 
     // OP0
     instruction |= MASK_OP0_DPII << OFFSET_OP0;
@@ -131,7 +131,7 @@ uint32 encode_immediate_arithmetic(Instruction *i) {
 }
 
 uint32 encode_wide_move(Instruction *i) {
-    WideMoveInstruction data = i->data.wide_move;
+    WideMoveInstruction data = i->wide_move;
     uint32 instruction = 0;
 
     // OP0
@@ -182,7 +182,7 @@ uint32 encode_wide_move(Instruction *i) {
 
 uint32 encode_register_arithmetic_logic(Instruction *i) {
     uint32 instruction = 0;
-    RegisterArithmeticLogicInstruction data = i->data.register_arithmetic_logic;
+    RegisterArithmeticLogicInstruction data = i->register_arithmetic_logic;
 
     // OP0
     instruction |= MASK_OP0_DPIR << OFFSET_OP0;
@@ -293,7 +293,7 @@ uint32 encode_register_arithmetic_logic(Instruction *i) {
 
 uint32 encode_register_multiply(Instruction *i) {
     uint32 instruction = 0;
-    RegisterMultiplyInstruction data = i->data.multiply;
+    RegisterMultiplyInstruction data = i->multiply;
 
     // OP0
     instruction |= MASK_OP0_DPIR << OFFSET_OP0;
@@ -338,7 +338,7 @@ uint32 encode_register_multiply(Instruction *i) {
 
 uint32 encode_single_data_transfer(Instruction *i) {
     uint32 instruction = 0;
-    SingleDataTransferInstruction data = i->data.single_data_transfer;
+    SingleDataTransferInstruction data = i->single_data_transfer;
 
     // Top bits
     const int MASK_TOP_BITS = 0x5; // 0b101
@@ -401,7 +401,7 @@ uint32 encode_single_data_transfer(Instruction *i) {
 
 uint32 encode_load_literal(Instruction *i) {
     uint32 instruction = 0;
-    LoadLiteralInstruction data = i->data.load_literal;
+    LoadLiteralInstruction data = i->load_literal;
 
     // OP0
     instruction |= MASK_OP0_LOAD_STORE << OFFSET_OP0;
@@ -424,7 +424,7 @@ uint32 encode_load_literal(Instruction *i) {
 
 uint32 encode_conditional_branch(Instruction *i) {
     uint32 instruction = 0;
-    ConditionalBranchInstruction data = i->data.cond_branch;
+    ConditionalBranchInstruction data = i->cond_branch;
 
     // Top bits
     const int MASK_TOP_BITS_CONDITIONAL_BRANCH = 0x2; // 0b010
@@ -478,7 +478,7 @@ uint32 encode_conditional_branch(Instruction *i) {
 
 uint32 encode_unconditional_branch(Instruction *i) {
     uint32 instruction = 0;
-    UnconditionalBranchInstruction data = i->data.uncond_branch;
+    UnconditionalBranchInstruction data = i->uncond_branch;
 
     // OP0
     instruction |= MASK_OP0_BRANCH << OFFSET_OP0;
@@ -492,7 +492,7 @@ uint32 encode_unconditional_branch(Instruction *i) {
 
 uint32 encode_register_branch(Instruction *i) {
     uint32 instruction = 0;
-    RegisterBranchInstruction data = i->data.reg_branch;
+    RegisterBranchInstruction data = i->reg_branch;
 
     // UPPER BITS
     const int MASK_UPPER_BITS = 0xD61F0000;
@@ -505,7 +505,7 @@ uint32 encode_register_branch(Instruction *i) {
 }
 
 uint32 encode_directive_int(Instruction *i) {
-    return (uint32)i->data.directive_int.value;
+    return (uint32)i->directive_int.value;
 }
 
 // Takes a fully populated instruction struct and packs it into a 32 bit binary

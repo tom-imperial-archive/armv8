@@ -42,7 +42,7 @@ DecodeResult decode(uint32 input, Instruction *result) {
             int imm12 = (operand & MASK_IMM12) >> 10;
 
             instruction = (Instruction){.op_type = op_type,
-                                        .data.immediate_arithmetic = {
+                                        .immediate_arithmetic = {
                                             .imm12 = imm12,
                                             .rd = rd,
                                             .rn = rn,
@@ -72,7 +72,7 @@ DecodeResult decode(uint32 input, Instruction *result) {
             // TODO: do I shift imm16 by hw straight away or should this be in
             // EXECUTE
             instruction = (Instruction){.op_type = op_type,
-                                        .data.wide_move = {
+                                        .wide_move = {
                                             .hw = hw,
                                             .imm16 = imm16,
                                             .rd = rd,
@@ -107,7 +107,7 @@ DecodeResult decode(uint32 input, Instruction *result) {
             int ra = operand & 0x1F;
             OpType op_type = x ? OP_TYPE_MSUB : OP_TYPE_MADD;
             instruction = (Instruction){.op_type = op_type,
-                                        .data.multiply = {
+                                        .multiply = {
                                             .sf = sf,
                                             .ra = ra,
                                             .rd = rd,
@@ -152,7 +152,7 @@ DecodeResult decode(uint32 input, Instruction *result) {
                     break;
                 }
                 instruction = (Instruction){.op_type = op_type,
-                                            .data.register_arithmetic_logic = {
+                                            .register_arithmetic_logic = {
                                                 .operand = operand,
                                                 .rd = rd,
                                                 .rm = rm,
@@ -195,7 +195,7 @@ DecodeResult decode(uint32 input, Instruction *result) {
                 }
             }
             instruction = (Instruction){.op_type = op_type,
-                                        .data.register_arithmetic_logic = {
+                                        .register_arithmetic_logic = {
                                             .operand = operand,
                                             .rd = rd,
                                             .rm = rm,
@@ -240,7 +240,7 @@ DecodeResult decode(uint32 input, Instruction *result) {
             OpType op_type = OP_TYPE_SINGLE_DATA_TRANSFER;
 
             instruction = (Instruction){.op_type = op_type,
-                                        .data.single_data_transfer = {
+                                        .single_data_transfer = {
                                             .sf = sf,
                                             .L = L,
                                             .mode = mode,
@@ -263,7 +263,7 @@ DecodeResult decode(uint32 input, Instruction *result) {
             OpType op_type = OP_TYPE_LOAD_LITERAL;
 
             instruction = (Instruction){.op_type = op_type,
-                                        .data.load_literal = {
+                                        .load_literal = {
                                             .simm19 = simm19,
                                             .rt = rt,
                                             .sf = sf,
@@ -278,7 +278,7 @@ DecodeResult decode(uint32 input, Instruction *result) {
 
             instruction = (Instruction){
                 .op_type = op_type,
-                .data.reg_branch.xn = xn,
+                .reg_branch.xn = xn,
             };
 
         } else if ((input & 0xFF000000) == 0x54000000) { // Conditional
@@ -318,7 +318,7 @@ DecodeResult decode(uint32 input, Instruction *result) {
 
             instruction = (Instruction){
                 .op_type = op_type,
-                .data.cond_branch.simm19 = simm19,
+                .cond_branch.simm19 = simm19,
             };
 
         } else if ((input & 0xFC000000) == 0x14000000) { // Unconditional
@@ -331,7 +331,7 @@ DecodeResult decode(uint32 input, Instruction *result) {
 
             instruction = (Instruction){
                 .op_type = op_type,
-                .data.uncond_branch.simm26 = simm26,
+                .uncond_branch.simm26 = simm26,
             };
         }
     } else {

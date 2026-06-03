@@ -21,7 +21,7 @@ int test_load_literal(void) {
     // Checking with sf = false
     Instruction instruction1 = {
         .op_type = OP_TYPE_LOAD_LITERAL,
-        .data.load_literal =
+        .load_literal =
             {
                 .rt = RT,
                 .sf = false,
@@ -40,7 +40,7 @@ int test_load_literal(void) {
     // Checking with sf = true
     Instruction instruction2 = {
         .op_type = OP_TYPE_LOAD_LITERAL,
-        .data.load_literal =
+        .load_literal =
             {
                 .rt = RT,
                 .sf = true,
@@ -58,7 +58,7 @@ int test_load_literal(void) {
     // Checking with negative simm19
     Instruction instruction3 = {
         .op_type = OP_TYPE_LOAD_LITERAL,
-        .data.load_literal =
+        .load_literal =
             {
                 .rt = RT,
                 .sf = true,
@@ -77,7 +77,7 @@ int test_load_literal(void) {
     // Checking with postiive simm19
     Instruction instruction4 = {
         .op_type = OP_TYPE_LOAD_LITERAL,
-        .data.load_literal =
+        .load_literal =
             {
                 .rt = RT,
                 .sf = true,
@@ -95,7 +95,7 @@ int test_load_literal(void) {
     // Checking with zero simm19
     Instruction instruction5 = {
         .op_type = OP_TYPE_LOAD_LITERAL,
-        .data.load_literal =
+        .load_literal =
             {
                 .rt = RT,
                 .sf = true,
@@ -113,7 +113,7 @@ int test_load_literal(void) {
     // Checking with max simm19
     Instruction instruction6 = {
         .op_type = OP_TYPE_LOAD_LITERAL,
-        .data.load_literal =
+        .load_literal =
             {
                 .rt = RT,
                 .sf = true,
@@ -131,7 +131,7 @@ int test_load_literal(void) {
     // Checking with min simm19
     Instruction instruction7 = {
         .op_type = OP_TYPE_LOAD_LITERAL,
-        .data.load_literal =
+        .load_literal =
             {
                 .rt = RT,
                 .sf = true,
@@ -150,7 +150,7 @@ int test_load_literal(void) {
     // Checking with different value of RT
     Instruction instruction8 = {
         .op_type = OP_TYPE_LOAD_LITERAL,
-        .data.load_literal =
+        .load_literal =
             {
                 .rt = RT2,
                 .sf = true,

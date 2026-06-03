@@ -17,7 +17,7 @@ void test_encode_halt(void) {
 // IMMEDIATE ARITHMETIC
 void test_encode_imm_add(void) {
     Instruction i = {.op_type = OP_TYPE_ADD,
-                     .data.immediate_arithmetic = {
+                     .immediate_arithmetic = {
                          .sf = 1,
                          .rn = 1,
                          .sh = 1,
@@ -29,7 +29,7 @@ void test_encode_imm_add(void) {
 
 void test_encode_imm_adds(void) {
     Instruction i = {.op_type = OP_TYPE_ADDS,
-                     .data.immediate_arithmetic = {
+                     .immediate_arithmetic = {
                          .sf = 0,
                          .rn = 2,
                          .sh = 1,
@@ -41,7 +41,7 @@ void test_encode_imm_adds(void) {
 
 void test_encode_imm_sub(void) {
     Instruction i = {.op_type = OP_TYPE_SUB,
-                     .data.immediate_arithmetic = {
+                     .immediate_arithmetic = {
                          .sf = 1,
                          .rn = 4,
                          .sh = 1,
@@ -53,7 +53,7 @@ void test_encode_imm_sub(void) {
 
 void test_encode_imm_subs(void) {
     Instruction i = {.op_type = OP_TYPE_SUBS,
-                     .data.immediate_arithmetic = {
+                     .immediate_arithmetic = {
                          .sf = 0,
                          .rn = 6,
                          .sh = 1,
@@ -66,7 +66,7 @@ void test_encode_imm_subs(void) {
 // 3. WIDE MOVE
 void test_encode_wide_movn(void) {
     Instruction i = {.op_type = OP_TYPE_MOVN,
-                     .data.wide_move = {
+                     .wide_move = {
                          .sf = 1,
                          .hw = 0,
                          .imm16 = 0x1234,
@@ -77,7 +77,7 @@ void test_encode_wide_movn(void) {
 
 void test_encode_wide_movz(void) {
     Instruction i = {.op_type = OP_TYPE_MOVZ,
-                     .data.wide_move = {
+                     .wide_move = {
                          .sf = 1,
                          .hw = 1,
                          .imm16 = 0xABCD,
@@ -88,7 +88,7 @@ void test_encode_wide_movz(void) {
 
 void test_encode_wide_movk(void) {
     Instruction i = {.op_type = OP_TYPE_MOVK,
-                     .data.wide_move = {
+                     .wide_move = {
                          .sf = 0,
                          .hw = 2,
                          .imm16 = 0xFFFF,
@@ -100,7 +100,7 @@ void test_encode_wide_movk(void) {
 // 4. REGISTER ARITHMETIC / LOGIC
 void test_encode_reg_add(void) {
     Instruction i = {.op_type = OP_TYPE_REG_ADD,
-                     .data.register_arithmetic_logic = {
+                     .register_arithmetic_logic = {
                          .sf = 1,
                          .shift = 0,
                          .rm = 12,
@@ -113,7 +113,7 @@ void test_encode_reg_add(void) {
 
 void test_encode_reg_adds(void) {
     Instruction i = {.op_type = OP_TYPE_REG_ADDS,
-                     .data.register_arithmetic_logic = {
+                     .register_arithmetic_logic = {
                          .sf = 0,
                          .shift = 1,
                          .rm = 14,
@@ -126,7 +126,7 @@ void test_encode_reg_adds(void) {
 
 void test_encode_reg_sub(void) {
     Instruction i = {.op_type = OP_TYPE_REG_SUB,
-                     .data.register_arithmetic_logic = {
+                     .register_arithmetic_logic = {
                          .sf = 1,
                          .shift = 2,
                          .rm = 1,
@@ -139,7 +139,7 @@ void test_encode_reg_sub(void) {
 
 void test_encode_reg_subs(void) {
     Instruction i = {.op_type = OP_TYPE_REG_SUBS,
-                     .data.register_arithmetic_logic = {
+                     .register_arithmetic_logic = {
                          .sf = 0,
                          .shift = 0,
                          .rm = 4,
@@ -152,7 +152,7 @@ void test_encode_reg_subs(void) {
 
 void test_encode_log_and(void) {
     Instruction i = {.op_type = OP_TYPE_AND,
-                     .data.register_arithmetic_logic = {
+                     .register_arithmetic_logic = {
                          .sf = 1,
                          .shift = 0,
                          .rm = 8,
@@ -165,7 +165,7 @@ void test_encode_log_and(void) {
 
 void test_encode_log_bic(void) {
     Instruction i = {.op_type = OP_TYPE_BIC,
-                     .data.register_arithmetic_logic = {
+                     .register_arithmetic_logic = {
                          .sf = 0,
                          .shift = 0,
                          .rm = 11,
@@ -178,7 +178,7 @@ void test_encode_log_bic(void) {
 
 void test_encode_log_orr(void) {
     Instruction i = {.op_type = OP_TYPE_ORR,
-                     .data.register_arithmetic_logic = {
+                     .register_arithmetic_logic = {
                          .sf = 1,
                          .shift = 0,
                          .rm = 14,
@@ -191,7 +191,7 @@ void test_encode_log_orr(void) {
 
 void test_encode_log_orn(void) {
     Instruction i = {.op_type = OP_TYPE_ORN,
-                     .data.register_arithmetic_logic = {
+                     .register_arithmetic_logic = {
                          .sf = 0,
                          .shift = 0,
                          .rm = 17,
@@ -204,7 +204,7 @@ void test_encode_log_orn(void) {
 
 void test_encode_log_eor(void) {
     Instruction i = {.op_type = OP_TYPE_EOR,
-                     .data.register_arithmetic_logic = {
+                     .register_arithmetic_logic = {
                          .sf = 1,
                          .shift = 0,
                          .rm = 20,
@@ -217,7 +217,7 @@ void test_encode_log_eor(void) {
 
 void test_encode_log_eon(void) {
     Instruction i = {.op_type = OP_TYPE_EON,
-                     .data.register_arithmetic_logic = {
+                     .register_arithmetic_logic = {
                          .sf = 0,
                          .shift = 0,
                          .rm = 23,
@@ -230,7 +230,7 @@ void test_encode_log_eon(void) {
 
 void test_encode_log_ands(void) {
     Instruction i = {.op_type = OP_TYPE_ANDS,
-                     .data.register_arithmetic_logic = {
+                     .register_arithmetic_logic = {
                          .sf = 1,
                          .shift = 0,
                          .rm = 26,
@@ -243,7 +243,7 @@ void test_encode_log_ands(void) {
 
 void test_encode_log_bics(void) {
     Instruction i = {.op_type = OP_TYPE_BICS,
-                     .data.register_arithmetic_logic = {
+                     .register_arithmetic_logic = {
                          .sf = 0,
                          .shift = 0,
                          .rm = 29,
@@ -257,7 +257,7 @@ void test_encode_log_bics(void) {
 // 5. REGISTER MULTIPLY
 void test_encode_madd(void) {
     Instruction i = {.op_type = OP_TYPE_MADD,
-                     .data.multiply = {
+                     .multiply = {
                          .sf = 1,
                          .rm = 1,
                          .ra = 2,
@@ -269,7 +269,7 @@ void test_encode_madd(void) {
 
 void test_encode_msub(void) {
     Instruction i = {.op_type = OP_TYPE_MSUB,
-                     .data.multiply = {
+                     .multiply = {
                          .sf = 0,
                          .rm = 5,
                          .ra = 6,
@@ -282,7 +282,7 @@ void test_encode_msub(void) {
 // SINGLE DATA TRANSFER
 void test_encode_sdt_load_unsigned(void) {
     Instruction i = {.op_type = OP_TYPE_SINGLE_DATA_TRANSFER,
-                     .data.single_data_transfer = {
+                     .single_data_transfer = {
                          .sf = 1,
                          .mode = ADDR_UNSIGNED_OFFSET,
                          .L = 1,
@@ -295,7 +295,7 @@ void test_encode_sdt_load_unsigned(void) {
 
 void test_encode_sdt_store_unsigned(void) {
     Instruction i = {.op_type = OP_TYPE_SINGLE_DATA_TRANSFER,
-                     .data.single_data_transfer = {
+                     .single_data_transfer = {
                          .sf = 0,
                          .mode = ADDR_UNSIGNED_OFFSET,
                          .L = 0,
@@ -309,7 +309,7 @@ void test_encode_sdt_store_unsigned(void) {
 
 void test_encode_sdt_store_pre_indexed(void) {
     Instruction i = {.op_type = OP_TYPE_SINGLE_DATA_TRANSFER,
-                     .data.single_data_transfer = {
+                     .single_data_transfer = {
                          .sf = 1,
                          .mode = ADDR_PRE_INDEXED,
                          .L = 0,
@@ -322,7 +322,7 @@ void test_encode_sdt_store_pre_indexed(void) {
 
 void test_encode_sdt_load_register(void) {
     Instruction i = {.op_type = OP_TYPE_SINGLE_DATA_TRANSFER,
-                     .data.single_data_transfer = {
+                     .single_data_transfer = {
                          .sf = 1,
                          .mode = ADDR_REGISTER_OFFSET,
                          .L = 1,
@@ -336,7 +336,7 @@ void test_encode_sdt_load_register(void) {
 // LOAD LITERAL
 void test_encode_load_literal(void) {
     Instruction i = {.op_type = OP_TYPE_LOAD_LITERAL,
-                     .data.load_literal = {
+                     .load_literal = {
                          .sf = 1,
                          .simm19 = 16,
                          .rt = 14,
@@ -348,7 +348,7 @@ void test_encode_load_literal(void) {
 void test_encode_branch_eq(void) {
     Instruction i = {
         .op_type = OP_TYPE_EQ,
-        .data.cond_branch.simm19 = 8,
+        .cond_branch.simm19 = 8,
     };
     assert(encode_instruction(&i) == 0x54000100);
 }
@@ -356,7 +356,7 @@ void test_encode_branch_eq(void) {
 void test_encode_branch_ne(void) {
     Instruction i = {
         .op_type = OP_TYPE_NE,
-        .data.cond_branch.simm19 = 12,
+        .cond_branch.simm19 = 12,
     };
     assert(encode_instruction(&i) == 0x54000181);
 }
@@ -364,7 +364,7 @@ void test_encode_branch_ne(void) {
 void test_encode_branch_ge(void) {
     Instruction i = {
         .op_type = OP_TYPE_GE,
-        .data.cond_branch.simm19 = 16,
+        .cond_branch.simm19 = 16,
     };
     assert(encode_instruction(&i) == 0x5400020A);
 }
@@ -372,7 +372,7 @@ void test_encode_branch_ge(void) {
 void test_encode_branch_lt(void) {
     Instruction i = {
         .op_type = OP_TYPE_LT,
-        .data.cond_branch.simm19 = 20,
+        .cond_branch.simm19 = 20,
     };
     assert(encode_instruction(&i) == 0x5400028B);
 }
@@ -380,7 +380,7 @@ void test_encode_branch_lt(void) {
 void test_encode_branch_gt(void) {
     Instruction i = {
         .op_type = OP_TYPE_GT,
-        .data.cond_branch.simm19 = 24,
+        .cond_branch.simm19 = 24,
     };
     assert(encode_instruction(&i) == 0x5400030C);
 }
@@ -388,7 +388,7 @@ void test_encode_branch_gt(void) {
 void test_encode_branch_le(void) {
     Instruction i = {
         .op_type = OP_TYPE_LE,
-        .data.cond_branch.simm19 = 28,
+        .cond_branch.simm19 = 28,
     };
     assert(encode_instruction(&i) == 0x5400038D);
 }
@@ -396,7 +396,7 @@ void test_encode_branch_le(void) {
 void test_encode_branch_al(void) {
     Instruction i = {
         .op_type = OP_TYPE_AL,
-        .data.cond_branch.simm19 = 32,
+        .cond_branch.simm19 = 32,
     };
     assert(encode_instruction(&i) == 0x5400040E);
 }
@@ -404,7 +404,7 @@ void test_encode_branch_al(void) {
 void test_encode_uncond_branch(void) {
     Instruction i = {
         .op_type = OP_TYPE_UNCONDITIONAL_BRANCH,
-        .data.uncond_branch.simm26 = 64,
+        .uncond_branch.simm26 = 64,
     };
     assert(encode_instruction(&i) == 0x14000040);
 }
@@ -412,7 +412,7 @@ void test_encode_uncond_branch(void) {
 void test_encode_reg_branch(void) {
     Instruction i = {
         .op_type = OP_TYPE_BR,
-        .data.reg_branch.xn = 30,
+        .reg_branch.xn = 30,
     };
     assert(encode_instruction(&i) == 0xD61F03C0);
 }
@@ -422,7 +422,7 @@ void test_encode_reg_branch(void) {
 void test_encode_negative_uncond_branch(void) {
     Instruction i = {
         .op_type = OP_TYPE_UNCONDITIONAL_BRANCH,
-        .data.uncond_branch.simm26 = -4,
+        .uncond_branch.simm26 = -4,
     };
     assert(encode_instruction(&i) == 0x17FFFFFC);
 }
@@ -430,14 +430,14 @@ void test_encode_negative_uncond_branch(void) {
 void test_encode_negative_cond_branch(void) {
     Instruction i = {
         .op_type = OP_TYPE_EQ,
-        .data.cond_branch.simm19 = -2,
+        .cond_branch.simm19 = -2,
     };
     assert(encode_instruction(&i) == 0x54FFFFC0);
 }
 
 void test_encode_negative_load_literal(void) {
     Instruction i = {.op_type = OP_TYPE_LOAD_LITERAL,
-                     .data.load_literal = {
+                     .load_literal = {
                          .sf = 1,
                          .simm19 = -3,
                          .rt = 0,
@@ -448,7 +448,7 @@ void test_encode_negative_load_literal(void) {
 void test_encode_directive_int(void) {
     Instruction i = {
         .op_type = OP_TYPE_DIRECTIVE_INT,
-        .data.directive_int.value = 0x12345678,
+        .directive_int.value = 0x12345678,
     };
 
     assert(encode_instruction(&i) == 0x12345678);

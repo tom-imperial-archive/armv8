@@ -10,19 +10,19 @@ bool execute_instruction(State *state, OpType op, Instruction *i);
 // Instruction builder helpers
 Instruction create_uncond_branch_inst(int32_t simm26) {
     Instruction i = {.op_type = OP_TYPE_AL};
-    i.data.uncond_branch.simm26 = simm26;
+    i.uncond_branch.simm26 = simm26;
     return i;
 }
 
 Instruction create_cond_branch_inst(OpType op, int32_t simm19) {
     Instruction i = {.op_type = op};
-    i.data.cond_branch.simm19 = simm19;
+    i.cond_branch.simm19 = simm19;
     return i;
 }
 
 Instruction create_reg_branch_inst(Register xn) {
     Instruction i = {.op_type = OP_TYPE_BR};
-    i.data.reg_branch.xn = xn;
+    i.reg_branch.xn = xn;
     return i;
 }
 
