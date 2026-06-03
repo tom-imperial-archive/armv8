@@ -1,19 +1,19 @@
 #ifndef STATE_H_
 #define STATE_H_
-#include <stdbool.h>
-#include "utils/types.h"
 #include "emulator/state/memory.h"
+#include "utils/types.h"
+#include <stdbool.h>
 #define REG_PRINT_LINE_LENGTH 24
 #define REG_PRINT_BUFFER_SIZE (33 * REG_PRINT_LINE_LENGTH)
 
 /*
-This includes all registers including the special registers, excluding PSTATE which is handled separately.
-Instructions cannot modify PSTATE so we implement the fields separately.
+This includes all registers including the special registers, excluding PSTATE
+which is handled separately. Instructions cannot modify PSTATE so we implement
+the fields separately.
 
 These values represent PHYSICAL registers.
 */
-enum Register
-{
+enum Register {
     R0,
     R1,
     R2,
@@ -54,21 +54,14 @@ typedef enum Register Register;
 /*
 Represents the fields of PSTATE
 */
-enum PSTATE_flag
-{
-    N,
-    Z,
-    C,
-    V
-};
+enum PSTATE_flag { N, Z, C, V };
 typedef enum PSTATE_flag PSTATE_flag;
 
 /*
-    Represents the registers of an ARMv8 machine and contains a reference to the memory of the machine.
-    Do not construct directly; use init_state() instead.
+    Represents the registers of an ARMv8 machine and contains a reference to the
+   memory of the machine. Do not construct directly; use init_state() instead.
 */
-struct State
-{
+struct State {
     uint64 R0;
     uint64 R1;
     uint64 R2;

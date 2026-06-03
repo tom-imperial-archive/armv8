@@ -1,14 +1,15 @@
 #ifndef INSTRUCTION_H
 #define INSTRUCTION_H
 
-#include <stdbool.h>
 #include "utils/types.h"
+#include <stdbool.h>
 
 typedef enum OpType {
     // Halt
     OP_TYPE_HALT,
 
-    // Data processing instruction (immediate). Correspond to `ImmediateArithmeticInstruction`.
+    // Data processing instruction (immediate). Correspond to
+    // `ImmediateArithmeticInstruction`.
 
     // Arithmetic
     OP_TYPE_ADD,
@@ -21,7 +22,8 @@ typedef enum OpType {
     OP_TYPE_MOVZ,
     OP_TYPE_MOVK,
 
-    // Data processing instruction (register). Correspond to `RegisterArithmeticLogicInstruction`
+    // Data processing instruction (register). Correspond to
+    // `RegisterArithmeticLogicInstruction`
 
     // Arithmetic
     OP_TYPE_REG_ADD,

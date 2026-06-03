@@ -1,42 +1,34 @@
-#include <assert.h>
 #include "common/error.h"
-#include "utils/types.h"
 #include "common/instruction.h"
+#include "utils/types.h"
+#include <assert.h>
 
 /*
-Here, we take an instruction, represented by a struct, and turn it into the actual 32-bit representation.
-This will ultimately be achieved by bitwise operations and masks.
+Here, we take an instruction, represented by a struct, and turn it into the
+actual 32-bit representation. This will ultimately be achieved by bitwise
+operations and masks.
 
 Essentially, we will have one big switch, like we did in execute,
     but the work being done is like the opposite of what was done in decode.
 */
 
 bool is_immediate_arithmetic(OpType op_type) {
-    return op_type == OP_TYPE_ADD
-        || op_type == OP_TYPE_ADDS
-        || op_type == OP_TYPE_SUB
-        || op_type == OP_TYPE_SUBS;
+    return op_type == OP_TYPE_ADD || op_type == OP_TYPE_ADDS ||
+           op_type == OP_TYPE_SUB || op_type == OP_TYPE_SUBS;
 }
 
 bool is_wide_move(OpType op_type) {
-    return op_type == OP_TYPE_MOVN
-        || op_type == OP_TYPE_MOVZ
-        || op_type == OP_TYPE_MOVK;
+    return op_type == OP_TYPE_MOVN || op_type == OP_TYPE_MOVZ ||
+           op_type == OP_TYPE_MOVK;
 }
 
 bool is_register_arithmetic_logic(OpType op_type) {
-    return op_type == OP_TYPE_REG_ADD
-        || op_type == OP_TYPE_REG_ADDS
-        || op_type == OP_TYPE_REG_SUB
-        || op_type == OP_TYPE_REG_SUBS
-        || op_type == OP_TYPE_AND
-        || op_type == OP_TYPE_BIC
-        || op_type == OP_TYPE_ORR
-        || op_type == OP_TYPE_ORN
-        || op_type == OP_TYPE_EOR
-        || op_type == OP_TYPE_EON
-        || op_type == OP_TYPE_ANDS
-        || op_type == OP_TYPE_BICS;
+    return op_type == OP_TYPE_REG_ADD || op_type == OP_TYPE_REG_ADDS ||
+           op_type == OP_TYPE_REG_SUB || op_type == OP_TYPE_REG_SUBS ||
+           op_type == OP_TYPE_AND || op_type == OP_TYPE_BIC ||
+           op_type == OP_TYPE_ORR || op_type == OP_TYPE_ORN ||
+           op_type == OP_TYPE_EOR || op_type == OP_TYPE_EON ||
+           op_type == OP_TYPE_ANDS || op_type == OP_TYPE_BICS;
 }
 
 bool is_register_multiply(OpType op_type) {
@@ -47,36 +39,29 @@ bool is_single_data_transfer(OpType op_type) {
     return op_type == OP_TYPE_SINGLE_DATA_TRANSFER;
 }
 
-bool is_load_literal(OpType op_type) {
-    return op_type == OP_TYPE_LOAD_LITERAL;
-}
+bool is_load_literal(OpType op_type) { return op_type == OP_TYPE_LOAD_LITERAL; }
 
 bool is_conditional_branch(OpType op_type) {
-    return op_type == OP_TYPE_EQ
-        || op_type == OP_TYPE_NE
-        || op_type == OP_TYPE_GE
-        || op_type == OP_TYPE_LT
-        || op_type == OP_TYPE_GT
-        || op_type == OP_TYPE_LE
-        || op_type == OP_TYPE_AL;
+    return op_type == OP_TYPE_EQ || op_type == OP_TYPE_NE ||
+           op_type == OP_TYPE_GE || op_type == OP_TYPE_LT ||
+           op_type == OP_TYPE_GT || op_type == OP_TYPE_LE ||
+           op_type == OP_TYPE_AL;
 }
 
 bool is_unconditional_branch(OpType op_type) {
     return op_type == OP_TYPE_UNCONDITIONAL_BRANCH;
 }
 
-bool is_register_branch(OpType op_type) {
-    return op_type == OP_TYPE_BR;
-}
+bool is_register_branch(OpType op_type) { return op_type == OP_TYPE_BR; }
 
 bool is_directive_int(OpType op_type) {
     return op_type == OP_TYPE_DIRECTIVE_INT;
 }
 
-const int MASK_OP0_DPII = 0x8; // 0b1000
-const int MASK_OP0_DPIR = 0x5; // 0b0101
+const int MASK_OP0_DPII = 0x8;       // 0b1000
+const int MASK_OP0_DPIR = 0x5;       // 0b0101
 const int MASK_OP0_LOAD_STORE = 0xC; // 0b1100
-const int MASK_OP0_BRANCH = 0xA; // 0b1010
+const int MASK_OP0_BRANCH = 0xA;     // 0b1010
 const int OFFSET_OP0 = 25;
 const int OFFSET_SF_DPII_DPIR = 31;
 const int OFFSET_SF_LOAD_STORE = 30;
@@ -88,7 +73,7 @@ const int OFFSET_RN = 5;
 const int OFFSET_XN = 5;
 const int OFFSET_TOP_BITS = 29;
 
-uint32 encode_immediate_arithmetic(Instruction* i) {
+uint32 encode_immediate_arithmetic(Instruction *i) {
     uint32 instruction = 0;
     ImmediateArithmeticInstruction data = i->data.immediate_arithmetic;
 
@@ -105,12 +90,21 @@ uint32 encode_immediate_arithmetic(Instruction* i) {
     const int MASK_SUB = 0x2;  // 0b10
     const int MASK_SUBS = 0x3; // 0b11
     switch (i->op_type) {
-        // OPC is 0b00 so nothing to do.
-        case OP_TYPE_ADD: break;
-        case OP_TYPE_ADDS: instruction |= MASK_ADDS << OFFSET_OPC; break;
-        case OP_TYPE_SUB:  instruction |= MASK_SUB << OFFSET_OPC;  break;
-        case OP_TYPE_SUBS: instruction |= MASK_SUBS << OFFSET_OPC; break;
-        default: ERROR((Error){.type = INCORRECT_OP_TYPE}); break;
+    // OPC is 0b00 so nothing to do.
+    case OP_TYPE_ADD:
+        break;
+    case OP_TYPE_ADDS:
+        instruction |= MASK_ADDS << OFFSET_OPC;
+        break;
+    case OP_TYPE_SUB:
+        instruction |= MASK_SUB << OFFSET_OPC;
+        break;
+    case OP_TYPE_SUBS:
+        instruction |= MASK_SUBS << OFFSET_OPC;
+        break;
+    default:
+        ERROR((Error){.type = INCORRECT_OP_TYPE});
+        break;
     }
 
     // OPI
@@ -136,7 +130,7 @@ uint32 encode_immediate_arithmetic(Instruction* i) {
     return instruction;
 }
 
-uint32 encode_wide_move(Instruction* i) {
+uint32 encode_wide_move(Instruction *i) {
     WideMoveInstruction data = i->data.wide_move;
     uint32 instruction = 0;
 
@@ -152,12 +146,19 @@ uint32 encode_wide_move(Instruction* i) {
     const int MASK_MOVZ = 0x2; // 0b10
     const int MASK_MOVK = 0x3; // 0b11
     switch (i->op_type) {
-        // OPC is 0b00 so nothing to do.
-        case OP_TYPE_MOVN: break;
-        case OP_TYPE_MOVZ: instruction |= MASK_MOVZ << OFFSET_OPC; break;
-        case OP_TYPE_MOVK: instruction |= MASK_MOVK << OFFSET_OPC; break;
-        // Wrong op_type
-        default: ERROR((Error){.type = INCORRECT_OP_TYPE}); break;
+    // OPC is 0b00 so nothing to do.
+    case OP_TYPE_MOVN:
+        break;
+    case OP_TYPE_MOVZ:
+        instruction |= MASK_MOVZ << OFFSET_OPC;
+        break;
+    case OP_TYPE_MOVK:
+        instruction |= MASK_MOVK << OFFSET_OPC;
+        break;
+    // Wrong op_type
+    default:
+        ERROR((Error){.type = INCORRECT_OP_TYPE});
+        break;
     }
 
     // OPI
@@ -181,7 +182,8 @@ uint32 encode_wide_move(Instruction* i) {
 
 // uint32 encode_register_arithmetic_logic(Instruction* i) {
 //     uint32 instruction = 0;
-//     RegisterArithmeticLogicInstruction data = i->data.register_arithmetic_logic;
+//     RegisterArithmeticLogicInstruction data =
+//     i->data.register_arithmetic_logic;
 
 //     // OP0
 //     instruction |= MASK_OP0_DPIR << OFFSET_OP0;
@@ -249,7 +251,7 @@ uint32 encode_wide_move(Instruction* i) {
 //     return instruction;
 // }
 
-uint32 encode_register_arithmetic_logic(Instruction* i) {
+uint32 encode_register_arithmetic_logic(Instruction *i) {
     uint32 instruction = 0;
     RegisterArithmeticLogicInstruction data = i->data.register_arithmetic_logic;
 
@@ -271,23 +273,65 @@ uint32 encode_register_arithmetic_logic(Instruction* i) {
     uint32 n_bit = 0;
 
     switch (i->op_type) {
-        // ARITHMETIC
-        case OP_TYPE_REG_ADD:  opc = 0x0; break;
-        case OP_TYPE_REG_ADDS: opc = 0x1; break;
-        case OP_TYPE_REG_SUB:  opc = 0x2; break;
-        case OP_TYPE_REG_SUBS: opc = 0x3; break;
+    // ARITHMETIC
+    case OP_TYPE_REG_ADD:
+        opc = 0x0;
+        break;
+    case OP_TYPE_REG_ADDS:
+        opc = 0x1;
+        break;
+    case OP_TYPE_REG_SUB:
+        opc = 0x2;
+        break;
+    case OP_TYPE_REG_SUBS:
+        opc = 0x3;
+        break;
 
-        // LOGICAL
-        case OP_TYPE_AND:  opc = 0x0; is_logical = 1; n_bit = 0; break;
-        case OP_TYPE_BIC:  opc = 0x0; is_logical = 1; n_bit = 1; break;
-        case OP_TYPE_ORR:  opc = 0x1; is_logical = 1; n_bit = 0; break;
-        case OP_TYPE_ORN:  opc = 0x1; is_logical = 1; n_bit = 1; break;
-        case OP_TYPE_EOR:  opc = 0x2; is_logical = 1; n_bit = 0; break;
-        case OP_TYPE_EON:  opc = 0x2; is_logical = 1; n_bit = 1; break;
-        case OP_TYPE_ANDS: opc = 0x3; is_logical = 1; n_bit = 0; break;
-        case OP_TYPE_BICS: opc = 0x3; is_logical = 1; n_bit = 1; break;
+    // LOGICAL
+    case OP_TYPE_AND:
+        opc = 0x0;
+        is_logical = 1;
+        n_bit = 0;
+        break;
+    case OP_TYPE_BIC:
+        opc = 0x0;
+        is_logical = 1;
+        n_bit = 1;
+        break;
+    case OP_TYPE_ORR:
+        opc = 0x1;
+        is_logical = 1;
+        n_bit = 0;
+        break;
+    case OP_TYPE_ORN:
+        opc = 0x1;
+        is_logical = 1;
+        n_bit = 1;
+        break;
+    case OP_TYPE_EOR:
+        opc = 0x2;
+        is_logical = 1;
+        n_bit = 0;
+        break;
+    case OP_TYPE_EON:
+        opc = 0x2;
+        is_logical = 1;
+        n_bit = 1;
+        break;
+    case OP_TYPE_ANDS:
+        opc = 0x3;
+        is_logical = 1;
+        n_bit = 0;
+        break;
+    case OP_TYPE_BICS:
+        opc = 0x3;
+        is_logical = 1;
+        n_bit = 1;
+        break;
 
-        default: assert(false); break;
+    default:
+        assert(false);
+        break;
     }
 
     // Apply OPC
@@ -319,7 +363,7 @@ uint32 encode_register_arithmetic_logic(Instruction* i) {
     return instruction;
 }
 
-uint32 encode_register_multiply(Instruction* i) {
+uint32 encode_register_multiply(Instruction *i) {
     uint32 instruction = 0;
     RegisterMultiplyInstruction data = i->data.multiply;
 
@@ -364,7 +408,7 @@ uint32 encode_register_multiply(Instruction* i) {
     return instruction;
 }
 
-uint32 encode_single_data_transfer(Instruction* i) {
+uint32 encode_single_data_transfer(Instruction *i) {
     uint32 instruction = 0;
     SingleDataTransfer data = i->data.single_data_transfer;
 
@@ -427,7 +471,7 @@ uint32 encode_single_data_transfer(Instruction* i) {
     return instruction;
 }
 
-uint32 encode_load_literal(Instruction* i) {
+uint32 encode_load_literal(Instruction *i) {
     uint32 instruction = 0;
     LoadLiteral data = i->data.load_literal;
 
@@ -450,7 +494,7 @@ uint32 encode_load_literal(Instruction* i) {
     return instruction;
 }
 
-uint32 encode_conditional_branch(Instruction* i) {
+uint32 encode_conditional_branch(Instruction *i) {
     uint32 instruction = 0;
     ConditionalBranchInstruction data = i->data.cond_branch;
 
@@ -474,22 +518,37 @@ uint32 encode_conditional_branch(Instruction* i) {
     const int MASK_COND_LE = 0xD; // 0b1101
     const int MASK_COND_AL = 0xE; // 0b1110
     switch (i->op_type) {
-        // Mask is 0b00.
-        case OP_TYPE_EQ: break;
-        case OP_TYPE_NE: instruction |= MASK_COND_NE; break;
-        case OP_TYPE_GE: instruction |= MASK_COND_GE; break;
-        case OP_TYPE_LT: instruction |= MASK_COND_LT; break;
-        case OP_TYPE_GT: instruction |= MASK_COND_GT; break;
-        case OP_TYPE_LE: instruction |= MASK_COND_LE; break;
-        case OP_TYPE_AL: instruction |= MASK_COND_AL; break;
-        // Wrong op_type
-        default: ERROR((Error){.type = INCORRECT_OP_TYPE}); break;
+    // Mask is 0b00.
+    case OP_TYPE_EQ:
+        break;
+    case OP_TYPE_NE:
+        instruction |= MASK_COND_NE;
+        break;
+    case OP_TYPE_GE:
+        instruction |= MASK_COND_GE;
+        break;
+    case OP_TYPE_LT:
+        instruction |= MASK_COND_LT;
+        break;
+    case OP_TYPE_GT:
+        instruction |= MASK_COND_GT;
+        break;
+    case OP_TYPE_LE:
+        instruction |= MASK_COND_LE;
+        break;
+    case OP_TYPE_AL:
+        instruction |= MASK_COND_AL;
+        break;
+    // Wrong op_type
+    default:
+        ERROR((Error){.type = INCORRECT_OP_TYPE});
+        break;
     }
 
     return instruction;
 }
 
-uint32 encode_unconditional_branch(Instruction* i) {
+uint32 encode_unconditional_branch(Instruction *i) {
     uint32 instruction = 0;
     UnconditionalBranchInstruction data = i->data.uncond_branch;
 
@@ -503,7 +562,7 @@ uint32 encode_unconditional_branch(Instruction* i) {
     return instruction;
 }
 
-uint32 encode_register_branch(Instruction* i) {
+uint32 encode_register_branch(Instruction *i) {
     uint32 instruction = 0;
     RegisterBranchInstruction data = i->data.reg_branch;
 
@@ -525,13 +584,13 @@ uint32 encode_register_branch(Instruction* i) {
     return instruction;
 }
 
-uint32 encode_directive_int(Instruction* i) {
+uint32 encode_directive_int(Instruction *i) {
     return (uint32)i->data.directive_int.value;
 }
 
-// Takes a fully populated instruction struct and packs it into a 32 bit binary instruction
-// This is the exact opposite of what we did in decode
-uint32 encode_instruction(Instruction* i) {
+// Takes a fully populated instruction struct and packs it into a 32 bit binary
+// instruction This is the exact opposite of what we did in decode
+uint32 encode_instruction(Instruction *i) {
     if (i->op_type == OP_TYPE_HALT) {
         return 0x8A000000;
     } else if (is_immediate_arithmetic(i->op_type)) {

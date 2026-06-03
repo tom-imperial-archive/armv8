@@ -1,6 +1,6 @@
-#include <stdio.h>
-#include <assert.h>
 #include "assembler/pass1/scanner.h"
+#include <assert.h>
+#include <stdio.h>
 
 void test_scanfile() {
     SymbolTable *table = create_symbol_table();
@@ -14,8 +14,7 @@ void test_scanfile() {
     printf("Scanner Test: OK\n");
 }
 
-int main (void)
-{
+int main(void) {
     printf("Scanner Tests\n");
     printf("-------------\n");
     test_scanfile();

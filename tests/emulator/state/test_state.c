@@ -1,7 +1,7 @@
+#include "emulator/state/state.h"
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
-#include "emulator/state/state.h"
 
 void test_create(void) {
     State *state = init_state();

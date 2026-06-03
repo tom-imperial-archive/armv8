@@ -1,14 +1,13 @@
 #ifndef ERROR_H_
 #define ERROR_H_
-#include <stdio.h>
 #include "utils/types.h"
+#include <stdio.h>
 
 #define ERROR(...) _error(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 static const int max_file_name_length = 32;
 
-typedef enum
-{
+typedef enum {
     FAILED_TO_ALLOCATE,
     ERROR_READING_FILE,
     ERROR_WRITING_FILE,
@@ -41,7 +40,8 @@ typedef struct {
     ErrorType type;
     union {
         int index;
-        // Must have length <= max_file_name_length (including the string terminator \0)
+        // Must have length <= max_file_name_length (including the string
+        // terminator \0)
         char *str;
         uint32 instruction;
         long shift_amount;

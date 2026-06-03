@@ -6,7 +6,7 @@
 #include <assert.h>
 
 int test_load_literal(void) {
-    State* state;
+    State *state;
     uint64 expected_address;
     const int RT = 2;
     const int RT2 = 6;
@@ -15,16 +15,18 @@ int test_load_literal(void) {
     const int SIMM19_MAX = 0x3FFFF;
     const int SIMM19_MIN = -0x40000;
 
-    // Check value of rt is set to the whatever value is at address PC + simm19 * 4.
+    // Check value of rt is set to the whatever value is at address PC + simm19
+    // * 4.
 
     // Checking with sf = false
     Instruction instruction1 = {
         .op_type = OP_TYPE_LOAD_LITERAL,
-        .data.load_literal = {
-            .rt = RT,
-            .sf = false,
-            .simm19 = SIMM19_POSITIVE,
-        },
+        .data.load_literal =
+            {
+                .rt = RT,
+                .sf = false,
+                .simm19 = SIMM19_POSITIVE,
+            },
     };
     const uint64 WRITTEN_VALUE = 0x00ADEFBABACADABA;
     const uint32 EXPECTED_VALUE = 0xBACADABA;
@@ -38,11 +40,12 @@ int test_load_literal(void) {
     // Checking with sf = true
     Instruction instruction2 = {
         .op_type = OP_TYPE_LOAD_LITERAL,
-        .data.load_literal = {
-            .rt = RT,
-            .sf = true,
-            .simm19 = SIMM19_POSITIVE,
-        },
+        .data.load_literal =
+            {
+                .rt = RT,
+                .sf = true,
+                .simm19 = SIMM19_POSITIVE,
+            },
     };
     destroy_state(state);
     state = init_state();
@@ -55,11 +58,12 @@ int test_load_literal(void) {
     // Checking with negative simm19
     Instruction instruction3 = {
         .op_type = OP_TYPE_LOAD_LITERAL,
-        .data.load_literal = {
-            .rt = RT,
-            .sf = true,
-            .simm19 = SIMM19_NEGATIVE,
-        },
+        .data.load_literal =
+            {
+                .rt = RT,
+                .sf = true,
+                .simm19 = SIMM19_NEGATIVE,
+            },
     };
     destroy_state(state);
     state = init_state();
@@ -73,11 +77,12 @@ int test_load_literal(void) {
     // Checking with postiive simm19
     Instruction instruction4 = {
         .op_type = OP_TYPE_LOAD_LITERAL,
-        .data.load_literal = {
-            .rt = RT,
-            .sf = true,
-            .simm19 = SIMM19_POSITIVE,
-        },
+        .data.load_literal =
+            {
+                .rt = RT,
+                .sf = true,
+                .simm19 = SIMM19_POSITIVE,
+            },
     };
     destroy_state(state);
     state = init_state();
@@ -90,11 +95,12 @@ int test_load_literal(void) {
     // Checking with zero simm19
     Instruction instruction5 = {
         .op_type = OP_TYPE_LOAD_LITERAL,
-        .data.load_literal = {
-            .rt = RT,
-            .sf = true,
-            .simm19 = SIMM19_POSITIVE,
-        },
+        .data.load_literal =
+            {
+                .rt = RT,
+                .sf = true,
+                .simm19 = SIMM19_POSITIVE,
+            },
     };
     destroy_state(state);
     state = init_state();
@@ -107,11 +113,12 @@ int test_load_literal(void) {
     // Checking with max simm19
     Instruction instruction6 = {
         .op_type = OP_TYPE_LOAD_LITERAL,
-        .data.load_literal = {
-            .rt = RT,
-            .sf = true,
-            .simm19 = SIMM19_MAX,
-        },
+        .data.load_literal =
+            {
+                .rt = RT,
+                .sf = true,
+                .simm19 = SIMM19_MAX,
+            },
     };
     destroy_state(state);
     state = init_state();
@@ -124,11 +131,12 @@ int test_load_literal(void) {
     // Checking with min simm19
     Instruction instruction7 = {
         .op_type = OP_TYPE_LOAD_LITERAL,
-        .data.load_literal = {
-            .rt = RT,
-            .sf = true,
-            .simm19 = SIMM19_MIN,
-        },
+        .data.load_literal =
+            {
+                .rt = RT,
+                .sf = true,
+                .simm19 = SIMM19_MIN,
+            },
     };
     destroy_state(state);
     state = init_state();
@@ -142,11 +150,12 @@ int test_load_literal(void) {
     // Checking with different value of RT
     Instruction instruction8 = {
         .op_type = OP_TYPE_LOAD_LITERAL,
-        .data.load_literal = {
-            .rt = RT2,
-            .sf = true,
-            .simm19 = SIMM19_POSITIVE,
-        },
+        .data.load_literal =
+            {
+                .rt = RT2,
+                .sf = true,
+                .simm19 = SIMM19_POSITIVE,
+            },
     };
     destroy_state(state);
     state = init_state();

@@ -1,9 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <stdbool.h>
 #include "assembler/pass2/operands.h"
 #include "common/instruction.h"
+#include <assert.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 void test_parse_register_64_bit(void) {
     bool is_64_bit;

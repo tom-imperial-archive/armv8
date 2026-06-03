@@ -1,7 +1,7 @@
-#include <stdio.h>
+#include "emulator/decode/decode.h"
 #include <assert.h>
 #include <stdbool.h>
-#include "emulator/decode/decode.h"
+#include <stdio.h>
 
 void test_decode_halt(void) {
     Instruction inst;
@@ -66,7 +66,8 @@ void test_decode_dpir(void) {
     assert(inst.data.multiply.rd == 5);
 
     // AND (Logical Register)
-    // sf=1, opc=0(AND), M=0, opr=0000(LSL, N=0), rm=2, operand(shift_amt)=6, rn=4, rd=5
+    // sf=1, opc=0(AND), M=0, opr=0000(LSL, N=0), rm=2, operand(shift_amt)=6,
+    // rn=4, rd=5
     res = decode(0x8A021885, &inst);
     assert(res == DECODE_SUCCESS);
     assert(inst.op_type == OP_TYPE_AND);
@@ -78,7 +79,8 @@ void test_decode_dpir(void) {
     assert(inst.data.register_arithmetic_logic.rd == 5);
 
     // ADD (Arithmetic Register)
-    // sf=0, opc=0(ADD), M=0, opr=1010(LSR, N=0), rm=3, operand(shift_amt)=7, rn=4, rd=5
+    // sf=0, opc=0(ADD), M=0, opr=1010(LSR, N=0), rm=3, operand(shift_amt)=7,
+    // rn=4, rd=5
     res = decode(0x0B431C85, &inst);
     assert(res == DECODE_SUCCESS);
     assert(inst.op_type == OP_TYPE_REG_ADD);

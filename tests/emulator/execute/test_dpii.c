@@ -1,12 +1,13 @@
-#include <stdio.h>
-#include <assert.h>
-#include <stdbool.h>
 #include "emulator/execute/execute.h"
 #include "utils/hashset.h"
+#include <assert.h>
+#include <stdbool.h>
+#include <stdio.h>
 
 // Instruction Builder Helpers
-Instruction create_imm_arithmetic_inst(OpType op, bool sf, Register rd, Register rn, uint16_t imm12, bool sh) {
-    Instruction i = { .op_type = op };
+Instruction create_imm_arithmetic_inst(OpType op, bool sf, Register rd,
+                                       Register rn, uint16_t imm12, bool sh) {
+    Instruction i = {.op_type = op};
     i.data.immediate_arithmetic.sf = sf;
     i.data.immediate_arithmetic.rd = rd;
     i.data.immediate_arithmetic.rn = rn;
@@ -15,8 +16,9 @@ Instruction create_imm_arithmetic_inst(OpType op, bool sf, Register rd, Register
     return i;
 }
 
-Instruction create_wide_move_inst(OpType op, bool sf, Register rd, uint16_t imm16, uint8_t hw) {
-    Instruction i = { .op_type = op };
+Instruction create_wide_move_inst(OpType op, bool sf, Register rd,
+                                  uint16_t imm16, uint8_t hw) {
+    Instruction i = {.op_type = op};
     i.data.wide_move.sf = sf;
     i.data.wide_move.rd = rd;
     i.data.wide_move.imm16 = imm16;
@@ -29,7 +31,8 @@ void test_add_imm_standard() {
     uint64 val1 = 0xFFF;
     write_reg_64(state, R0, val1);
 
-    Instruction i = create_imm_arithmetic_inst(OP_TYPE_ADD, true, R1, R0, val1, false);
+    Instruction i =
+        create_imm_arithmetic_inst(OP_TYPE_ADD, true, R1, R0, val1, false);
     execute_instruction(state, i.op_type, &i);
 
     assert(read_reg_64(state, R1) == 2 * val1);
@@ -44,7 +47,8 @@ void test_adds_imm_flags_shifted() {
     uint64 val2 = 0xFFFFFFFFFFFFFFFFULL;
     write_reg_64(state, R0, val2);
 
-    Instruction i = create_imm_arithmetic_inst(OP_TYPE_ADDS, true, R2, R0, val1, true);
+    Instruction i =
+        create_imm_arithmetic_inst(OP_TYPE_ADDS, true, R2, R0, val1, true);
     execute_instruction(state, i.op_type, &i);
 
     assert(read_reg_64(state, R2) == val2 + (val1 << 12));
@@ -63,7 +67,8 @@ void test_subs_imm_standard() {
     uint64 val2 = 0xFFFFFFFFFFFFFFFFULL;
     write_reg_64(state, R0, val2);
 
-    Instruction i = create_imm_arithmetic_inst(OP_TYPE_SUBS, true, R3, R0, val1, false);
+    Instruction i =
+        create_imm_arithmetic_inst(OP_TYPE_SUBS, true, R3, R0, val1, false);
     execute_instruction(state, i.op_type, &i);
 
     assert(read_reg_64(state, R3) == val2 - val1);
@@ -97,7 +102,8 @@ void test_subs_imm_carry_flag_no_borrow() {
     State *state = init_state();
     write_reg_64(state, R0, 5);
 
-    Instruction i = create_imm_arithmetic_inst(OP_TYPE_SUBS, true, R1, R0, 0, false);
+    Instruction i =
+        create_imm_arithmetic_inst(OP_TYPE_SUBS, true, R1, R0, 0, false);
     execute_instruction(state, i.op_type, &i);
 
     assert(read_pstate_flag(state, C) == true);
@@ -111,7 +117,8 @@ void test_subs_imm_overflow_flag_underflow() {
     write_reg_64(state, R0, 0x8000000000000000ULL);
 
     // SUBS R1, R0, #1
-    Instruction i = create_imm_arithmetic_inst(OP_TYPE_SUBS, true, R1, R0, 1, false);
+    Instruction i =
+        create_imm_arithmetic_inst(OP_TYPE_SUBS, true, R1, R0, 1, false);
     execute_instruction(state, i.op_type, &i);
 
     assert(read_pstate_flag(state, V) == true);

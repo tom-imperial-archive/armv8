@@ -7,7 +7,7 @@
 #include <stdbool.h>
 
 int test_single_data_transfer(void) {
-    State* state;
+    State *state;
     const int RT = 3;
     const int XN = 5;
     const uint64 BASE_ADDRESS = 0x2000;
@@ -17,11 +17,12 @@ int test_single_data_transfer(void) {
     // Expected: Address = Base + 16. Writeback Base = Base + 16.
     Instruction instr_pre = {
         .op_type = OP_TYPE_SINGLE_DATA_TRANSFER,
-        .data.single_data_transfer = {
-            .rt = RT, .xn = XN, .L = true, .sf = true,
-            .mode = ADDR_PRE_INDEXED,
-            .offset = 16
-        },
+        .data.single_data_transfer = {.rt = RT,
+                                      .xn = XN,
+                                      .L = true,
+                                      .sf = true,
+                                      .mode = ADDR_PRE_INDEXED,
+                                      .offset = 16},
     };
 
     state = init_state();
@@ -38,11 +39,12 @@ int test_single_data_transfer(void) {
     // Expected: Address = Base. Writeback Base = Base + 24.
     Instruction instr_post = {
         .op_type = OP_TYPE_SINGLE_DATA_TRANSFER,
-        .data.single_data_transfer = {
-            .rt = RT, .xn = XN, .L = false, .sf = true,
-            .mode = ADDR_POST_INDEXED,
-            .offset = 24
-        },
+        .data.single_data_transfer = {.rt = RT,
+                                      .xn = XN,
+                                      .L = false,
+                                      .sf = true,
+                                      .mode = ADDR_POST_INDEXED,
+                                      .offset = 24},
     };
 
     state = init_state();
@@ -52,19 +54,22 @@ int test_single_data_transfer(void) {
 
     execute_single_data_transfer(state, &instr_post);
 
-    assert(read_mem_64(state, BASE_ADDRESS) == VAL_64); // Stored at ORIGINAL address
-    assert(read_reg_64(state, XN) == BASE_ADDRESS + 24); // Xn is updated AFTER transfer
+    assert(read_mem_64(state, BASE_ADDRESS) ==
+           VAL_64); // Stored at ORIGINAL address
+    assert(read_reg_64(state, XN) ==
+           BASE_ADDRESS + 24); // Xn is updated AFTER transfer
     destroy_state(state);
 
     // Pre-Indexed Negative Offset (LDR Xt, [Xn, #-8]!)
     // Expected: Address = Base - 8. Writeback Base = Base - 8.
     Instruction instr_pre_neg = {
         .op_type = OP_TYPE_SINGLE_DATA_TRANSFER,
-        .data.single_data_transfer = {
-            .rt = RT, .xn = XN, .L = true, .sf = true,
-            .mode = ADDR_PRE_INDEXED,
-            .offset = -8
-        },
+        .data.single_data_transfer = {.rt = RT,
+                                      .xn = XN,
+                                      .L = true,
+                                      .sf = true,
+                                      .mode = ADDR_PRE_INDEXED,
+                                      .offset = -8},
     };
 
     state = init_state();

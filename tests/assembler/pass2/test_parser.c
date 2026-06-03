@@ -1,10 +1,10 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include "assembler/pass2/parser.h"
+#include "common/instruction.h"
 #include <assert.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include "common/instruction.h"
-#include "assembler/pass2/parser.h"
 
 void test_parse_line_ignores_labels_and_blanks(void) {
     Instruction i;
@@ -176,7 +176,8 @@ void test_parse_and_register_standard(void) {
     assert(i.data.register_arithmetic_logic.rn == 2);
     assert(i.data.register_arithmetic_logic.rm == 3);
     assert(i.data.register_arithmetic_logic.sf == true); // 64-bit 'x' registers
-    assert(i.data.register_arithmetic_logic.shift == SHIFT_LSL); // Default shift
+    assert(i.data.register_arithmetic_logic.shift ==
+           SHIFT_LSL); // Default shift
     assert(i.data.register_arithmetic_logic.operand == 0);
 
     printf("Test parse and register standard: OK\n");
@@ -193,7 +194,8 @@ void test_parse_orr_register_shifted(void) {
     assert(i.data.register_arithmetic_logic.rd == 4);
     assert(i.data.register_arithmetic_logic.rn == 5);
     assert(i.data.register_arithmetic_logic.rm == 6);
-    assert(i.data.register_arithmetic_logic.sf == false); // 32-bit 'w' registers
+    assert(i.data.register_arithmetic_logic.sf ==
+           false); // 32-bit 'w' registers
     assert(i.data.register_arithmetic_logic.shift == SHIFT_LSL);
     assert(i.data.register_arithmetic_logic.operand == 2);
 
@@ -521,9 +523,8 @@ void test_parse_memory_literal(void) {
     assert(i.data.load_literal.rt == 9);
 
     printf("\nDEBUG --> current_pc: %ld, target_pc: %ld, simm19: %d\n",
-       current_pc,
-       symbol_table_lookup(table, "target_data"),
-       i.data.load_literal.simm19);
+           current_pc, symbol_table_lookup(table, "target_data"),
+           i.data.load_literal.simm19);
 
     assert(i.data.load_literal.simm19 == 8);
 

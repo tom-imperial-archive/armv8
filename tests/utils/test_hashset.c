@@ -1,7 +1,7 @@
+#include "utils/hashset.h"
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
-#include "utils/hashset.h"
 
 void test_creation() {
     AddressSet *set = create_set(1024);
@@ -51,9 +51,12 @@ void test_get_all_addresses() {
     int found_a = 0, found_b = 0, found_c = 0;
 
     for (int i = 0; i < set->size; i++) {
-        if (results[i] == &var_a) found_a = 1;
-        if (results[i] == &var_b) found_b = 1;
-        if (results[i] == &var_c) found_c = 1;
+        if (results[i] == &var_a)
+            found_a = 1;
+        if (results[i] == &var_b)
+            found_b = 1;
+        if (results[i] == &var_c)
+            found_c = 1;
     }
 
     assert(found_a == 1);
