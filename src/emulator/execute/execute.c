@@ -1,4 +1,5 @@
 #include "common/error.h"
+#include "common/instruction.h"
 #include "emulator/decode/decode.h"
 #include "emulator/state/state.h"
 #include "utils/bitmasks.h"
@@ -368,6 +369,46 @@ void execute_load_literal(State *state, Instruction *i) {
     Executes the given instruction.
     If we encounter a halt instruction, we return true, otherwise return false;
 */
+
+void execute_branch(State *state, Instruction *i) {
+    // Read PSTATE flags
+    bool z = read_pstate_flag(state, Z);
+    bool n = read_pstate_flag(state, N);
+    bool v = read_pstate_flag(state, V);
+
+    // Check condition
+    bool condition_met = false;
+    switch (i->op_type) {
+    case OP_TYPE_EQ:
+        condition_met = (z == 1);
+        break;
+    case OP_TYPE_NE:
+        condition_met = (z == 0);
+        break;
+    case OP_TYPE_GE:
+        condition_met = (n == v);
+        break;
+    case OP_TYPE_LT:
+        condition_met = (n != v);
+        break;
+    case OP_TYPE_GT:
+        condition_met = ((z == 0) && (n == v));
+        break;
+    case OP_TYPE_LE:
+        condition_met = !((z == 0) && (n == v));
+        break;
+    default:
+        break;
+    }
+
+    if (condition_met) {
+        int64 offset = (int64)i->cond_branch.simm19 * 4;
+        offset_pc(state, offset);
+    } else {
+        inc_pc(state);
+    }
+}
+
 bool execute_instruction(State *state, Instruction *i) {
     switch (i->op_type) {
     // Halt instruction
@@ -424,43 +465,7 @@ bool execute_instruction(State *state, Instruction *i) {
     case OP_TYPE_LT:
     case OP_TYPE_GT:
     case OP_TYPE_LE:
-        // Read PSTATE flags
-        bool z = read_pstate_flag(state, Z);
-        bool n = read_pstate_flag(state, N);
-        bool v = read_pstate_flag(state, V);
-
-        // Check condition
-        bool condition_met = false;
-        switch (i->op_type) {
-        case OP_TYPE_EQ:
-            condition_met = (z == 1);
-            break;
-        case OP_TYPE_NE:
-            condition_met = (z == 0);
-            break;
-        case OP_TYPE_GE:
-            condition_met = (n == v);
-            break;
-        case OP_TYPE_LT:
-            condition_met = (n != v);
-            break;
-        case OP_TYPE_GT:
-            condition_met = ((z == 0) && (n == v));
-            break;
-        case OP_TYPE_LE:
-            condition_met = !((z == 0) && (n == v));
-            break;
-        default:
-            break;
-        }
-
-        if (condition_met) {
-            int64 offset = (int64)i->cond_branch.simm19 * 4;
-
-            offset_pc(state, offset);
-        } else {
-            inc_pc(state);
-        }
+        execute_branch(state, i);
         break;
 
     // Unconditional branch
@@ -476,15 +481,14 @@ bool execute_instruction(State *state, Instruction *i) {
         write_pc(state, read_reg_64(state, i->reg_branch.xn));
         break;
 
-    // TEMP until all instructions have been implemented
-    default:
-        break;
+    // Directive
+    case OP_TYPE_DIRECTIVE_INT:
+        // Should be impossible, since we never decode to a directive;
+        ERROR((Error){.type = INCORRECT_OP_TYPE});
     }
-    OpType op = i->op_type;
-    if (!(op == OP_TYPE_EQ || op == OP_TYPE_NE || op == OP_TYPE_GE ||
-          op == OP_TYPE_LT || op == OP_TYPE_GT || op == OP_TYPE_LE ||
-          op == OP_TYPE_AL || op == OP_TYPE_BR ||
-          op == OP_TYPE_UNCONDITIONAL_BRANCH)) {
+
+    // Increment PC for all instructions bar branch
+    if (!is_branch(i->op_type)) {
         inc_pc(state);
     }
 
