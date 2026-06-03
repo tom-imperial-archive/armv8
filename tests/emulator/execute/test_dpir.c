@@ -11,12 +11,12 @@ bool execute_instruction(State *state, OpType op, Instruction *i);
 Instruction create_arithmetic_inst(OpType op, bool sf, Register rd, Register rn,
                                    Register rm, ShiftType shift, int operand) {
     Instruction i = {.op_type = op};
-    i.data.register_arithmetic_logic.sf = sf;
-    i.data.register_arithmetic_logic.rd = rd;
-    i.data.register_arithmetic_logic.rn = rn;
-    i.data.register_arithmetic_logic.rm = rm;
-    i.data.register_arithmetic_logic.shift = shift;
-    i.data.register_arithmetic_logic.operand = operand;
+    i.register_arithmetic_logic.sf = sf;
+    i.register_arithmetic_logic.rd = rd;
+    i.register_arithmetic_logic.rn = rn;
+    i.register_arithmetic_logic.rm = rm;
+    i.register_arithmetic_logic.shift = shift;
+    i.register_arithmetic_logic.operand = operand;
     return i;
 }
 
@@ -24,11 +24,11 @@ Instruction create_arithmetic_inst(OpType op, bool sf, Register rd, Register rn,
 Instruction create_multiply_inst(OpType op, bool sf, Register rd, Register rn,
                                  Register rm, Register ra) {
     Instruction i = {.op_type = op};
-    i.data.multiply.sf = sf;
-    i.data.multiply.rd = rd;
-    i.data.multiply.rn = rn;
-    i.data.multiply.rm = rm;
-    i.data.multiply.ra = ra;
+    i.multiply.sf = sf;
+    i.multiply.rd = rd;
+    i.multiply.rn = rn;
+    i.multiply.rm = rm;
+    i.multiply.ra = ra;
     return i;
 }
 

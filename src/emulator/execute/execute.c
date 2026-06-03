@@ -93,13 +93,13 @@ void process_arithmetic(State *state, Register rd, uint64 val_n, uint64 op2,
 
 void execute_arithmetic_register(State *state, Instruction *i) {
     // Unpack
-    bool sf = i->data.register_arithmetic_logic.sf;
-    Register rd = (Register)i->data.register_arithmetic_logic.rd;
-    Register rn = (Register)i->data.register_arithmetic_logic.rn;
-    Register rm = (Register)i->data.register_arithmetic_logic.rm;
+    bool sf = i->register_arithmetic_logic.sf;
+    Register rd = (Register)i->register_arithmetic_logic.rd;
+    Register rn = (Register)i->register_arithmetic_logic.rn;
+    Register rm = (Register)i->register_arithmetic_logic.rm;
 
-    int shift_amount = i->data.register_arithmetic_logic.operand;
-    ShiftType shift_type = i->data.register_arithmetic_logic.shift;
+    int shift_amount = i->register_arithmetic_logic.operand;
+    ShiftType shift_type = i->register_arithmetic_logic.shift;
 
     // Initial values
     uint64 val_n = sf ? read_reg_64(state, rn) : (uint64)read_reg_32(state, rn);
@@ -119,13 +119,13 @@ void execute_arithmetic_register(State *state, Instruction *i) {
 
 void execute_arithmetic_immediate(State *state, Instruction *i) {
     // Unpack
-    bool sf = i->data.immediate_arithmetic.sf;
-    Register rd = (Register)i->data.immediate_arithmetic.rd;
-    Register rn = (Register)i->data.immediate_arithmetic.rn;
-    uint64 op2 = i->data.immediate_arithmetic.imm12;
+    bool sf = i->immediate_arithmetic.sf;
+    Register rd = (Register)i->immediate_arithmetic.rd;
+    Register rn = (Register)i->immediate_arithmetic.rn;
+    uint64 op2 = i->immediate_arithmetic.imm12;
 
     // Shifting
-    if (i->data.immediate_arithmetic.sh) {
+    if (i->immediate_arithmetic.sh) {
         op2 = op2 << 12;
     }
 
@@ -143,13 +143,13 @@ void execute_arithmetic_immediate(State *state, Instruction *i) {
 
 void execute_logical_register(State *state, Instruction *i) {
     // Unpack
-    bool sf = i->data.register_arithmetic_logic.sf;
-    Register rd = (Register)i->data.register_arithmetic_logic.rd;
-    Register rn = (Register)i->data.register_arithmetic_logic.rn;
-    Register rm = (Register)i->data.register_arithmetic_logic.rm;
+    bool sf = i->register_arithmetic_logic.sf;
+    Register rd = (Register)i->register_arithmetic_logic.rd;
+    Register rn = (Register)i->register_arithmetic_logic.rn;
+    Register rm = (Register)i->register_arithmetic_logic.rm;
 
-    int shift_amount = i->data.register_arithmetic_logic.operand;
-    ShiftType shift_type = i->data.register_arithmetic_logic.shift;
+    int shift_amount = i->register_arithmetic_logic.operand;
+    ShiftType shift_type = i->register_arithmetic_logic.shift;
     OpType op = i->op_type;
 
     // Initial values
@@ -219,11 +219,11 @@ void execute_logical_register(State *state, Instruction *i) {
 
 void execute_multiply_register(State *state, Instruction *i) {
     // Unpack
-    bool sf = i->data.multiply.sf;
-    Register rm = (Register)i->data.multiply.rm;
-    Register rn = (Register)i->data.multiply.rn;
-    Register rd = (Register)i->data.multiply.rd;
-    Register ra = (Register)i->data.multiply.ra;
+    bool sf = i->multiply.sf;
+    Register rm = (Register)i->multiply.rm;
+    Register rn = (Register)i->multiply.rn;
+    Register rd = (Register)i->multiply.rd;
+    Register ra = (Register)i->multiply.ra;
     OpType op = i->op_type;
 
     // Initial values
@@ -254,10 +254,10 @@ void execute_multiply_register(State *state, Instruction *i) {
 
 void execute_wide_move(State *state, Instruction *i) {
     // Unpack
-    bool sf = i->data.wide_move.sf;
-    Register rd = i->data.wide_move.rd;
-    uint64 imm16 = (uint64)i->data.wide_move.imm16;
-    int shift = i->data.wide_move.hw * 16;
+    bool sf = i->wide_move.sf;
+    Register rd = i->wide_move.rd;
+    uint64 imm16 = (uint64)i->wide_move.imm16;
+    int shift = i->wide_move.hw * 16;
     OpType op = i->op_type;
 
     // Compute values
@@ -322,9 +322,9 @@ uint64 find_address(State *state, SingleDataTransferInstruction data_transfer) {
 
 // PRE: op == OP_TYPE_SINGLE_DATA_TRANSFER
 void execute_single_data_transfer(State *state, Instruction *i) {
-    SingleDataTransferInstruction data_transfer = i->data.single_data_transfer;
+    SingleDataTransferInstruction data_transfer = i->single_data_transfer;
     uint64 address = find_address(state, data_transfer);
-    int rt = i->data.single_data_transfer.rt;
+    int rt = i->single_data_transfer.rt;
 
     if (data_transfer.L) { // Load operation
         if (data_transfer.sf) {
@@ -353,7 +353,7 @@ void execute_single_data_transfer(State *state, Instruction *i) {
 }
 
 void execute_load_literal(State *state, Instruction *i) {
-    LoadLiteralInstruction instruction_data = i->data.load_literal;
+    LoadLiteralInstruction instruction_data = i->load_literal;
     uint64 transfer_address = state->PC + instruction_data.simm19 * 4;
     if (instruction_data.sf) {
         uint64 data = read_mem_64(state, transfer_address);
@@ -455,7 +455,7 @@ bool execute_instruction(State *state, OpType op, Instruction *i) {
         }
 
         if (condition_met) {
-            int64 offset = (int64)i->data.cond_branch.simm19 * 4;
+            int64 offset = (int64)i->cond_branch.simm19 * 4;
 
             offset_pc(state, offset);
         } else {
@@ -466,14 +466,14 @@ bool execute_instruction(State *state, OpType op, Instruction *i) {
     // Unconditional branch
     case OP_TYPE_UNCONDITIONAL_BRANCH:
     case OP_TYPE_AL: {
-        int64 offset = (int64)i->data.uncond_branch.simm26 * 4;
+        int64 offset = (int64)i->uncond_branch.simm26 * 4;
         offset_pc(state, offset);
         break;
     }
 
     // Register branch
     case OP_TYPE_BR:
-        write_pc(state, read_reg_64(state, i->data.reg_branch.xn));
+        write_pc(state, read_reg_64(state, i->reg_branch.xn));
         break;
 
     // TEMP until all instructions have been implemented
