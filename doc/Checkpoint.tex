@@ -1,30 +1,65 @@
 \documentclass[11pt]{article}
-
-\usepackage{fullpage}
-
+\usepackage[margin=2.4cm]{geometry}
 \begin{document}
 
-\title{ARM Checkpoint... }
-\author{TODO}
+\section{Division of Work \& Coordination}
+\vspace{-0.1cm}
+\subsection{Work Allocation}
+To ensure continuous progress, tasks were divided modularly, as follows:
 
-\maketitle
+\begin{itemize}
+  \item \textbf{Hugo:} Designed the overall architecture of the emulator, implemented the register state logic, the execution loop, and Data Processing Instructions (immediate).
+  \vspace{-0.1cm}
+  \item \textbf{Tom:} Implemented memory management, Data Processing Instructions (registers), and acted as the primary reviewer for most merge requests.
+  \vspace{-0.1cm}
+  \item \textbf{Virgile:} Developed the instruction decoding logic, the Single Data Transfer and Load Literal execution logic, and the internal representation for instructions.
+  \vspace{-0.1cm}
+  \item \textbf{Hari:} Implemented branch instructions and file I/O logic, managing reading from the binary file and writing the final state to the output file.
+\end{itemize}
+\vspace{-0.1cm}
+\subsection{Coordination Strategy}
+We coordinate primarily through regular in-person meetings in the labs, and a dedicated group chat to discuss design choices issues. We enforced a strict peer-reviewing policy on GitLab, where all merge requests must be reviewed and locally tested by at least one other team member before being merged into master. We initially experimented with GitLab milestones, but found them to be redundant alongside our existing communication, so we will no longer use these as we move forward to the assembler.
 
-\section{Group Organisation}
+\vspace{-0.1cm}
+\section{Group Work: Evaluation \& Adjustments}
+\vspace{-0.1cm}
+\noindent\textbf{Continuous Workflow:}\\
+Our primary success in coordination has been ensuring that there was always independent work available. Because our task allocation was highly modular, team members could complete their tasks without delaying the rest of the group. This naturally prioritised code quality and correctness over rushed implementation.
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
-incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
-nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
-fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-culpa qui officia deserunt mollit anim id est laborum.
+\vspace{0.2cm}\noindent\textbf{Resolving Merge Conflicts:}\\
+At the beginning of the project, we encountered complex merge conflicts as multiple team members attempted to modify the same core files simultaneously. We resolved this by pivoting to our current modular architecture. Keeping logical units separated ensured group members rarely worked on the same files at the same time, eliminating further merge conflicts, and drastically increasing our efficiency.
 
-\section{Implementation Strategies}
+\vspace{0.2cm}\noindent\textbf{Improving Code Integration:}\\
+There were issues towards the start of the first week with code that fails to compile making its way into the main emulator branch. This happened because not all group members were familiar with \texttt{make}, so not every C file had been added to the Makefile. We fixed this by briefing non-familiar group members with Make and by ensuring that all merge requests are not just read, but locally compiled and tested by the reviewer, before being approved.
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
-incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
-nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
-fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-culpa qui officia deserunt mollit anim id est laborum.
+\vspace{0.2cm}\noindent\textbf{Testing:}\\
+Initially, we relied on ad-hoc testing, which we quickly discovered was insufficient for assuring code correctness. To solve this we built a robust unit-testing framework, and demanded that each module had its own comprehensive test file.
+\section{Emulator Structure \& Code Reuse}
+\vspace{-0.1cm}
+\subsection{Architecture}
+The emulator is built on a highly modular Fetch-Decode-Execute pipeline, with a focus on abstracting internal logic away from the main execution loop:
+
+\begin{itemize}
+    \item \textbf{State Encapsulation \& I/O:} The emulated state is stored in a single \texttt{struct} containing the general-purpose registers, the flags, and memory. Rather than trusting raw access, all interactions, such as memory reads/writes and PC increments, go through helper functions. Memory itself is an array allocated on the heap, which allows reading and writing to be handled by \texttt{memcpy} operations, which are highly efficient. We also designed custom \texttt{sprintf} functions to produce the specific output format required by the specification and test suite.
+    \vspace{-0.1cm}
+    \item \textbf{Decoding Logic:} The decode module uses bitmasks, to identify the instruction's opcode and classify its type, such as Data Processing, Branch, Single Data Transfer. Bitwise shifts and further  masks are then done to extract the relevant fields, such as immediate values and register indices. This is all then stored in a single instruction \texttt{struct}. To maximise memory efficiency, we use an anonymous \texttt{union} which holds the specific fields for different instruction types.
+    \vspace{-0.1cm}
+    \item \textbf{Execution Routing:} The core of the emulator is a \texttt{while(!shouldHalt)} loop that fetches the next 32-bit instruction from memory using the Program Counter. This is then passed to then decode module, which returns a \texttt{DecodeResult} \texttt{enum}. On a \texttt{DECODE\_SUCCESS}, the populated instruction \texttt{struct} is passed to \texttt{execute\_instruction} which calls the relevant subfunction based on the opcode. If a \texttt{DECODE\_UNDEFINED\_OPCODE} is caught, or a \texttt{HALT} instruction executed, then the loop cleanly terminates.
+    \vspace{-0.1cm}
+    \item \textbf{Memory Output Optimisation:} To output non-zero memory at termination, we implemented a custom hashset, backed by a resizing array. By storing every memory address we write to during execution, we bypass the immense performance cost of iterating over the entire memory array at the end of the program.
+\end{itemize}
+\vspace{-0.2cm}
+\subsection{Reuse for the Assembler}
+Since we isolated the instruction representation and error handling from the emulator's core logic, we can cleanly reuse this for the Assembler:
+\vspace{-0.1cm}
+\begin{itemize}
+    \item \textbf{Internal Representation (\texttt{instruction.h}):} The type definitions and \texttt{structs} used to represent decoded instructions in the emulator will be able to act as an Internal Representation (IR) for the assembler. This will allow us to split up parsing raw text and encoding into 32-bit binary into two separate modules.
+    \vspace{-0.1cm}
+    \item \textbf{Error handling (\texttt{error.c}):} Our centralised module for handling errors will be reused, to ensure standardised error messages across the entire project.
+\end{itemize}
+\section{Challenging Tasks \& Challenge Mitigation}
+\vspace{-0.1cm}
+We expect that the most difficult task of the Assembler will be the parsing of the raw assembly code from the file, specifically handling varying whitespace, varying operand formats for the same instructions, and resolving forward references.
+To mitigate complexity in the parsing stage, we decided to use a two-pass approach. In the first pass, we create a symbol table, mapping between labels and addresses. In the second pass we can then directly construct the internal representation of an instruction, using our symbol table whenever a label is encountered.
 
 \end{document}
