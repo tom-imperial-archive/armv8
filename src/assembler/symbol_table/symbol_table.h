@@ -17,17 +17,17 @@ typedef struct {
 } SymbolTable;
 
 // Allocates memory and initialises
-SymbolTable *create_symbol_table(void);
+extern SymbolTable *create_symbol_table(void);
 
 // Adds new label, and resizes array if needed
 // Note we must store the label ourselves,
 //     since the pointer passed will change as scanner.c runs
-void symbol_table_add(SymbolTable *table, char *label, uint64 address);
+extern void symbol_table_add(SymbolTable *table, char *label, uint64 address);
 
 // Returns address represented by a label
-uint64 symbol_table_lookup(SymbolTable *table, char *label);
+extern uint64 symbol_table_lookup(SymbolTable *table, char *label);
 
 // Frees memory from the table, and from storing the labels
-void free_symbol_table(SymbolTable *table);
+extern void free_symbol_table(SymbolTable *table);
 
 #endif

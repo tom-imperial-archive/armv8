@@ -111,29 +111,29 @@ State *init_state();
 /*
 Frees the memory attached to state
 */
-void destroy_state(State *state);
+extern void destroy_state(State *state);
 
-void write_reg_64(State *state, Register reg, uint64 val);
-void write_reg_32(State *state, Register reg, uint32 val);
+extern void write_reg_64(State *state, Register reg, uint64 val);
+extern void write_reg_32(State *state, Register reg, uint32 val);
 
-uint64 read_reg_64(State *state, Register reg);
-uint32 read_reg_32(State *state, Register reg);
+extern uint64 read_reg_64(State *state, Register reg);
+extern uint32 read_reg_32(State *state, Register reg);
 
-void offset_pc(State *state, uint64 offset);
-void inc_pc(State *state);
-void write_pc(State *state, uint64 value);
+extern void offset_pc(State *state, uint64 offset);
+extern void inc_pc(State *state);
+extern void write_pc(State *state, uint64 value);
 
-void write_pstate_flag(State *state, PSTATE_flag flag, bool val);
-bool read_pstate_flag(State *state, PSTATE_flag flag);
+extern void write_pstate_flag(State *state, PSTATE_flag flag, bool val);
+extern bool read_pstate_flag(State *state, PSTATE_flag flag);
 
-void sprint_all_registers(State *state, char *out);
-char *sprint_nonzero_memory(State *state);
+extern void sprint_all_registers(State *state, char *out);
+extern char *sprint_nonzero_memory(State *state);
 
-void write_mem_64(State *state, uint64 addr, uint64 val);
-void write_mem_32(State *state, uint64 addr, uint32 val);
+extern void write_mem_64(State *state, uint64 addr, uint64 val);
+extern void write_mem_32(State *state, uint64 addr, uint32 val);
 
-uint64 read_mem_64(State *state, uint64 addr);
+extern uint64 read_mem_64(State *state, uint64 addr);
 
-uint32 read_mem_32(State *state, uint64 addr);
+extern uint32 read_mem_32(State *state, uint64 addr);
 
 #endif

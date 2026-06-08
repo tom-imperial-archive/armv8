@@ -9,9 +9,9 @@
     Executes the given instruction.
     If we encounter a halt instruction, we return true, otherwise return false;
 */
-bool execute_instruction(State *state, Instruction *i);
+extern bool execute_instruction(State *state, Instruction *i);
 
-void execute_single_data_transfer(State *state, Instruction *i);
-void execute_load_literal(State *state, Instruction *i);
+extern void execute_single_data_transfer(State *state, Instruction *i);
+extern void execute_load_literal(State *state, Instruction *i);
 
 #endif
