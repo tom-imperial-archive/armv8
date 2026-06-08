@@ -10,6 +10,6 @@ typedef enum DecodeResult {
     DECODE_UNDEFINED_OPCODE, // OPI, OPC, OPR are not supported in the emulator
 } DecodeResult;
 
-DecodeResult decode(uint32 input, Instruction *result);
+extern DecodeResult decode(uint32 input, Instruction *result);
 
 #endif

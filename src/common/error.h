@@ -48,6 +48,6 @@ typedef struct {
     };
 } Error;
 
-void _error(Error error, const char *file, int line, const char *func);
+extern void _error(Error error, const char *file, int line, const char *func);
 
 #endif

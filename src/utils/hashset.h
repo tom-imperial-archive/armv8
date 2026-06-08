@@ -8,9 +8,9 @@ typedef struct {
     int size;
 } AddressSet;
 
-AddressSet *create_set();
-void insert_address(AddressSet *set, uint8 *address);
-void free_set(AddressSet *set);
-uint8 **get_all_addresses(AddressSet *set);
+extern AddressSet *create_set();
+extern void insert_address(AddressSet *set, uint8 *address);
+extern void free_set(AddressSet *set);
+extern uint8 **get_all_addresses(AddressSet *set);
 
 #endif

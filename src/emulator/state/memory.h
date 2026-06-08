@@ -24,21 +24,21 @@ is at index 0.
 /*
 Write the first n bytes of data to memory starting from base addr
 */
-void write(Memory m, uint64 addr, uint8 *data, long n);
+extern void write(Memory m, uint64 addr, uint8 *data, long n);
 /*
 Read the first n bytes in memory starting from base addr and write these to
 data. Pre: sizeof(*data) = n
 */
-void read(Memory m, uint64 addr, uint8 *data, long n);
+extern void read(Memory m, uint64 addr, uint8 *data, long n);
 
 /*
 Returns the 4 byte chunks of memory that are non-zero, and their values
 and fills in `out_size` with the count.
 The caller is responsible for freeing the returned array.
 */
-NonZeroMemory *get_non_zero_memory(Memory m, int *out_size);
+extern NonZeroMemory *get_non_zero_memory(Memory m, int *out_size);
 
-Memory init_mem();
-void destroy_mem(Memory m);
+extern Memory init_mem();
+extern void destroy_mem(Memory m);
 
 #endif
