@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#define is_label_char(c) isalnum(c) || c == '_' || c == '.' || c == '\\'
+#define is_label_char(c) isalnum(c) || c == '_' || c == '.' || c == '\\'|| c == '$'
 
 #define INSTRUCTION_SIZE 4
 #define MAX_FILE_LINE_LENGTH 120
@@ -16,8 +16,8 @@
 /*
 THIS IS PASS 1 OF THE TWO PASS APPROACH
 
-We read through each line, tracking the current memory address (making sure to
-ignore comments). When we encounter a label, we add it, and the current
+We read through each line, tracking the current memory address.
+When we encounter a label, we add it, and the current
 address, to the symbol table.
 
 This accepts any preceeding whitespace
