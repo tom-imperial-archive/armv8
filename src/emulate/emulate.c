@@ -24,31 +24,12 @@ int main(int argc, char **argv) {
     write(state->m, 0, (uint8 *)fileBuffer, size * sizeof(uint32));
     free(fileBuffer);
 
-    // Main loop
-    Instruction *i = malloc(sizeof(Instruction));
-
-    if (i == NULL) {
-        destroy_state(state);
-        ERROR((Error){.type = FAILED_TO_ALLOCATE});
-        return EXIT_FAILURE;
-    }
-
     bool shouldHalt = false;
-
+    Instruction i;
     while (!shouldHalt) {
         uint32 instruction = read_mem_32(state, read_reg_64(state, PC));
-        // todo make this nicer
-        DecodeResult r = decode(instruction, i);
-        switch (r) {
-        case DECODE_SUCCESS: {
-            shouldHalt = execute_instruction(state, i);
-        }; break;
-        case DECODE_UNDEFINED_OPCODE: {
-            shouldHalt = true;
-            ERROR(
-                (Error){.type = UNDEFINED_OPCODE, .instruction = instruction});
-        } break;
-        }
+        decode(instruction, &i);
+        shouldHalt = execute_instruction(state, &i);
     }
 
     char *outputFile = argv[2];
@@ -58,7 +39,6 @@ int main(int argc, char **argv) {
     fwrite_all(state, outputFile);
     print_all(state);
 
-    free(i);
     destroy_state(state);
     return EXIT_SUCCESS;
 }
