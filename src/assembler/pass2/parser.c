@@ -8,6 +8,7 @@
 #include "common/instruction.h"
 #include "operands.h"
 #include "utils/types.h"
+#include "utils/parseutils.h"
 
 #define ZERO_REG 31
 
@@ -308,8 +309,7 @@ void parse_memory(char *operands, Instruction *i, SymbolTable *table,
     int rt = parse_register(rt_str, &sf_rt);
 
     // Strip leading whitespace
-    while (*saveptr == ' ' || *saveptr == '\t')
-        saveptr++;
+    saveptr = trim_leading_whitespace(saveptr);
     char *address_str = saveptr;
     // Strip trailing newlines
     address_str[strcspn(address_str, "\n")] = '\0';

@@ -1,6 +1,7 @@
 #include "assembler/symbol_table/symbol_table.h"
 #include "common/error.h"
 #include "utils/types.h"
+#include "utils/parseutils.h"
 #include <assert.h>
 #include <regex.h>
 #include <stdbool.h>
@@ -23,10 +24,9 @@ address, to the symbol table.
 This accepts any preceeding whitespace
 */
 
-// Regex: [a-zA-Z_\.]([a-zA-Z0-9$_\.])*
 static void read_line(char *buf, uint64 *address, SymbolTable *table) {
     // Remove whitespace
-    while (isspace(*buf)) buf++;
+    buf = trim_leading_whitespace(buf);
 
     if (*buf == '\0') {
         // Line is just whitespace
