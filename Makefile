@@ -99,6 +99,8 @@ RAYLIB_INCLUDE = raylib/src
 RAYLIB_LIB = raylib/src
 RAYGUI_INCLUDE = raygui/src
 
+CFLAGS += -I$(RAYLIB_INCLUDE) -I$(RAYGUI_INCLUDE)
+
 # OBJECT FILES (source files with extensions changed)
 EMULATE_OBJS = $(EMULATE_SRCS:.c=.o)
 ASSEMBLE_OBJS = $(ASSEMBLE_SRCS:.c=.o)
@@ -135,7 +137,7 @@ assemble: bin/assemble
 # or replace UBUNTU with whatever you need to do
 
 bin/extension: $(EXTENSION_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS)  -I$(RAYLIB_INCLUDE) -I$(RAYGUI_INCLUDE)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS)
 extension: bin/extension
 
 # Compiles any missing .o file, and places next to its .c counterpart
