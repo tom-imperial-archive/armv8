@@ -3,6 +3,9 @@ CFLAGS  ?= -std=c17 -g\
 	-D_POSIX_SOURCE -D_DEFAULT_SOURCE\
 	-Wall -Werror -pedantic -Isrc
 
+# HOW TO COMPILE RAYLIB
+# https://github.com/raysan5/raylib/wiki/Working-on-GNU-Linux
+LDLIBS = -L$(RAYLIB_LIB) -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
 $(shell mkdir -p bin)
 
 # SOURCE FILES
@@ -27,6 +30,9 @@ ASSEMBLE_SRCS = \
 	src/assembler/symbol_table/symbol_table.c \
 	src/common/instruction.c \
 	src/common/error.c
+
+EXTENSION_SRCS = \
+	src/extension/main.c
 
 TEST_UTILS_SRCS = \
 	tests/utils/test_hashset.c \
@@ -88,9 +94,15 @@ TEST_SYMBOL_TABLE_SRCS = \
 	src/assembler/symbol_table/symbol_table.c \
 	src/common/error.c
 
+# RAYLIB FILES
+RAYLIB_INCLUDE = raylib/src
+RAYLIB_LIB = raylib/src
+RAYGUI_INCLUDE = raygui/src
+
 # OBJECT FILES (source files with extensions changed)
 EMULATE_OBJS = $(EMULATE_SRCS:.c=.o)
 ASSEMBLE_OBJS = $(ASSEMBLE_SRCS:.c=.o)
+EXTENSION_OBJS = $(EXTENSION_SRCS:.c=.o)
 TEST_UTILS_OBJS = $(TEST_UTILS_SRCS:.c=.o)
 TEST_STATE_OBJS = $(TEST_STATE_SRCS:.c=.o)
 TEST_DECODE_OBJS = $(TEST_DECODE_SRCS:.c=.o)
@@ -104,7 +116,7 @@ TEST_SYMBOL_TABLE_OBJS = $(TEST_SYMBOL_TABLE_SRCS:.c=.o)
 
 
 # BUILD TARGETS AND RULES
-.PHONY: all clean test format
+.PHONY: all clean test format raylib
 
 all: bin/emulate bin/assemble
 
@@ -115,6 +127,16 @@ emulate: bin/emulate
 bin/assemble: $(ASSEMBLE_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
 assemble: bin/assemble
+
+# To compile raylib:
+# cd raylib/src
+# make
+# OPTIONALLY: make PLATFORM=UBUNTU_DESKTOP
+# or replace UBUNTU with whatever you need to do
+
+bin/extension: $(EXTENSION_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS)  -I$(RAYLIB_INCLUDE) -I$(RAYGUI_INCLUDE)
+extension: bin/extension
 
 # Compiles any missing .o file, and places next to its .c counterpart
 %.o: %.c
@@ -196,4 +218,3 @@ clean:
 	-$(RM) -r bin/*
 	-$(RM) $(EMULATE_OBJS) $(ASSEMBLE_OBJS)
 	-$(RM) $(TEST_UTILS_OBJS) $(TEST_STATE_OBJS) $(TEST_DECODE_OBJS) $(TEST_EXECUTE_OBJS) $(TEST_ENCODE_OBJS) $(TEST_PASS1_OBJS) $(TEST_PARSER_OBJS) $(TEST_OPERANDS_OBJS) $(TEST_SYMBOL_TABLE_OBJS)
-
