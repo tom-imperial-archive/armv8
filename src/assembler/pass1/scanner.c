@@ -2,13 +2,14 @@
 #include "common/error.h"
 #include "utils/types.h"
 #include <assert.h>
+#include <ctype.h>
 #include <regex.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-#define is_label_char(c) isalnum(c) || c == '_' || c == '.' || c == '\\'|| c == '$'
+#define is_label_char(c)                                                       \
+    isalnum(c) || c == '_' || c == '.' || c == '\\' || c == '$'
 
 #define INSTRUCTION_SIZE 4
 #define MAX_FILE_LINE_LENGTH 120
@@ -16,8 +17,8 @@
 /*
 THIS IS PASS 1 OF THE TWO PASS APPROACH
 
-We read through each line, tracking the current memory address.
-When we encounter a label, we add it, and the current
+We read through each line, tracking the current memory address (making sure to
+ignore comments). When we encounter a label, we add it, and the current
 address, to the symbol table.
 
 This accepts any preceeding whitespace
@@ -26,15 +27,8 @@ This accepts any preceeding whitespace
 // Regex: [a-zA-Z_\.]([a-zA-Z0-9$_\.])*
 static void read_line(char *buf, uint64 *address, SymbolTable *table) {
     // Remove whitespace
-    while (isspace(*buf)) buf++;
-
-    printf("Address: 0x%lx\n", *address);
-    printf("Line: %s\n", buf);
-
-/*
-If label: don't increment
-If directive: increment
-If instruction: increment*/
+    while (isspace(*buf))
+        buf++;
 
     if (*buf == '\0') {
         // Line is just whitespace
@@ -43,7 +37,7 @@ If instruction: increment*/
 
     // Line is not whitespace
     int i = 0;
-    while(is_label_char(buf[i])) {
+    while (is_label_char(buf[i])) {
         i++;
     }
 
@@ -55,10 +49,9 @@ If instruction: increment*/
     } else {
         *address += 4;
     }
-
 }
 
-// This should read through the file, and populate a SymbolTable mapping labels
+// This reads through the file, and populate a SymbolTable mapping labels
 // to addresses Note this is def not the best way to pass the file around, but
 // it's sufficient for this sketch.
 uint64 scan_file(char *filename, SymbolTable *table) {
