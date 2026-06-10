@@ -43,17 +43,3 @@ uint32 *readfile(char *path, size_t *count) {
     fclose(f);
     return instrs;
 }
-
-bool writefile(char *path, char *registers_out, char *nonzero_out) {
-    FILE *f = fopen(path, "w");
-
-    if (f == NULL) {
-        ERROR((Error){.type = ERROR_WRITING_FILE, .str = path});
-        return false;
-    }
-
-    fprintf(f, "%s\n%s\n", registers_out, nonzero_out);
-    fclose(f);
-
-    return true;
-}
