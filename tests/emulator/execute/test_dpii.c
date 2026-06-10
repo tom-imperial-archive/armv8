@@ -1,4 +1,6 @@
+#include "common/instruction.h"
 #include "emulator/execute/execute.h"
+#include "emulator/state/state.h"
 #include "utils/hashset.h"
 #include <assert.h>
 #include <stdbool.h>

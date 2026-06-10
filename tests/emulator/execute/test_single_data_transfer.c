@@ -1,7 +1,9 @@
 #include "test_single_data_transfer.h"
 
+#include "common/instruction.h"
 #include "emulator/decode/decode.h"
 #include "emulator/execute/execute.h"
+#include "emulator/state/state.h"
 
 #include <assert.h>
 #include <stdbool.h>

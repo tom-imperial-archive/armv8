@@ -1,5 +1,6 @@
 #include "decode.h"
 #include "common/error.h"
+#include "common/instruction.h"
 #include "utils/types.h"
 #include <stdlib.h>
 #define ERR_UNDEF_OPCODE()                                                     \

@@ -1,3 +1,4 @@
+#include "common/instruction.h"
 #include "emulator/decode/decode.h"
 #include <assert.h>
 #include <stdbool.h>
