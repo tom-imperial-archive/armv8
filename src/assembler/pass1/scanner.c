@@ -1,6 +1,7 @@
 #include "assembler/symbol_table/symbol_table.h"
 #include "common/error.h"
 #include "utils/types.h"
+#include "utils/parseutils.h"
 #include <assert.h>
 #include <ctype.h>
 #include <regex.h>
@@ -24,11 +25,9 @@ address, to the symbol table.
 This accepts any preceeding whitespace
 */
 
-// Regex: [a-zA-Z_\.]([a-zA-Z0-9$_\.])*
 static void read_line(char *buf, uint64 *address, SymbolTable *table) {
     // Remove whitespace
-    while (isspace(*buf))
-        buf++;
+    buf = trim_leading_whitespace(buf);
 
     if (*buf == '\0') {
         // Line is just whitespace
@@ -51,23 +50,17 @@ static void read_line(char *buf, uint64 *address, SymbolTable *table) {
     }
 }
 
-// This reads through the file, and populate a SymbolTable mapping labels
-// to addresses Note this is def not the best way to pass the file around, but
-// it's sufficient for this sketch.
-uint64 scan_file(char *filename, SymbolTable *table) {
-    FILE *f = fopen(filename, "rb");
-    if (f == NULL) {
-        ERROR((Error){.type = ERROR_READING_FILE, .str = filename});
-    }
-
+/*
+This populates the symbol table table with the assembly from the file.
+The file pointer is returned to the beginning of the file.
+*/
+void scan_file(FILE *file, SymbolTable *table) {
     char buf[MAX_FILE_LINE_LENGTH];
 
-    uint64 binary_size = 0;
-    while (fgets(buf, MAX_FILE_LINE_LENGTH, f)) {
-        read_line(buf, &binary_size, table);
+    uint64 address = 0;
+    while (fgets(buf, MAX_FILE_LINE_LENGTH, file)) {
+        read_line(buf, &address, table);
     }
 
-    fclose(f);
-
-    return binary_size;
+    rewind(file);
 }
