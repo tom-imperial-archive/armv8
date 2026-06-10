@@ -8,7 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define is_label_char(c) isalnum(c) || c == '_' || c == '.' || c == '\\'
+#define is_label_char(c)                                                       \
+    isalnum(c) || c == '_' || c == '.' || c == '\\' || c == '$'
 
 #define INSTRUCTION_SIZE 4
 #define MAX_FILE_LINE_LENGTH 120
