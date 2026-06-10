@@ -1,4 +1,11 @@
-#include "emulate.h"
+#include "common/error.h"
+#include "emulator/execute/execute.h"
+#include "emulator/io/filehandlers.h"
+#include "emulator/io/output.h"
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 int main(int argc, char **argv) {
     if (argc < 2) {
