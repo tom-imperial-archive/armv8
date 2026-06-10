@@ -17,9 +17,13 @@ Since there will be a very low number of labels, it suffices to implement this
 // Allocates memory and initialises
 SymbolTable *create_symbol_table(void) {
     SymbolTable *table = malloc(sizeof(SymbolTable));
-    if (table == NULL) { ERROR((Error){.type = FAILED_TO_ALLOCATE}); }
+    if (table == NULL) {
+        ERROR((Error){.type = FAILED_TO_ALLOCATE});
+    }
     Symbol *entries = malloc(INITIAL_CAPACITY * sizeof(Symbol));
-    if (entries == NULL) { ERROR((Error){.type = FAILED_TO_ALLOCATE}); }
+    if (entries == NULL) {
+        ERROR((Error){.type = FAILED_TO_ALLOCATE});
+    }
     table->entries = entries;
     table->count = 0;
     table->capacity = INITIAL_CAPACITY;
@@ -35,7 +39,9 @@ void symbol_table_add(SymbolTable *table, char *label, uint64 address) {
         table->capacity *= 2;
         table->entries =
             realloc(table->entries, table->capacity * sizeof(Symbol));
-        if (table->entries == NULL) { ERROR((Error){.type = FAILED_TO_ALLOCATE}); }
+        if (table->entries == NULL) {
+            ERROR((Error){.type = FAILED_TO_ALLOCATE});
+        }
     }
     table->entries[table->count].label = strdup(label);
     table->entries[table->count].address = address;
