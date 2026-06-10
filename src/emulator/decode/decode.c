@@ -1,8 +1,10 @@
 #include "decode.h"
-#include "utils/types.h"
 #include "common/error.h"
+#include "common/instruction.h"
+#include "utils/types.h"
 #include <stdlib.h>
-#define ERR_UNDEF_OPCODE() ERROR((Error){.type = UNDEFINED_OPCODE, .instruction = input});
+#define ERR_UNDEF_OPCODE()                                                     \
+    ERROR((Error){.type = UNDEFINED_OPCODE, .instruction = input});
 
 // TODO: check if simm and imm need to be handled differently when extracting
 // them.
@@ -46,13 +48,13 @@ void decode(uint32 input, Instruction *instruction) {
             int imm12 = (operand & MASK_IMM12) >> 10;
 
             *instruction = (Instruction){.op_type = op_type,
-                                        .immediate_arithmetic = {
-                                            .imm12 = imm12,
-                                            .rd = rd,
-                                            .rn = rn,
-                                            .sf = sf,
-                                            .sh = sh,
-                                        }};
+                                         .immediate_arithmetic = {
+                                             .imm12 = imm12,
+                                             .rd = rd,
+                                             .rn = rn,
+                                             .sf = sf,
+                                             .sh = sh,
+                                         }};
         } else if (opi == 0x5) { // Immediate Wide Move
             OpType op_type;
             switch (opc) {
@@ -77,12 +79,12 @@ void decode(uint32 input, Instruction *instruction) {
             // TODO: do I shift imm16 by hw straight away or should this be in
             // EXECUTE
             *instruction = (Instruction){.op_type = op_type,
-                                        .wide_move = {
-                                            .hw = hw,
-                                            .imm16 = imm16,
-                                            .rd = rd,
-                                            .sf = sf,
-                                        }};
+                                         .wide_move = {
+                                             .hw = hw,
+                                             .imm16 = imm16,
+                                             .rd = rd,
+                                             .sf = sf,
+                                         }};
         } else {
             ERR_UNDEF_OPCODE();
         }
@@ -113,13 +115,13 @@ void decode(uint32 input, Instruction *instruction) {
             int ra = operand & 0x1F;
             OpType op_type = x ? OP_TYPE_MSUB : OP_TYPE_MADD;
             *instruction = (Instruction){.op_type = op_type,
-                                        .multiply = {
-                                            .sf = sf,
-                                            .ra = ra,
-                                            .rd = rd,
-                                            .rm = rm,
-                                            .rn = rn,
-                                        }};
+                                         .multiply = {
+                                             .sf = sf,
+                                             .ra = ra,
+                                             .rd = rd,
+                                             .rm = rm,
+                                             .rn = rn,
+                                         }};
         } else { // Arithmetic and logic instructions
             int shift_bits = (opr & 0x6) >> 1;
             ShiftType shift_type;
@@ -158,14 +160,14 @@ void decode(uint32 input, Instruction *instruction) {
                     break;
                 }
                 *instruction = (Instruction){.op_type = op_type,
-                                            .register_arithmetic_logic = {
-                                                .operand = operand,
-                                                .rd = rd,
-                                                .rm = rm,
-                                                .rn = rn,
-                                                .sf = sf,
-                                                .shift = shift_type,
-                                            }};
+                                             .register_arithmetic_logic = {
+                                                 .operand = operand,
+                                                 .rd = rd,
+                                                 .rm = rm,
+                                                 .rn = rn,
+                                                 .sf = sf,
+                                                 .shift = shift_type,
+                                             }};
             } else { // Logic instruction
                 bool n = opr & 0x1;
                 if (n) {
@@ -201,14 +203,14 @@ void decode(uint32 input, Instruction *instruction) {
                 }
             }
             *instruction = (Instruction){.op_type = op_type,
-                                        .register_arithmetic_logic = {
-                                            .operand = operand,
-                                            .rd = rd,
-                                            .rm = rm,
-                                            .rn = rn,
-                                            .sf = sf,
-                                            .shift = shift_type,
-                                        }};
+                                         .register_arithmetic_logic = {
+                                             .operand = operand,
+                                             .rd = rd,
+                                             .rm = rm,
+                                             .rn = rn,
+                                             .sf = sf,
+                                             .shift = shift_type,
+                                         }};
         }
     } else if ((input & 0x0A000000) == 0x08000000) { // Load/store
         if ((input & 0x80000000) == 0x80000000) {
@@ -246,15 +248,15 @@ void decode(uint32 input, Instruction *instruction) {
             OpType op_type = OP_TYPE_SINGLE_DATA_TRANSFER;
 
             *instruction = (Instruction){.op_type = op_type,
-                                        .single_data_transfer = {
-                                            .sf = sf,
-                                            .L = L,
-                                            .mode = mode,
-                                            .offset = final_offset,
-                                            .xm = xm,
-                                            .xn = xn,
-                                            .rt = rt,
-                                        }};
+                                         .single_data_transfer = {
+                                             .sf = sf,
+                                             .L = L,
+                                             .mode = mode,
+                                             .offset = final_offset,
+                                             .xm = xm,
+                                             .xn = xn,
+                                             .rt = rt,
+                                         }};
 
         } else { // Load Literal: bit 31 = 0
             int sf = (input & 0x40000000) >> 30;
@@ -269,11 +271,11 @@ void decode(uint32 input, Instruction *instruction) {
             OpType op_type = OP_TYPE_LOAD_LITERAL;
 
             *instruction = (Instruction){.op_type = op_type,
-                                        .load_literal = {
-                                            .simm19 = simm19,
-                                            .rt = rt,
-                                            .sf = sf,
-                                        }};
+                                         .load_literal = {
+                                             .simm19 = simm19,
+                                             .rt = rt,
+                                             .sf = sf,
+                                         }};
         }
 
     } else if ((input & 0x1C000000) == 0x14000000) { // Branch
