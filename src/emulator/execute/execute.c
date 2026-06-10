@@ -1,6 +1,5 @@
 #include "common/error.h"
 #include "common/instruction.h"
-#include "emulator/decode/decode.h"
 #include "emulator/state/state.h"
 #include "utils/bitmasks.h"
 #include "utils/types.h"

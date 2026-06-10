@@ -1,9 +1,11 @@
 #ifndef EXECUTE_H
 #define EXECUTE_H
 
-#include "emulator/decode/decode.h"
-#include "emulator/state/state.h"
 #include <stdbool.h>
+
+// Forward declerations
+typedef struct State State;
+typedef struct Instruction Instruction;
 
 /*
     Executes the given instruction.
