@@ -1,4 +1,5 @@
 #include "symbol_table.h"
+#include "common/error.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -16,7 +17,9 @@ Since there will be a very low number of labels, it suffices to implement this
 // Allocates memory and initialises
 SymbolTable *create_symbol_table(void) {
     SymbolTable *table = malloc(sizeof(SymbolTable));
+    if (table == NULL) { ERROR((Error){.type = FAILED_TO_ALLOCATE}); }
     Symbol *entries = malloc(INITIAL_CAPACITY * sizeof(Symbol));
+    if (entries == NULL) { ERROR((Error){.type = FAILED_TO_ALLOCATE}); }
     table->entries = entries;
     table->count = 0;
     table->capacity = INITIAL_CAPACITY;
@@ -32,6 +35,7 @@ void symbol_table_add(SymbolTable *table, char *label, uint64 address) {
         table->capacity *= 2;
         table->entries =
             realloc(table->entries, table->capacity * sizeof(Symbol));
+        if (table->entries == NULL) { ERROR((Error){.type = FAILED_TO_ALLOCATE}); }
     }
     table->entries[table->count].label = strdup(label);
     table->entries[table->count].address = address;
@@ -45,8 +49,9 @@ uint64 symbol_table_lookup(SymbolTable *table, char *label) {
             return table->entries[i].address;
         }
     }
-    // FAILURE - should never happen but we should handle somehow
-    exit(EXIT_FAILURE);
+    // FAILURE - should never happen but we must handle somehow
+    ERROR((Error){.type = LABEL_NOT_FOUND, .str = label});
+    return 0;
 }
 
 // Frees memory from the table, and from storing the labels

@@ -3,13 +3,14 @@
 #include "utils/types.h"
 #include "utils/parseutils.h"
 #include <assert.h>
+#include <ctype.h>
 #include <regex.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-#define is_label_char(c) isalnum(c) || c == '_' || c == '.' || c == '\\'
+#define is_label_char(c)                                                       \
+    isalnum(c) || c == '_' || c == '.' || c == '\\' || c == '$'
 
 #define INSTRUCTION_SIZE 4
 #define MAX_FILE_LINE_LENGTH 120
@@ -35,7 +36,7 @@ static void read_line(char *buf, uint64 *address, SymbolTable *table) {
 
     // Line is not whitespace
     int i = 0;
-    while(is_label_char(buf[i])) {
+    while (is_label_char(buf[i])) {
         i++;
     }
 
@@ -47,7 +48,6 @@ static void read_line(char *buf, uint64 *address, SymbolTable *table) {
     } else {
         *address += 4;
     }
-
 }
 
 /*
