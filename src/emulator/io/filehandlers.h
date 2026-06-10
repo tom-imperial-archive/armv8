@@ -5,6 +5,5 @@
 #include <stdbool.h>
 
 extern uint32 *readfile(const char *path, size_t *count);
-extern bool writefile(const char *path, char *registers_out, char *nonzero_out);
 
 #endif

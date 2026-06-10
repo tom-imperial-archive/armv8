@@ -2,12 +2,12 @@
 #include "common/error.h"
 #include "utils/types.h"
 #include <assert.h>
+#include <ctype.h>
 #include <regex.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 #define is_label_char(c) isalnum(c) || c == '_' || c == '.' || c == '\\'
 
 #define INSTRUCTION_SIZE 4
@@ -26,7 +26,8 @@ This accepts any preceeding whitespace
 // Regex: [a-zA-Z_\.]([a-zA-Z0-9$_\.])*
 static void read_line(char *buf, uint64 *address, SymbolTable *table) {
     // Remove whitespace
-    while (isspace(*buf)) buf++;
+    while (isspace(*buf))
+        buf++;
 
     if (*buf == '\0') {
         // Line is just whitespace
@@ -35,7 +36,7 @@ static void read_line(char *buf, uint64 *address, SymbolTable *table) {
 
     // Line is not whitespace
     int i = 0;
-    while(is_label_char(buf[i])) {
+    while (is_label_char(buf[i])) {
         i++;
     }
 
@@ -47,7 +48,6 @@ static void read_line(char *buf, uint64 *address, SymbolTable *table) {
     } else {
         *address += 4;
     }
-
 }
 
 // This reads through the file, and populate a SymbolTable mapping labels
