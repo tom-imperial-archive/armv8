@@ -8,7 +8,9 @@ Checks for updates every frame, without interfering with main loop
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+// TODO: FIX relative paths
 #include "../shared/log.h"
+#include "../shared/types.h"
 
 void error(const char *msg) {
     perror(msg);
@@ -24,6 +26,35 @@ void send_msg(int sockfd, char *msg) {
     }
 
     printf("%s to server: %s", MESSAGE_SEND_SUCCESS, msg);
+}
+
+static int receive_int(int sockfd) {
+    int msg;
+    int n = read(sockfd, &msg, sizeof(int));
+
+    if (n != sizeof(int)) {
+        error("Error receiving int");
+    }
+
+    return msg;
+
+}
+
+void receive_msg(int sockfd, char **out)  {
+    // server must send length before message
+    uint32 length = (uint32) receive_int(sockfd);
+    length = ntohl(length);
+
+    char *msg = malloc(length+1);
+
+    int n = read(sockfd, &msg, length);
+
+    if (n < 0) {
+        error("Error receiving message");
+    }
+
+    msg[length] = '\0';
+    *out = msg;
 }
 
 int connect_to_server(char *hostname, int port) {
