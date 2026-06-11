@@ -142,6 +142,39 @@ void free_board(Board b) {
     free(b);
 }
 
+/*
+Attempts to hit at pos on target_board. If this succeeds, shooter_board has pos
+updated to a hit and target_board has pos updated to a hit. If it misses,
+the both boards have pos updated to a miss.
+
+Returns true if the shot was successfully processed. Returns false if the position is invalid or
+if an attack has already been launched on that position
+*/
+bool board_try_hit(Board shooter_board, Board target_board, Position pos) {
+    if (!check_pos_in_bounds(pos)) {
+        return false;
+    }
+
+    CellState target = target_board->cells[pos.x][pos.y];
+
+    switch(target) {
+        case CELL_WATER: {
+            target_board->cells[pos.x][pos.y] = CELL_MISS;
+            shooter_board->cells[pos.x][pos.y] = CELL_MISS;
+        }; break;
+        case CELL_SHIP: {
+            target_board->cells[pos.x][pos.y] = CELL_HIT;
+            shooter_board->cells[pos.x][pos.y] = CELL_HIT;
+        }; break;
+        case CELL_HIT:
+        case CELL_MISS:
+        return false;
+    }
+
+    return true;
+
+}
+
 // Testing
 int main(void) {
     Board b = create_empty_board();

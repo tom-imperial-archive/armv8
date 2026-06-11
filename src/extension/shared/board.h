@@ -35,5 +35,8 @@ extern bool board_is_valid_placement_set(ShipDefs ship_defs, Board board);
 extern bool board_is_valid_placement(ShipLocation sl, Board board, int nships);
 
 extern Board create_empty_board(void);
+extern void free_board(Board board);
+
+extern bool board_try_hit(Board shooter_board, Board target_board, Position pos);
 
 #endif
