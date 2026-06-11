@@ -1,0 +1,3 @@
+/*
+Universal interface for output
+*/

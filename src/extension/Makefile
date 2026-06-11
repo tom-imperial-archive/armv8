@@ -1,7 +1,7 @@
 CC      ?= gcc
 CFLAGS  ?= -std=c17 -g \
         -D_POSIX_SOURCE -D_DEFAULT_SOURCE \
-        -Wall -Werror -pedantic -Ishared
+        -Wall -Werror -pedantic -Isrc/extension
 
 # HOW TO COMPILE RAYLIB
 # https://github.com/raysan5/raylib/wiki/Working-on-GNU-Linux

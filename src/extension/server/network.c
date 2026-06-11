@@ -1,0 +1,5 @@
+/*
+Manages the raw TCP operations
+Wraps payloads into complete packets to transmits
+Parses received packets
+*/
