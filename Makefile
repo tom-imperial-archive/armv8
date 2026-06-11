@@ -31,9 +31,6 @@ ASSEMBLE_SRCS = \
 	src/common/instruction.c \
 	src/common/error.c
 
-EXTENSION_SRCS = \
-	src/extension/main.c
-
 TEST_UTILS_SRCS = \
 	tests/utils/test_hashset.c \
 	src/utils/hashset.c \
@@ -104,7 +101,6 @@ CFLAGS += -I$(RAYLIB_INCLUDE) -I$(RAYGUI_INCLUDE)
 # OBJECT FILES (source files with extensions changed)
 EMULATE_OBJS = $(EMULATE_SRCS:.c=.o)
 ASSEMBLE_OBJS = $(ASSEMBLE_SRCS:.c=.o)
-EXTENSION_OBJS = $(EXTENSION_SRCS:.c=.o)
 TEST_UTILS_OBJS = $(TEST_UTILS_SRCS:.c=.o)
 TEST_STATE_OBJS = $(TEST_STATE_SRCS:.c=.o)
 TEST_DECODE_OBJS = $(TEST_DECODE_SRCS:.c=.o)
@@ -135,10 +131,6 @@ assemble: bin/assemble
 # make
 # OPTIONALLY: make PLATFORM=UBUNTU_DESKTOP
 # or replace UBUNTU with whatever you need to do
-
-bin/extension: $(EXTENSION_OBJS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS)
-extension: bin/extension
 
 # Compiles any missing .o file, and places next to its .c counterpart
 %.o: %.c
