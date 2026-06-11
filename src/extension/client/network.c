@@ -16,6 +16,16 @@ void error(const char *msg) {
     exit(0);
 }
 
+void send_msg(int sockfd, char *msg) {
+    int sent = send(sockfd, msg, strlen(msg), 0);
+
+    if (sent < 0) {
+        error("Error sending message");
+    }
+
+    printf("%s to server: %s", MESSAGE_SEND_SUCCESS, msg);
+}
+
 int connect_to_server(char *hostname, int port) {
    
     struct sockaddr_in server_addr;
