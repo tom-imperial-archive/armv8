@@ -213,7 +213,7 @@ test-all: test-utils test-emulator test-assembler
 
 # FORMAT
 format:
-	git ls-files '*.c' '*.h' | xargs clang-format -i
+	git ls-files '*.c' '*.h' | grep -v '^src/extension/' | xargs clang-format -i
 
 # CLEAN
 clean:
