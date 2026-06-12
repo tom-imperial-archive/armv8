@@ -24,7 +24,8 @@ SERVER_SRCS = \
 	server/state.c \
 	server/game.c \
 	server/network.c \
-	server/placement.c
+	server/placement.c \
+	shared/network.c
 
 CLIENT_CORE_SRCS = \
 	client/main.c \
@@ -32,6 +33,7 @@ CLIENT_CORE_SRCS = \
 	client/logic.c \
 	client/network.c \
 	client/placement.c \
+	shared/network.c
 
 CLIENT_GUI_SRCS = \
 	client/render_raylib.c \
