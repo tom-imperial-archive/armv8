@@ -1,9 +1,14 @@
 #include "shared/protocol.h"
 #include "shared/network.h"
 #include "server/network.h"
+#include "server/game.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+void server_crash(void) {
+    exit(EXIT_FAILURE);
+}
 
 /*
 Server executable:
@@ -16,9 +21,37 @@ int main(void) {
 
     printf("Waiting for Player 1...\n");
     int player1_fd = accept_client(server_fd);
+    printf("Waiting for Player 2...\n");
+    int player2_fd = accept_client(server_fd);
 
-    if (player1_fd != -1) {
-        printf("Player 1 connected successfully!");
+    if (player1_fd == -1) {
+        fprintf(stderr, "[Error] Player 1 failed to connect!");
+        server_crash();
+    }
+
+    printf("Player 1 connected successfully!");
+
+    if (player2_fd == -1) {
+        fprintf(stderr, "[Error] Player 2 failed to connect!");
+    }
+
+    // Set up server state
+    ServerState state = init_server_state();
+
+    if (state == NULL) {
+        server_crash();
+    }
+
+    send_packet(player1_fd, MSG_REQ_BOARD, NULL, 0);
+    send_packet(player2_fd, MSG_REQ_BOARD, NULL, 0);
+
+    // Set up players
+    PlayerState p1 = new_player(player1_fd);
+    PlayerState p2 = new_player(player2_fd);
+    set_players(state, p1, p2);
+
+
+    /*if (player1_fd != -1) {
 
         while (1) {
             PacketHeader header;
@@ -39,7 +72,7 @@ int main(void) {
 
         close (player1_fd);
     }
-
+*/
     close(server_fd);
     return 0;
 }

@@ -64,7 +64,8 @@ int receive_packet(int sockfd, PacketHeader *out_header, void **out_payload) {
         // If we got some other error, then that's a genuine error
         fprintf(stderr, "%s\n", "[ERROR] Socket error during receive");
     } else if (n == 0) {
-        fprintf(stderr, "%s\n", "[ERROR] Server closed the connection");
+        fprintf(stderr, "%s\n", "[ERROR] Connection was closed");
+        return -1;
     }
 
     // Now we have a header

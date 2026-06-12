@@ -64,7 +64,7 @@ It is the caller's responsibility to keep track of how many ships are already on
 This should only be used for initialisation and never after gameplay has started.
 If you are adding multiple ships, see board_is_valid_placement_set.
 */
-static bool board_add_placement(ShipState sl, Board board, int n) {
+/*static bool board_add_placement(ShipState sl, Board board, int n) {
     if (n < 0 || n >= NUM_SHIPS) {
         return false;
     }
@@ -92,7 +92,7 @@ static bool board_add_placement(ShipState sl, Board board, int n) {
         return false;
     }
     return true;
-}
+}*/
 
 /*
 Add the following ships at given the board is empty.
@@ -144,11 +144,25 @@ void free_board(Board b) {
     free(b);
 }
 
-static void check_destroyed(Board board, ShipState *s) {
+struct PosShipPair{
+    Position pos;
+    ShipType *ship;
+};
+
+static void check_destroyed(Board board, ShipState *s, void *data) {
     int len = ship_length(s->ship);
+    struct PosShipPair *psp = (struct PosShipPair *) data;
+
+    Position hit_pos = psp->pos;
+    ShipType *ship = psp->ship;
     Position pos = s->pos;
     s->destroyed = true;
+
     for (int i = 0; i < len; i++) {
+        if (pos.x == hit_pos.x && pos.y == hit_pos.y) {
+            *ship = s->ship;
+        }
+
         if (board->cells[pos.x][pos.y] != CELL_HIT) {
             s->destroyed = false;
             break;
@@ -157,9 +171,9 @@ static void check_destroyed(Board board, ShipState *s) {
     }
 }
 
-static void for_each_ship(Board board, void (*cb)(Board board, ShipState *s)) {
+static void for_each_ship(Board board, void (*cb)(Board board, ShipState *s, void *data), void *data) {
     for (int i = 0; i < NUM_SHIPS; i++) {
-        (*cb)(board, &(board->ships[i]));
+        (*cb)(board, &(board->ships[i]), data);
     }
 }
 
@@ -171,7 +185,7 @@ the both boards have pos updated to a miss.
 Returns true if the shot was successfully processed. Returns false if the position is invalid or
 if an attack has already been launched on that position
 */
-bool board_try_hit(Board opponent_ships_board, Position pos) {
+bool board_try_hit(Board opponent_ships_board, Position pos, bool *was_hit, ShipType *sunk) {
     if (!check_pos_in_bounds(pos)) {
         return false;
     }
@@ -183,10 +197,13 @@ bool board_try_hit(Board opponent_ships_board, Position pos) {
             opponent_ships_board->cells[pos.x][pos.y] = CELL_MISS;
         }; break;
         case CELL_SHIP: {
+            *was_hit = true;
             opponent_ships_board->cells[pos.x][pos.y] = CELL_HIT;
 
             // Update the relevant ship definitions on the opponent's board
-            for_each_ship(opponent_ships_board, *check_destroyed);
+            *sunk = -1;
+            struct PosShipPair psp = {.pos = pos, .ship = sunk};
+            for_each_ship(opponent_ships_board, *check_destroyed, &psp);
         }; break;
         case CELL_HIT:
         case CELL_MISS:
@@ -232,7 +249,7 @@ void print_board(Board board, FILE *out) {
 }
 
 // Testing
-///*
+/*
 int main(void) {
     Board b = create_empty_board();
 
@@ -313,4 +330,4 @@ int main(void) {
     free(b);
     return 0;
 }
-//*/
+*/

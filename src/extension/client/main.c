@@ -25,7 +25,8 @@ int main() {
         }
 
         // Wait a moment so the server has time to process before we close
-        sleep(1);
+
+            while (true)sleep(1);
         close(sockfd);
     }
 

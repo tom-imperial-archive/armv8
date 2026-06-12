@@ -21,7 +21,6 @@ SHARED_SRCS = \
 
 SERVER_SRCS = \
 	server/main.c \
-	server/state.c \
 	server/game.c \
 	server/network.c \
 	server/placement.c \
