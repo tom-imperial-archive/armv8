@@ -3,6 +3,7 @@
 
 #include "types.h"
 #include "board.h"
+#include <stdbool.h>
 
 typedef enum {
     MSG_JOIN,
