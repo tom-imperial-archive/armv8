@@ -9,6 +9,7 @@ typedef enum {
     MSG_JOIN,
     MSG_REQ_BOARD,
     MSG_INIT_BOARD_LAYOUT,
+    MSG_GAME_START,
     MSG_FIRE,
     MSG_RESULT,
     MSG_ATTACKED,
@@ -45,5 +46,9 @@ typedef struct {
 typedef struct {
     bool you_won;
 } GameOverPayload;
+
+typedef struct {
+    bool your_turn;
+} GameStartPayload;
 
 #endif

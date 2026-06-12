@@ -94,6 +94,15 @@ static bool board_add_placement(ShipState sl, Board board, int n) {
     return true;
 }
 
+ShipState board_get_ship(Board board, int index) {
+    if (index >= 0 && index < NUM_SHIPS) {
+        return board->ships[index];
+    }
+
+    fprintf(stderr, "%s\n", "[ERROR] Invalid index provided");
+    exit(EXIT_FAILURE);
+}
+
 /*
 Add the following ships at given the board is empty.
 It is the caller's responsibility to keep track of how many ships are already on the board.
@@ -196,6 +205,28 @@ bool board_try_hit(Board opponent_ships_board, Position pos) {
     return true;
 }
 
+void board_mark_strike(Board board, Position pos, bool success) {
+    if (!check_pos_in_bounds(pos)) {
+        return;
+    }
+
+    CellState new_state;
+
+    if (success) {
+        new_state = CELL_HIT;
+    } else {
+        new_state = CELL_MISS;
+    }
+
+    board->cells[pos.x][pos.y] = new_state;
+}
+
+bool valid_attack_pos(Board board, Position pos) {
+    if (!check_pos_in_bounds(pos)) { return false; }
+
+    return board->cells[pos.x][pos.y] == CELL_WATER;
+}
+
 bool all_ships_destroyed(Board board) {
     for (int i = 0; i < NUM_SHIPS; i++) {
         if (!board->ships[i].destroyed) {
@@ -233,84 +264,83 @@ void print_board(Board board, FILE *out) {
 
 // Testing
 ///*
-int main(void) {
-    Board b = create_empty_board();
+// int main(void) {
+//     Board b = create_empty_board();
 
-    InitialShipState defs[5];
-    InitialShipState sl0 = {
-        .ship = SHIP_CARRIER,
-        .pos = {
-            .x = 0,
-            .y = 0,
-            .horizontal = true
-        }
-    };
-    InitialShipState sl1 = {
-        .ship = SHIP_BATTLESHIP,
-        .pos = {
-            .x = 0,
-            .y = 1,
-            .horizontal = true
-        }
-    };
-    InitialShipState sl2 = {
-        .ship = SHIP_CRUISER,
-        .pos = {
-            .x = 5,
-            .y = 0,
-            .horizontal = true
-        }
-    };
-    InitialShipState sl3 = {
-        .ship = SHIP_SUBMARINE,
-        .pos = {
-            .x = 0,
-            .y = 2,
-            .horizontal = false
-        }
-    };
-    InitialShipState sl4 = {
-        .ship = SHIP_DESTROYER,
-        .pos = {
-            .x = 1,
-            .y = 2,
-            .horizontal = false
-        }
-    };
-    defs[0] = sl0;
-    defs[1] = sl1;
-    defs[2] = sl2;
-    defs[3] = sl3;
-    defs[4] = sl4;
-    printf("Checking placement: %d\n", board_add_placement_set(defs, b));
-    print_board(b, stdout);
+//     InitialShipState defs[5];
+//     InitialShipState sl0 = {
+//         .ship = SHIP_CARRIER,
+//         .pos = {
+//             .x = 0,
+//             .y = 0,
+//             .horizontal = true
+//         }
+//     };
+//     InitialShipState sl1 = {
+//         .ship = SHIP_BATTLESHIP,
+//         .pos = {
+//             .x = 0,
+//             .y = 1,
+//             .horizontal = true
+//         }
+//     };
+//     InitialShipState sl2 = {
+//         .ship = SHIP_CRUISER,
+//         .pos = {
+//             .x = 5,
+//             .y = 0,
+//             .horizontal = true
+//         }
+//     };
+//     InitialShipState sl3 = {
+//         .ship = SHIP_SUBMARINE,
+//         .pos = {
+//             .x = 0,
+//             .y = 2,
+//             .horizontal = false
+//         }
+//     };
+//     InitialShipState sl4 = {
+//         .ship = SHIP_DESTROYER,
+//         .pos = {
+//             .x = 1,
+//             .y = 2,
+//             .horizontal = false
+//         }
+//     };
+//     defs[0] = sl0;
+//     defs[1] = sl1;
+//     defs[2] = sl2;
+//     defs[3] = sl3;
+//     defs[4] = sl4;
+//     printf("Checking placement: %d\n", board_add_placement_set(defs, b));
+//     print_board(b, stdout);
 
-    Position p = {
-            .x = 1,
-            .y = 2,
-        };
-    printf("%d\n", board_try_hit(b, p));
-    p.x = 5;
-    printf("%d\n", board_try_hit(b, p));
+//     Position p = {
+//             .x = 1,
+//             .y = 2,
+//         };
+//     printf("%d\n", board_try_hit(b, p));
+//     p.x = 5;
+//     printf("%d\n", board_try_hit(b, p));
 
-    printf("Board: \n");
-    print_board(b, stdout);
+//     printf("Board: \n");
+//     print_board(b, stdout);
 
-    printf("Game over? %d\n", all_ships_destroyed(b));
+//     printf("Game over? %d\n", all_ships_destroyed(b));
 
-    for (int i = 0; i < BOARD_SIZE; i++) {
-        for (int j = 0; j < BOARD_SIZE; j++) {
-            p.x = i;
-            p.y = j;
-            board_try_hit(b, p);
-        }
-    }
+//     for (int i = 0; i < BOARD_SIZE; i++) {
+//         for (int j = 0; j < BOARD_SIZE; j++) {
+//             p.x = i;
+//             p.y = j;
+//             board_try_hit(b, p);
+//         }
+//     }
 
-    printf("Board: \n");
-    print_board(b, stdout);
-    printf("Game over? %d\n", all_ships_destroyed(b));
+//     printf("Board: \n");
+//     print_board(b, stdout);
+//     printf("Game over? %d\n", all_ships_destroyed(b));
 
-    free(b);
-    return 0;
-}
-//*/
+//     free(b);
+//     return 0;
+// }

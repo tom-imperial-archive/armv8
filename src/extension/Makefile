@@ -32,6 +32,7 @@ CLIENT_CORE_SRCS = \
 	client/state.c \
 	client/network.c \
 	client/placement.c \
+	client/game.c \
 	shared/network.c
 
 CLIENT_GUI_SRCS = \

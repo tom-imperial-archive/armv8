@@ -46,6 +46,10 @@ extern bool board_add_placement_set(InitialShipDefs ship_defs, Board board);
 extern Board create_empty_board(void);
 extern void free_board(Board board);
 
+extern void board_mark_strike(Board board, Position pos, bool success);
+
+extern bool valid_attack_pos(Board board, Position pos);
+
 extern bool board_try_hit(Board opponent_ships_board, Position pos);
 extern bool all_ships_destroyed(Board board);
 

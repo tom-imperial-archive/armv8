@@ -27,6 +27,7 @@ typedef struct {
     // Temporary data when placing, irrelevant once main loop has begun
     InitialShipDefs my_placements;
     int ships_placed;
+    bool placing_horizontal;
 } ClientState;
 
 extern ClientState init_client_state(void);
