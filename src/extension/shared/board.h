@@ -26,15 +26,16 @@ typedef struct {
 typedef struct {
     ShipType ship;
     Position pos;
-} ShipLocation;
+    bool destroyed;
+} ShipState;
 
-typedef ShipLocation ShipDefs[NUM_SHIPS];
+typedef ShipState ShipDefs[NUM_SHIPS];
 
 /*
 Returns true if the ship placements form a valid board. If it is a valid placement, populate the board
 */
 extern bool board_is_valid_placement_set(ShipDefs ship_defs, Board board);
-extern bool board_is_valid_placement(ShipLocation sl, Board board, int nships);
+extern bool board_is_valid_placement(ShipState sl, Board board, int nships);
 
 extern Board create_empty_board(void);
 extern void free_board(Board board);
