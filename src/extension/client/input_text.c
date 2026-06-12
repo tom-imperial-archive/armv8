@@ -15,7 +15,7 @@ InputData get_user_input(void) {
 
     char input[BUFFER_SIZE];
     if (fgets(input, BUFFER_SIZE, stdin) != NULL) {
-        if (strcmp(input, "quit")) {
+        if (strcmp(input, "quit") == 0) {
             data.type = INPUT_QUIT;
         } else {
             // expect grid coords
@@ -25,6 +25,7 @@ InputData get_user_input(void) {
             // expect digit
             if (isdigit(*start) && atoi(start) < 11) {
                 data.grid_x = atoi(start);
+                while (isdigit(*start)) start++;
             } else {
                 data.type = INPUT_NONE;
             }
