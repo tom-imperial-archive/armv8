@@ -1,6 +1,5 @@
 #include "board.h"
-#include <stdlib.h>
-#include <stdio.h>
+
 /*
 Shared logic for validing ship placements, testing collisions
 */
@@ -65,7 +64,7 @@ It is the caller's responsibility to keep track of how many ships are already on
 This should only be used for initialisation and never after gameplay has started.
 If you are adding multiple ships, see board_is_valid_placement_set.
 */
-bool board_is_valid_placement(ShipLocation sl, Board board, int n) {
+bool board_add_placement(ShipLocation sl, Board board, int n) {
     if (n < 0 || n >= NUM_SHIPS) {
         return false;
     }
@@ -101,7 +100,7 @@ It is the caller's responsibility to keep track of how many ships are already on
 This should only be used for initialisation and never after gameplay has started.
 If you are adding multiple ships, see board_is_valid_placement_set.
 */
-bool board_is_valid_placement_set(ShipDefs ship_defs, Board board) {
+bool board_add_placement_set(ShipDefs ship_defs, Board board) {
     // Bit n in declared_types being set to 1 corresponds to having a ship of that type already added
     uint8 declared_types = 0;
 
@@ -172,7 +171,31 @@ bool board_try_hit(Board shooter_board, Board target_board, Position pos) {
     }
 
     return true;
+}
 
+static char cell_to_char(CellState cell) {
+    switch(cell) {
+        case CELL_HIT: return 'X'; break;
+        case CELL_MISS: return 'O'; break;
+        case CELL_SHIP: return '*'; break;
+        default: return '-';
+    }
+}
+
+void print_board(Board board, FILE *out) {
+    fprintf(out, " ");
+    for (int i = 0; i < BOARD_SIZE; i++) {
+        fprintf(out, " %d", i);
+    }
+    fprintf(out, "\n");
+
+    for(int i = 0; i < BOARD_SIZE; i++) {
+        fprintf(out, "%d", i);
+        for(int j = 0; j < BOARD_SIZE; j++) {
+            fprintf(out, " %c", cell_to_char(board->cells[j][i]));
+        }
+        fprintf(out, "\n");
+    }
 }
 
 // Testing
@@ -225,8 +248,25 @@ int main(void) {
     defs[2] = sl2;
     defs[3] = sl3;
     defs[4] = sl4;
-    printf("Checking placement: %d\n", board_is_valid_placement_set(defs, b));
+    printf("Checking placement: %d\n", board_add_placement_set(defs, b));
+    print_board(b, stdout);
 
+    Board source_board = create_empty_board();
+    Position p = {
+            .x = 1,
+            .y = 2,
+            .horizontal = false
+        };
+    printf("%d\n", board_try_hit(source_board, b, p));
+    p.x = 5;
+    printf("%d\n", board_try_hit(source_board, b, p));
+
+    printf("Source: \n");
+    print_board(source_board, stdout);
+    printf("Board: \n");
+    print_board(b, stdout);
+
+    free(source_board);
     free(b);
     return 0;
 }

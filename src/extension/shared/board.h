@@ -3,6 +3,8 @@
 
 #include "types.h"
 #include <stdbool.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 typedef enum {
     CELL_WATER,
@@ -38,5 +40,7 @@ extern Board create_empty_board(void);
 extern void free_board(Board board);
 
 extern bool board_try_hit(Board shooter_board, Board target_board, Position pos);
+
+extern void print_board(Board b, FILE *out);
 
 #endif
