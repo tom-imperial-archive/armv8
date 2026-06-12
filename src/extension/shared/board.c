@@ -64,7 +64,7 @@ It is the caller's responsibility to keep track of how many ships are already on
 This should only be used for initialisation and never after gameplay has started.
 If you are adding multiple ships, see board_is_valid_placement_set.
 */
-bool board_add_placement(ShipState sl, Board board, int n) {
+static bool board_add_placement(ShipState sl, Board board, int n) {
     if (n < 0 || n >= NUM_SHIPS) {
         return false;
     }
@@ -100,12 +100,15 @@ It is the caller's responsibility to keep track of how many ships are already on
 This should only be used for initialisation and never after gameplay has started.
 If you are adding multiple ships, see board_is_valid_placement_set.
 */
-bool board_add_placement_set(ShipDefs ship_defs, Board board) {
+bool board_add_placement_set(InitialShipDefs ship_defs, Board board) {
     // Bit n in declared_types being set to 1 corresponds to having a ship of that type already added
     uint8 declared_types = 0;
 
     for (int i = 0; i < NUM_SHIPS; i++) {
-        ShipState sl = ship_defs[i];
+        // Initialise internal struct
+        InitialShipState isl = ship_defs[i];
+        ShipState sl = (ShipState){.ship = isl.ship, .pos = isl.pos, .destroyed = false};
+
         int mask = mask_bit_for_ship(sl.ship);
         if ((declared_types & mask) == 0) {
             // No ship of this type declared yet
@@ -168,7 +171,7 @@ the both boards have pos updated to a miss.
 Returns true if the shot was successfully processed. Returns false if the position is invalid or
 if an attack has already been launched on that position
 */
-bool board_try_hit(Board player_target_board, Board opponent_ships_board, Position pos) {
+bool board_try_hit(Board opponent_ships_board, Position pos) {
     if (!check_pos_in_bounds(pos)) {
         return false;
     }
@@ -178,11 +181,9 @@ bool board_try_hit(Board player_target_board, Board opponent_ships_board, Positi
     switch(target) {
         case CELL_WATER: {
             opponent_ships_board->cells[pos.x][pos.y] = CELL_MISS;
-            player_target_board->cells[pos.x][pos.y] = CELL_MISS;
         }; break;
         case CELL_SHIP: {
             opponent_ships_board->cells[pos.x][pos.y] = CELL_HIT;
-            player_target_board->cells[pos.x][pos.y] = CELL_HIT;
 
             // Update the relevant ship definitions on the opponent's board
             for_each_ship(opponent_ships_board, *check_destroyed);
@@ -235,8 +236,8 @@ void print_board(Board board, FILE *out) {
 int main(void) {
     Board b = create_empty_board();
 
-    ShipState defs[5];
-    ShipState sl0 = {
+    InitialShipState defs[5];
+    InitialShipState sl0 = {
         .ship = SHIP_CARRIER,
         .pos = {
             .x = 0,
@@ -244,7 +245,7 @@ int main(void) {
             .horizontal = true
         }
     };
-    ShipState sl1 = {
+    InitialShipState sl1 = {
         .ship = SHIP_BATTLESHIP,
         .pos = {
             .x = 0,
@@ -252,7 +253,7 @@ int main(void) {
             .horizontal = true
         }
     };
-    ShipState sl2 = {
+    InitialShipState sl2 = {
         .ship = SHIP_CRUISER,
         .pos = {
             .x = 5,
@@ -260,7 +261,7 @@ int main(void) {
             .horizontal = true
         }
     };
-    ShipState sl3 = {
+    InitialShipState sl3 = {
         .ship = SHIP_SUBMARINE,
         .pos = {
             .x = 0,
@@ -268,7 +269,7 @@ int main(void) {
             .horizontal = false
         }
     };
-    ShipState sl4 = {
+    InitialShipState sl4 = {
         .ship = SHIP_DESTROYER,
         .pos = {
             .x = 1,
@@ -284,17 +285,14 @@ int main(void) {
     printf("Checking placement: %d\n", board_add_placement_set(defs, b));
     print_board(b, stdout);
 
-    Board source_board = create_empty_board();
     Position p = {
             .x = 1,
             .y = 2,
         };
-    printf("%d\n", board_try_hit(source_board, b, p));
+    printf("%d\n", board_try_hit(b, p));
     p.x = 5;
-    printf("%d\n", board_try_hit(source_board, b, p));
+    printf("%d\n", board_try_hit(b, p));
 
-    printf("Source: \n");
-    print_board(source_board, stdout);
     printf("Board: \n");
     print_board(b, stdout);
 
@@ -304,17 +302,14 @@ int main(void) {
         for (int j = 0; j < BOARD_SIZE; j++) {
             p.x = i;
             p.y = j;
-            board_try_hit(source_board, b, p);
+            board_try_hit(b, p);
         }
     }
 
-    printf("Source: \n");
-    print_board(source_board, stdout);
     printf("Board: \n");
     print_board(b, stdout);
     printf("Game over? %d\n", all_ships_destroyed(b));
 
-    free(source_board);
     free(b);
     return 0;
 }
