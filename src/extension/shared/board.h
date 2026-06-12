@@ -34,11 +34,6 @@ typedef struct {
     Position pos;
 } InitialShipState;
 
-typedef struct {
-    ShipType ship;
-    Position pos;
-} InitialShipState;
-
 typedef ShipState ShipDefs[NUM_SHIPS];
 
 typedef InitialShipState InitialShipDefs[NUM_SHIPS];

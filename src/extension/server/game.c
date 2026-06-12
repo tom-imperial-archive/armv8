@@ -165,7 +165,7 @@ void play(ServerState state) {
                     HitResultPayload hrp = {.success = was_hit, .destroyed_ship = sunk};
                     EnemyAttackPayload eap = { .shot = *fire_payload, .result = hrp};
 
-                    send_packet(turn_taker->socket_fd, MSG_RESULT, &hrp, sizeof(HitResultPayload));
+                    send_packet(turn_taker->socket_fd, MSG_ATTACKED, &eap, sizeof(EnemyAttackPayload));
                     // Inform opponent of result
                     send_packet(other_player->socket_fd, MSG_ATTACKED, &eap, sizeof(EnemyAttackPayload));
                     break;

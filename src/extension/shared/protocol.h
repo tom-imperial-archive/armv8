@@ -11,9 +11,6 @@ typedef enum {
     MSG_INIT_BOARD_LAYOUT,
     MSG_GAME_START,
     MSG_FIRE,
-    MSG_RESULT,
-    MSG_ATTACKED,
-    MSG_RESULT,
     MSG_ATTACKED,
     MSG_GAME_OVER
 } MessageType;
@@ -52,9 +49,5 @@ typedef struct {
 typedef struct {
     bool you_won;
 } GameOverPayload;
-
-typedef struct {
-    bool your_turn;
-} GameStartPayload;
 
 #endif
