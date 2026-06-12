@@ -94,6 +94,15 @@ If you are adding multiple ships, see board_is_valid_placement_set.
     return true;
 }*/
 
+ShipState board_get_ship(Board board, int index) {
+    if (index >= 0 && index < NUM_SHIPS) {
+        return board->ships[index];
+    }
+
+    fprintf(stderr, "%s\n", "[ERROR] Invalid index provided");
+    exit(EXIT_FAILURE);
+}
+
 /*
 Add the following ships at given the board is empty.
 It is the caller's responsibility to keep track of how many ships are already on the board.
@@ -213,6 +222,28 @@ bool board_try_hit(Board opponent_ships_board, Position pos, bool *was_hit, Ship
     return true;
 }
 
+void board_mark_strike(Board board, Position pos, bool success) {
+    if (!check_pos_in_bounds(pos)) {
+        return;
+    }
+
+    CellState new_state;
+
+    if (success) {
+        new_state = CELL_HIT;
+    } else {
+        new_state = CELL_MISS;
+    }
+
+    board->cells[pos.x][pos.y] = new_state;
+}
+
+bool valid_attack_pos(Board board, Position pos) {
+    if (!check_pos_in_bounds(pos)) { return false; }
+
+    return board->cells[pos.x][pos.y] == CELL_WATER;
+}
+
 bool all_ships_destroyed(Board board) {
     for (int i = 0; i < NUM_SHIPS; i++) {
         if (!board->ships[i].destroyed) {
@@ -313,7 +344,7 @@ int main(void) {
     printf("Board: \n");
     print_board(b, stdout);
 
-    printf("Game over? %d\n", all_ships_destroyed(b));
+//     printf("Game over? %d\n", all_ships_destroyed(b));
 
     for (int i = 0; i < BOARD_SIZE; i++) {
         for (int j = 0; j < BOARD_SIZE; j++) {

@@ -1,4 +1,0 @@
-/*
-State machien for the UI parts of the game
-Basically dictates what ends up being shown on screen
-*/
