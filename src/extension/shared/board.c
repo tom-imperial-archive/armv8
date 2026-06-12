@@ -161,31 +161,31 @@ static void for_each_ship(Board board, void (*cb)(Board board, ShipState *s)) {
 }
 
 /*
-Attempts to hit at pos on target_board. If this succeeds, shooter_board has pos
-updated to a hit and target_board has pos updated to a hit. If it misses,
+Attempts to hit at pos on opponent_ships_board. If this succeeds, opponent_ships_board has pos
+updated to a hit and player_target_board has pos updated to a hit. If it misses,
 the both boards have pos updated to a miss.
 
 Returns true if the shot was successfully processed. Returns false if the position is invalid or
 if an attack has already been launched on that position
 */
-bool board_try_hit(Board shooter_board, Board target_board, Position pos) {
+bool board_try_hit(Board player_target_board, Board opponent_ships_board, Position pos) {
     if (!check_pos_in_bounds(pos)) {
         return false;
     }
 
-    CellState target = target_board->cells[pos.x][pos.y];
+    CellState target = opponent_ships_board->cells[pos.x][pos.y];
 
     switch(target) {
         case CELL_WATER: {
-            target_board->cells[pos.x][pos.y] = CELL_MISS;
-            shooter_board->cells[pos.x][pos.y] = CELL_MISS;
+            opponent_ships_board->cells[pos.x][pos.y] = CELL_MISS;
+            player_target_board->cells[pos.x][pos.y] = CELL_MISS;
         }; break;
         case CELL_SHIP: {
-            target_board->cells[pos.x][pos.y] = CELL_HIT;
-            shooter_board->cells[pos.x][pos.y] = CELL_HIT;
+            opponent_ships_board->cells[pos.x][pos.y] = CELL_HIT;
+            player_target_board->cells[pos.x][pos.y] = CELL_HIT;
 
-            // Update the relevant ship definitions on the target board
-            for_each_ship(target_board, *check_destroyed);
+            // Update the relevant ship definitions on the opponent's board
+            for_each_ship(opponent_ships_board, *check_destroyed);
         }; break;
         case CELL_HIT:
         case CELL_MISS:
@@ -231,7 +231,7 @@ void print_board(Board board, FILE *out) {
 }
 
 // Testing
-/*
+///*
 int main(void) {
     Board b = create_empty_board();
 
@@ -318,4 +318,4 @@ int main(void) {
     free(b);
     return 0;
 }
-*/
+//*/
