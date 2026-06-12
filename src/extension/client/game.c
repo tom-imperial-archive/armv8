@@ -4,6 +4,7 @@
 #include "client/state.h"
 #include "client/input.h"
 #include "client/render.h"
+#include "client/network.h"
 #include "shared/network.h"
 #include "shared/protocol.h"
 
@@ -75,12 +76,13 @@ static void handle_incoming_packet(ClientState *state, PacketHeader header, void
                 state->current_state = UI_STATE_MY_TURN;
             }
             break;
-        case MSG_GAME_OVER:
+        case MSG_GAME_OVER: {
             // HANDLE GAME OVER
             // This is also called unexpectedly in the case where the opponent resigned or similar
             GameOverPayload *game_over = (GameOverPayload *)payload;
             state->is_running = false;
             state->i_won = game_over->you_won;
+        }
     }
 }
 
