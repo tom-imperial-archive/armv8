@@ -40,7 +40,8 @@ extern bool board_is_valid_placement(ShipState sl, Board board, int nships);
 extern Board create_empty_board(void);
 extern void free_board(Board board);
 
-extern bool board_try_hit(Board shooter_board, Board target_board, Position pos);
+extern bool board_try_hit(Board player_target_board, Board opponent_ships_board, Position pos);
+extern bool all_ships_destroyed(Board board);
 
 extern void print_board(Board b, FILE *out);
 
