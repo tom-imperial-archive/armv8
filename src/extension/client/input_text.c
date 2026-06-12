@@ -29,6 +29,8 @@ InputData get_user_input(void) {
 
     char input[BUFFER_SIZE];
     if (fgets(input, BUFFER_SIZE, stdin) != NULL) {
+        input[strcspn(input, "\n")] = 0;
+
         if (strcmp(input, "quit") == 0) {
             data.type = INPUT_QUIT;
         } else {

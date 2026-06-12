@@ -42,11 +42,13 @@ static void handle_incoming_packet(ClientState *state, PacketHeader header, void
         case MSG_REQ_BOARD:
             if (state->current_state == UI_STATE_WAITING_FOR_OPPONENT) {
                 send_board_to_server(state);
+                fprintf(stdout, "[DEBUG] Sent ship layout to server.\n");
             }
             break;
         case MSG_GAME_START: {
             GameStartPayload *start_data = (GameStartPayload *)payload;
             state->current_state = start_data->your_turn ? UI_STATE_MY_TURN : UI_STATE_OPPONENT_TURN;
+            fprintf(stdout, "[DEBUG] Game has been started.\n");
             break;
         }
         case MSG_ATTACKED:
@@ -57,7 +59,7 @@ static void handle_incoming_packet(ClientState *state, PacketHeader header, void
                 HitResultPayload result = hit_data->result;
 
                 board_mark_strike(state->target_board, (Position){.x = shot.x, .y = shot.y}, result.success);
-
+                fprintf(stdout, "[DEBUG] Marked the hit on TARGET board.\n");
                 // DO SOME MAGIC ABOUT DESTROY SHIP
 
                 // SWAP TURN
@@ -71,7 +73,7 @@ static void handle_incoming_packet(ClientState *state, PacketHeader header, void
                 HitResultPayload result = hit_data->result;
 
                 board_mark_strike(state->my_board, (Position){.x = shot.x, .y = shot.y}, result.success);
-
+                fprintf(stdout, "[DEBUG] Marked the hit on MY board.\n");
                 // SWAP TURN
                 state->current_state = UI_STATE_MY_TURN;
             }
@@ -109,7 +111,7 @@ static void hardcode_ship_placement(ClientState *state) {
     // Switch to next state
     state->current_state = UI_STATE_WAITING_FOR_OPPONENT;
 
-    fprintf(stdout, "[DEBUG] Auto-placed ships and sent layout to server.\n");
+    fprintf(stdout, "[DEBUG] Auto-placed ships, yet to send layout.\n");
 }
 
 void client_loop(ClientState *state) {
@@ -117,9 +119,17 @@ void client_loop(ClientState *state) {
         // Receive data from server
         PacketHeader header;
         void *payload = NULL;
-        while (receive_packet(state->connection_fd, &header, &payload) == 1) {
+        int recv_status;
+        while ((recv_status = receive_packet(state->connection_fd, &header, &payload)) == 1) {
             handle_incoming_packet(state, header, payload);
             if (payload) { free(payload); }
+        }
+
+        // Check for crash/disconnect
+        if (recv_status == -1) {
+            fprintf(stderr, "\n[ERROR] Lost connection to the server! Exiting...\n");
+            state->is_running = false;
+            break; // Break out of the game loop immediately
         }
 
         // Receive input

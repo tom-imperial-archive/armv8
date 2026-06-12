@@ -204,10 +204,11 @@ bool board_try_hit(Board opponent_ships_board, Position pos, bool *was_hit, Ship
     switch(target) {
         case CELL_WATER: {
             opponent_ships_board->cells[pos.x][pos.y] = CELL_MISS;
+            *was_hit = false;
         }; break;
         case CELL_SHIP: {
-            *was_hit = true;
             opponent_ships_board->cells[pos.x][pos.y] = CELL_HIT;
+            *was_hit = true;
 
             // Update the relevant ship definitions on the opponent's board
             *sunk = -1;

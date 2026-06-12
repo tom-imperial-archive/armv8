@@ -52,8 +52,8 @@ void end_game(ServerState state, PlayerState winner, PlayerState loser) {
     GameOverPayload winnerData = {.you_won = true};
     GameOverPayload loserData = {.you_won = false};
 
-    while (send_packet(winner->socket_fd, MSG_GAME_OVER, &winnerData, 0) != 0);
-    while (send_packet(loser->socket_fd, MSG_GAME_OVER, &loserData, 0) != 0);
+    while (send_packet(winner->socket_fd, MSG_GAME_OVER, &winnerData, sizeof(GameOverPayload)) != 0);
+    while (send_packet(loser->socket_fd, MSG_GAME_OVER, &loserData, sizeof(GameOverPayload)) != 0);
 
     close(state->player1->socket_fd);
     close(state->player2->socket_fd);
@@ -154,7 +154,8 @@ void play(ServerState state) {
             if (header.type == MSG_FIRE) {
                 Position p = { .x = fire_payload->x, .y = fire_payload->y};
 
-                bool was_hit; ShipType sunk;
+                bool was_hit = false;
+                ShipType sunk;
 
                 bool res = board_try_hit(other_player->board, p, &was_hit, &sunk);
 
@@ -168,7 +169,9 @@ void play(ServerState state) {
                     send_packet(turn_taker->socket_fd, MSG_ATTACKED, &eap, sizeof(EnemyAttackPayload));
                     // Inform opponent of result
                     send_packet(other_player->socket_fd, MSG_ATTACKED, &eap, sizeof(EnemyAttackPayload));
-                    break;
+
+                    // SWAP TURNS
+                    state->is_player1_turn = !state->is_player1_turn;
                 }
             }
         } else if (res == -1) {
@@ -176,6 +179,7 @@ void play(ServerState state) {
             end_game(state, other_player, turn_taker);
             exit(EXIT_FAILURE);
         }
+
 
     } while (!all_ships_destroyed(other_player->board));
 

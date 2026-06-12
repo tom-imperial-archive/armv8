@@ -29,7 +29,7 @@ int main(void) {
         server_crash();
     }
 
-    printf("Player 1 connected successfully!");
+    printf("Player 1 connected successfully!\n");
 
     if (player2_fd == -1) {
         fprintf(stderr, "[Error] Player 2 failed to connect!");
@@ -45,11 +45,13 @@ int main(void) {
     send_packet(player1_fd, MSG_REQ_BOARD, NULL, 0);
     send_packet(player2_fd, MSG_REQ_BOARD, NULL, 0);
 
+
     // Set up players
     PlayerState p1 = new_player(player1_fd);
     PlayerState p2 = new_player(player2_fd);
     set_players(state, p1, p2);
 
+    play(state);
 
     /*if (player1_fd != -1) {
 
