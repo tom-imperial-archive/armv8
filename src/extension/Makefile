@@ -30,7 +30,6 @@ SERVER_SRCS = \
 CLIENT_CORE_SRCS = \
 	client/main.c \
 	client/state.c \
-	client/logic.c \
 	client/network.c \
 	client/placement.c \
 	shared/network.c
