@@ -1,6 +1,4 @@
 /*
 Shared debugging utility, with logging macros
 */
-#define CONNECTION_SUCCESS_TO_SERVER "[DEBUG] Connected to server\n"
-#define MESSAGE_RECEIVE "[DEBUG] Received message: "
-#define MESSAGE_SEND_SUCCESS "[DEBUG] Message sent"
+// Just using fprintf for now, to stdout/stderr, but this can definitely be improved in future
