@@ -1,8 +1,9 @@
 #include <stdio.h>
-#include "render.h";
+#include "render.h"
 
 bool init_graphics(void) {
     printf("=== Initialising ===\n");
+    return 1;
 }
 
 bool is_window_open(void) {
