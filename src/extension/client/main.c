@@ -12,11 +12,18 @@ Entry point for client executable
 Initialises local state storage and runs the game loop
 */
 
-int main(void) {
+int main(int argc, char **argv) {
     ClientState state = init_client_state();
     state.is_running = true;
 
-    if (start_client_systems(&state)) {
+    char *hostname;
+    if (argc == 2) {
+        hostname = argv[1];
+    } else {
+        hostname = "127.0.0.1";
+    }
+
+    if (start_client_systems(&state, hostname)) {
         client_loop(&state);
     }
 

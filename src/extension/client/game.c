@@ -9,14 +9,14 @@
 #include "shared/protocol.h"
 
 // Returns true on success, false on failure
-bool start_client_systems(ClientState *state) {
+bool start_client_systems(ClientState *state, char *hostname) {
     if (!init_graphics()) {
         fprintf(stderr, "%s\n", "[ERROR] Failed to initialise graphics engine");
         return false;
     }
 
     fprintf(stdout, "%s\n", "[DEBUG] Attempting to connect to server...\n");
-    state->connection_fd = connect_to_server("127.0.0.1", 8080);
+    state->connection_fd = connect_to_server(hostname, 8080);
 
     if (state->connection_fd != -1) {
         fprintf(stdout, "%s\n", "[DEBUG] Connected successfully!");
