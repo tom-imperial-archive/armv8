@@ -280,6 +280,15 @@ void print_board(Board board, FILE *out) {
     }
 }
 
+CellState get_cell(Board b, int x, int y) {
+    Position p = { .x = x, .y = y };
+    if (!check_pos_in_bounds(p)) {
+        fprintf(stderr, "[ERROR] position not in bounds\n");
+        exit(1);
+    }
+    return b->cells[x][y];
+}
+
 // Testing
 /*
 int main(void) {
