@@ -26,8 +26,8 @@ typedef enum {
 } Orientation;
 
 typedef enum {
-    SHIP_CARRIER,
     SHIP_BATTLESHIP,
+    SHIP_CARRIER,
     SHIP_CRUISER,
     SHIP_SUBMARINE,
     SHIP_DESTROYER
