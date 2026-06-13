@@ -90,8 +90,8 @@ static void handle_incoming_packet(ClientState *state, PacketHeader header, void
 
 static void hardcode_ship_placement(ClientState *state) {
     InitialShipDefs my_ships = {
-        {SHIP_CARRIER,    {1, 1, true}},  // Length 5: Horizontal at (1,1) -> covers X: 1 to 5
-        {SHIP_BATTLESHIP, {8, 2, false}}, // Length 4: Vertical at (8,2) -> covers Y: 2 to 5
+        {SHIP_BATTLESHIP,    {1, 1, true}},  // Length 5: Horizontal at (1,1) -> covers X: 1 to 5
+        {SHIP_CARRIER, {8, 2, false}}, // Length 4: Vertical at (8,2) -> covers Y: 2 to 5
         {SHIP_CRUISER,    {2, 4, true}},  // Length 3: Horizontal at (2,4) -> covers X: 2 to 4
         {SHIP_SUBMARINE,  {5, 6, false}}, // Length 3: Vertical at (5,6) -> covers Y: 6 to 8
         {SHIP_DESTROYER,  {0, 8, true}}   // Length 2: Horizontal at (0,8) -> covers X: 0 to 1

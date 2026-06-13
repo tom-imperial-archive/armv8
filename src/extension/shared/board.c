@@ -14,8 +14,8 @@ struct Board {
 
 static int ship_length(ShipType ship) {
     switch(ship) {
-        case SHIP_CARRIER: return 5;
-        case SHIP_BATTLESHIP: return 4;
+        case SHIP_BATTLESHIP: return 5;
+        case SHIP_CARRIER: return 4;
         case SHIP_CRUISER:
         case SHIP_SUBMARINE: return 3;
         case SHIP_DESTROYER: return 2;
