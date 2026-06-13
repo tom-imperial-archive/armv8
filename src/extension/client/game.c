@@ -147,24 +147,21 @@ void client_loop(ClientState *state) {
                 break;
             case UI_STATE_MY_TURN:
                 // Check if we got an input
-                if (input.type == INPUT_SELECT_GRID) {
-                    if (valid_attack_pos(state->target_board, (Position){.x = input.grid_x, .y = input.grid_y})) {
+                if (input.type == INPUT_FIRE) {
+                    if (valid_attack_pos(state->target_board, (Position){.x = input.grid_pos.x, .y = input.grid_pos.y})) {
                         FirePayload fire_req;
-                        fire_req.x = input.grid_x;
-                        fire_req.y = input.grid_y;
+                        fire_req.x = input.grid_pos.x;
+                        fire_req.y = input.grid_pos.y;
 
                         send_packet(state->connection_fd, MSG_FIRE, &fire_req, sizeof(fire_req));
-                        fprintf(stdout, "[DEBUG] Fired at %d, %d!\n", input.grid_x, input.grid_y);
+                        fprintf(stdout, "[DEBUG] Fired at %d, %d!\n", input.grid_pos.x, input.grid_pos.y);
                     } else {
                         fprintf(stdout, "[DEBUG] Invalid coordinate!\n");
                     }
                 }
                 break;
             case UI_STATE_GAME_OVER:
-                // NEED SOME WAY TO GIVE USER A CHANCE TO SEE RESULTS BEFORE WE CLOSE EVERYTHING
-                if (input.type == INPUT_CONFIRM || input.type == INPUT_SELECT_GRID) {
-                    state->is_running = false;
-                }
+                // DONT THINK WE NEED ANYTHING HERE
                 break;
             case UI_STATE_OPPONENT_TURN:
             case UI_STATE_WAITING_FOR_OPPONENT:

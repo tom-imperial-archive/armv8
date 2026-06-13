@@ -6,20 +6,27 @@ Universal interface for output
 #define CLIENT_INPUT_H
 
 #include <stdbool.h>
+#include "shared/board.h"
 
 typedef enum {
     INPUT_NONE,
     INPUT_QUIT,
-    INPUT_SELECT_GRID,
-    INPUT_ROTATE_SHIP,
-    INPUT_CONFIRM
+    INPUT_FIRE,
+    INPUT_PLACED_SHIPS
 } InputType;
 
 typedef struct {
+    int x;
+    int y;
+} GridPos;
+
+typedef struct {
     InputType type;
-    // Optional coordinates
-    int grid_x;
-    int grid_y;
+    // Optional data
+    union {
+        GridPos grid_pos;
+        InitialShipState ships[NUM_SHIPS];
+    };
 } InputData;
 
 // Receives input, must be non-blocking.

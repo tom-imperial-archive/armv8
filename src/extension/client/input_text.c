@@ -20,8 +20,8 @@ InputData get_user_input(void) {
     InputData data;
 
     data.type = INPUT_NONE;
-    data.grid_x = 0;
-    data.grid_y = 0;
+    data.grid_pos.x = 0;
+    data.grid_pos.y = 0;
 
     if (!input_available()) {
         return data; // INPUT_NONE
@@ -35,12 +35,12 @@ InputData get_user_input(void) {
             data.type = INPUT_QUIT;
         } else {
             // expect grid coords
-            data.type = INPUT_SELECT_GRID;
+            data.type = INPUT_FIRE;
             char *start = input;
             while (isspace(*start)) start++;
             // expect digit
             if (isdigit(*start) && atoi(start) < 11) {
-                data.grid_x = atoi(start);
+                data.grid_pos.x = atoi(start);
                 while (isdigit(*start)) start++;
             } else {
                 data.type = INPUT_NONE;
@@ -49,7 +49,7 @@ InputData get_user_input(void) {
             while (isspace(*start)) start++;
             // expect digit
             if (isdigit(*start) && atoi(start) < 11) {
-                data.grid_y = atoi(start);
+                data.grid_pos.y = atoi(start);
             } else {
                 data.type = INPUT_NONE;
             }
