@@ -14,21 +14,28 @@ typedef enum {
 } UIState;
 
 typedef struct {
-    // Network and status
-    int connection_fd;
-    UIState current_state;
-    bool is_running; // while loop condition
-    bool i_won;
-
-    // Local data
     Board my_board;
     Board target_board;
+    bool i_won;
+} GameState;
 
-    // Temporary data when placing, irrelevant once main loop has begun
-    InitialShipDefs my_placements;
+typedef struct {
+    InitialShipDefs placements;
     int ships_placed;
     bool placing_horizontal;
+} PlacementState;
+
+typedef struct {
+    int connection_fd;
     bool server_requested_board;
+} NetworkState;
+
+typedef struct {
+    bool is_running; // while loop condition
+    UIState current_state;
+    GameState game;
+    NetworkState net;
+    PlacementState placement;
 } ClientState;
 
 extern ClientState init_client_state(void);
