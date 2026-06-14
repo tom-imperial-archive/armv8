@@ -99,6 +99,10 @@ void _error(Error error, const char *file, int line, const char *func) {
         break;
     case LABEL_NOT_FOUND:
         fprintf(stderr, "Label %s does not exist in symbol table", error.str);
+        break;
+    case MEMORY_ADDR_OUT_OF_BOUNDS:
+        fprintf(stderr, "Address %016lx out of bounds", error.addr);
+        break;
     }
     // Finally, exit the program
     exit(EXIT_FAILURE);
