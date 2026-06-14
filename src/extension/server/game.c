@@ -154,10 +154,10 @@ void play(GameState state) {
 
     PlayerState turn_taker;
     PlayerState other_player;
-    // Take turns
-    while (!all_ships_destroyed(other_player->board)) {
-        populate_turn_players(state, &turn_taker, &other_player);
 
+    // Take turns
+    do {
+        populate_turn_players(state, &turn_taker, &other_player);
         PacketHeader header;
         FirePayload *fire_payload = NULL;
         int res = receive_packet(turn_taker->socket_fd, &header, (void **) &fire_payload);
@@ -199,7 +199,7 @@ void play(GameState state) {
             free_game_state(state);
             exit(EXIT_FAILURE);
         }
-    }
+    } while (!all_ships_destroyed(other_player->board));
 
     end_game(state, turn_taker, other_player);
 }
