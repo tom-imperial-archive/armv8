@@ -9,36 +9,37 @@ Stores this player's board, opponents board, and current UI phase
 ClientState init_client_state(void) {
     ClientState state;
 
-    state.connection_fd = -1;
-    state.current_state = UI_STATE_CONNECTING;
     state.is_running = false;
-    state.i_won = false;
 
-    state.my_board = create_empty_board();
-    state.target_board = create_empty_board();
+    state.current_state = UI_STATE_CONNECTING;
 
-    state.ships_placed = 0;
-    state.placing_horizontal = true;
+    state.game.my_board = create_empty_board();
+    state.game.target_board = create_empty_board();
+    state.game.i_won = false;
+
+    state.net.connection_fd = -1;
+    state.net.server_requested_board = false;
 
     for (int i = 0; i < NUM_SHIPS; i++) {
-        state.my_placements[i].ship = 0;
-        state.my_placements[i].pos.x = 0;
-        state.my_placements[i].pos.y = 0;
-        state.my_placements[i].pos.horizontal = true;
+        state.placement.placements[i].ship = 0;
+        state.placement.placements[i].pos.x = 0;
+        state.placement.placements[i].pos.y = 0;
+        state.placement.placements[i].pos.horizontal = true;
     }
-
+    state.placement.ships_placed = 0;
+    state.placement.placing_horizontal = true;
     return state;
 }
 
 void free_client_state(ClientState *state) {
-    if (state->my_board != NULL) {
-        free_board(state->my_board);
-        state->my_board = NULL;
+    if (state->game.my_board != NULL) {
+        free_board(state->game.my_board);
+        state->game.my_board = NULL;
     }
 
-    if (state->target_board != NULL) {
-        free_board(state->target_board);
-        state->target_board = NULL;
+    if (state->game.target_board != NULL) {
+        free_board(state->game.target_board);
+        state->game.target_board = NULL;
     }
 }
 

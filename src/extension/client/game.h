@@ -1,6 +1,6 @@
 #include "state.h"
 
-extern bool start_client_systems(ClientState *state, char *hostname);
+extern bool start_client_systems(ClientState *state, char *hostname, int port);
 
 extern void client_loop(ClientState *state);
 

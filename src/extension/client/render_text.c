@@ -61,19 +61,19 @@ void render_frame(const ClientState *state) {
     case UI_STATE_MY_TURN:
         printf("=== YOUR TURN ===\n");
         printf("=== Your board ===\n");
-        print_board(state->my_board, stdout);
+        print_board(state->game.my_board, stdout);
         printf("\n=== Target board ===\n");
-        print_board(state->target_board, stdout);
+        print_board(state->game.target_board, stdout);
         break;
     case UI_STATE_OPPONENT_TURN:
         printf("=== OPPONENT'S TURN ===\n");
         printf("=== Your board ===\n");
-        print_board(state->my_board, stdout);
+        print_board(state->game.my_board, stdout);
         printf("\n=== Target board ===\n");
-        print_board(state->target_board, stdout);
+        print_board(state->game.target_board, stdout);
         break;
     case UI_STATE_GAME_OVER:
-        if (state->i_won) {
+        if (state->game.i_won) {
             printf("=== YOU WON!! ===\n");
         } else {
             printf("=== LOSER!! ==\n");
