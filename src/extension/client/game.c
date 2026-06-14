@@ -42,9 +42,13 @@ static void handle_incoming_packet(ClientState *state, PacketHeader header,
                                    void *payload) {
     switch (header.type) {
     case MSG_REQ_BOARD:
+        state->server_requested_board = true;
+
         if (state->current_state == UI_STATE_WAITING_FOR_OPPONENT) {
             send_board_to_server(state);
             fprintf(stdout, "[DEBUG] Sent ship layout to server.\n");
+        } else {
+            fprintf(stdout, "[DEBUG] Server requested board, but we are still placing ships.\n");
         }
         break;
     case MSG_GAME_START: {
@@ -174,6 +178,10 @@ void client_loop(ClientState *state) {
                     state->current_state = UI_STATE_WAITING_FOR_OPPONENT;
                     fprintf(stdout, "[DEBUG] Ships placed successfully! "
                                     "Waiting for opponent...\n");
+
+                    if (state->server_requested_board) {
+                        send_board_to_server(state);
+                    }
                 } else {
                     // Invalid!
                     fprintf(stdout, "[ERROR] Invalid placement: ships overlap "

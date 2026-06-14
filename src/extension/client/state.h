@@ -17,7 +17,7 @@ typedef struct {
     // Network and status
     int connection_fd;
     UIState current_state;
-    bool is_running; // for loop condition
+    bool is_running; // while loop condition
     bool i_won;
 
     // Local data
@@ -28,6 +28,7 @@ typedef struct {
     InitialShipDefs my_placements;
     int ships_placed;
     bool placing_horizontal;
+    bool server_requested_board;
 } ClientState;
 
 extern ClientState init_client_state(void);
