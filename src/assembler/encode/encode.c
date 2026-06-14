@@ -125,7 +125,6 @@ uint32 encode_wide_move(Instruction *i) {
 
     // IMM16
     const int OFFSET_IMM16 = 5;
-    // TODO: might need to mask top bits?
     instruction |= data.imm16 << OFFSET_IMM16;
 
     // RD
