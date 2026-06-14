@@ -6,10 +6,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-void server_crash(void) {
-    exit(EXIT_FAILURE);
-}
-
 /*
 Server executable:
     Connects to players, and boots up the state machine
@@ -26,20 +22,27 @@ int main(void) {
 
     if (player1_fd == -1) {
         fprintf(stderr, "[Error] Player 1 failed to connect!");
-        server_crash();
+        close(server_fd);
+        exit(EXIT_FAILURE);
     }
 
     printf("Player 1 connected successfully!\n");
 
     if (player2_fd == -1) {
         fprintf(stderr, "[Error] Player 2 failed to connect!");
+        close(player1_fd);
+        close(server_fd);
+        exit(EXIT_FAILURE);
     }
 
     // Set up server state
-    ServerState state = init_server_state();
+    GameState state = init_game_state();
 
     if (state == NULL) {
-        server_crash();
+        close(player1_fd);
+        close(server_fd);
+        close(server_fd);
+        exit(EXIT_FAILURE);
     }
 
     send_packet(player1_fd, MSG_REQ_BOARD, NULL, 0);
@@ -52,29 +55,9 @@ int main(void) {
     set_players(state, p1, p2);
 
     play(state);
+    close_connections(state);
+    free_game_state(state);
 
-    /*if (player1_fd != -1) {
-
-        while (1) {
-            PacketHeader header;
-            void *payload = NULL;
-            int status = receive_packet(player1_fd, &header, &payload);
-            if (status == 1) {
-                if (header.type == MSG_JOIN) {
-                    printf("Success! Received MSG_JOIN from client!\n");
-                }
-                if (payload) { free(payload); }
-                break;
-            } else if (status == -1) {
-                break; // Exit on error
-            }
-
-            usleep(10000); // To prevent killing my CPU
-        }
-
-        close (player1_fd);
-    }
-*/
     close(server_fd);
     return 0;
 }
