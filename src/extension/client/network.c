@@ -17,7 +17,7 @@ Checks for updates every frame, without interfering with main loop
 
 /* Establishes a non-blocking TCP connection to the game server
    Receives the server's address and the port the server is listening on.
-   Returns the connected socket file descriptor. Exits if a failure occurs. */
+   Returns the connected socket file descriptor. Returns -1 if a failure occurs. */
 
 int connect_to_server(char *hostname, int port) {
     struct sockaddr_in server_addr;
@@ -26,13 +26,14 @@ int connect_to_server(char *hostname, int port) {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
         fprintf(stderr, "%s\n", "[ERROR] Could not open socket for server connection");
-        exit(EXIT_FAILURE);
+        return -1;
     }
 
     server = gethostbyname(hostname);
     if (server == NULL) {
         fprintf(stderr, "[ERROR] No such host\n");
-        exit(EXIT_FAILURE);
+        close(sockfd);
+        return -1;
     }
 
     memset(&server_addr, 0, sizeof(server_addr));
@@ -43,7 +44,8 @@ int connect_to_server(char *hostname, int port) {
     // Attempt to connect
     if (connect(sockfd, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
         fprintf(stderr, "%s\n", "[ERROR] Could not connect to server");
-        exit(EXIT_FAILURE);
+        close(sockfd);
+        return -1;
     }
 
     fprintf(stdout, "%s\n", "[DEBUG] Connected to server");

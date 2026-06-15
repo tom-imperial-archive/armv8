@@ -19,16 +19,17 @@ struct PlayerState {
 
 typedef struct PlayerState *PlayerState;
 
-struct ServerState;
-typedef struct ServerState *ServerState;
+struct GameState;
+typedef struct GameState *GameState;
 
-extern ServerState init_server_state(void);
-extern void free_server_state(ServerState state);
-extern void setup_boards(ServerState state);
+extern GameState init_game_state(void);
+extern void free_game_state(GameState state);
+extern void close_connections(GameState state);
+extern void setup_boards(GameState state);
 
-extern bool populate_ships(ServerState state, PlayerState player);
+extern bool populate_ships(GameState state, PlayerState player);
 extern PlayerState new_player(int socket_fd);
-extern void set_players(ServerState state, PlayerState p1, PlayerState p2);
-extern void play(ServerState state);
+extern void set_players(GameState state, PlayerState p1, PlayerState p2);
+extern void play(GameState state);
 
 #endif

@@ -1,8 +1,7 @@
 CC      ?= gcc
 CFLAGS  ?= -std=c17 -g \
         -D_POSIX_SOURCE -D_DEFAULT_SOURCE \
-        -Wall -pedantic -I.
-# Make sure to re-add Werror
+        -Wall -Werror -pedantic -I.
 
 # HOW TO COMPILE RAYLIB
 # https://github.com/raysan5/raylib/wiki/Working-on-GNU-Linux
@@ -23,14 +22,12 @@ SERVER_SRCS = \
 	server/main.c \
 	server/game.c \
 	server/network.c \
-	server/placement.c \
 	shared/network.c
 
 CLIENT_CORE_SRCS = \
 	client/main.c \
 	client/state.c \
 	client/network.c \
-	client/placement.c \
 	client/game.c \
 	shared/network.c
 

@@ -4,7 +4,7 @@
 Processes actions, overwrites grid cells, and checks for win conditions
 */
 
-struct ServerState {
+struct GameState {
     PlayerState player1;
     PlayerState player2;
     bool is_player1_turn;
@@ -13,8 +13,8 @@ struct ServerState {
 /*
 Creates an empty game with two null player states
 */
-ServerState init_server_state(void) {
-    ServerState state = malloc(sizeof(struct ServerState));
+GameState init_game_state(void) {
+    GameState state = malloc(sizeof(struct GameState));
     if (state == NULL) {
         return NULL;
     }
@@ -39,36 +39,44 @@ PlayerState new_player(int socket_fd) {
     return p;
 }
 
-void set_players(ServerState state, PlayerState p1, PlayerState p2) {
+void set_players(GameState state, PlayerState p1, PlayerState p2) {
     state->player1 = p1;
     state->player2 = p2;
 }
-
-void free_server_state(ServerState state) {
+/*
+Frees all memory associated with the state. Ensure close_connections has already been called
+*/
+void free_game_state(GameState state) {
+    free(state->player1->board);
+    free(state->player2->board);
+    free(state->player1);
+    free(state->player2);
     free(state);
 }
 
-void end_game(ServerState state, PlayerState winner, PlayerState loser) {
+/*
+Destroys the conntections to both players
+*/
+void close_connections(GameState state) {
+    close(state->player1->socket_fd);
+    close(state->player2->socket_fd);
+}
+
+/*
+Sends game over packets to bth players
+*/
+void end_game(GameState state, PlayerState winner, PlayerState loser) {
     GameOverPayload winnerData = {.you_won = true};
     GameOverPayload loserData = {.you_won = false};
 
     while (send_packet(winner->socket_fd, MSG_GAME_OVER, &winnerData, sizeof(GameOverPayload)) != 0);
     while (send_packet(loser->socket_fd, MSG_GAME_OVER, &loserData, sizeof(GameOverPayload)) != 0);
-
-    close(state->player1->socket_fd);
-    close(state->player2->socket_fd);
-
-    free(state->player1->board);
-    free(state->player2->board);
-    free(state->player1);
-    free(state->player2);
-    free_server_state(state);
 }
 
 /*
 Returns true if the ships have valid placements, otherwise return false
 */
-bool populate_ships(ServerState state, PlayerState player) {
+bool populate_ships(GameState state, PlayerState player) {
     PacketHeader header;
     InitialShipDefs *defs = NULL;
 
@@ -79,6 +87,7 @@ bool populate_ships(ServerState state, PlayerState player) {
         other = state->player1;
     }
 
+    // We wait until we get a response
     while (true) {
         int res = receive_packet(player->socket_fd, &header, (void **) &defs);
         if (res == 1) {
@@ -87,8 +96,9 @@ bool populate_ships(ServerState state, PlayerState player) {
                 break;
             }
         } else if (res == -1) {
-            //todo failure logic
             end_game(state, other, player);
+            close_connections(state);
+            free_game_state(state);
             exit(EXIT_FAILURE);
         }
     }
@@ -98,14 +108,17 @@ bool populate_ships(ServerState state, PlayerState player) {
     return res;
 }
 
-PlayerState get_player1(ServerState state) {
+PlayerState get_player1(GameState state) {
     return state->player1;
 }
-PlayerState get_player2(ServerState state) {
+PlayerState get_player2(GameState state) {
     return state->player2;
 }
 
-static void send_start_packets(ServerState state) {
+/*
+Sends the packets declaring the start of the game with info of which player starts
+*/
+static void send_start_packets(GameState state) {
     GameStartPayload your_turn = {.your_turn = true};
     GameStartPayload not_your_turn = {.your_turn = false};
 
@@ -118,7 +131,7 @@ static void send_start_packets(ServerState state) {
     }
 }
 
-void populate_turn_players(ServerState state, PlayerState *turn_taker, PlayerState *other_player) {
+void populate_turn_players(GameState state, PlayerState *turn_taker, PlayerState *other_player) {
     if (state->is_player1_turn) {
         *turn_taker = state->player1;
         *other_player = state->player2;
@@ -128,7 +141,7 @@ void populate_turn_players(ServerState state, PlayerState *turn_taker, PlayerSta
     }
 }
 
-void play(ServerState state) {
+void play(GameState state) {
     // Keep requesting a ship placement until we get a valid one
     printf("Requesting ship positions from the clients");
 
@@ -141,10 +154,10 @@ void play(ServerState state) {
 
     PlayerState turn_taker;
     PlayerState other_player;
+
     // Take turns
     do {
         populate_turn_players(state, &turn_taker, &other_player);
-
         PacketHeader header;
         FirePayload *fire_payload = NULL;
         int res = receive_packet(turn_taker->socket_fd, &header, (void **) &fire_payload);
@@ -155,15 +168,27 @@ void play(ServerState state) {
                 Position p = { .x = fire_payload->x, .y = fire_payload->y};
 
                 bool was_hit = false;
-                ShipType sunk;
+                ShipType sunk = -1;
 
                 bool res = board_try_hit(other_player->board, p, &was_hit, &sunk);
 
                 if (!res) {
-                    //todo consider if this fails
+                    // A proper client will have ensured that this was a valid position to attack.
+                    // The player probably interfered wth our networking. They lose.
+                    end_game(state, other_player, turn_taker);
+                    close_connections(state);
+                    free_game_state(state);
+                    exit(EXIT_FAILURE);
                 } else {
                     // Inform player of result
-                    HitResultPayload hrp = {.success = was_hit, .destroyed_ship = sunk};
+                    HitResultPayload hrp = {.success = was_hit, .ship = sunk};
+
+                    // If a ship was sunk, send details
+                    if (sunk != -1) {
+                        ShipState sunk_state = board_get_ship(other_player->board, sunk);
+                        hrp.sunk_pos = sunk_state.pos;
+                    }
+
                     EnemyAttackPayload eap = { .shot = *fire_payload, .result = hrp};
 
                     send_packet(turn_taker->socket_fd, MSG_ATTACKED, &eap, sizeof(EnemyAttackPayload));
@@ -175,12 +200,12 @@ void play(ServerState state) {
                 }
             }
         } else if (res == -1) {
-            //todo failure logic
+            // Player disconnected or some other connection issue occurred on their turn. They lose.
             end_game(state, other_player, turn_taker);
+            close_connections(state);
+            free_game_state(state);
             exit(EXIT_FAILURE);
         }
-
-
     } while (!all_ships_destroyed(other_player->board));
 
     end_game(state, turn_taker, other_player);

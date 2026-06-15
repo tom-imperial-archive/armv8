@@ -23,7 +23,8 @@ int main(int argc, char **argv) {
         hostname = "127.0.0.1";
     }
 
-    if (start_client_systems(&state, hostname)) {
+    int port = 8080;
+    if (start_client_systems(&state, hostname, port)) {
         client_loop(&state);
     }
 
