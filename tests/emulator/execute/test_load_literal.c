@@ -1,7 +1,9 @@
 #include "test_load_literal.h"
 
+#include "common/instruction.h"
 #include "emulator/decode/decode.h"
 #include "emulator/execute/execute.h"
+#include "emulator/state/state.h"
 
 #include <assert.h>
 

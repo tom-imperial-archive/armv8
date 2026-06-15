@@ -3,6 +3,7 @@
 #include "emulator/state/memory.h"
 #include "utils/types.h"
 #include <stdbool.h>
+#include <stdio.h>
 #define REG_PRINT_LINE_LENGTH 24
 #define REG_PRINT_BUFFER_SIZE (33 * REG_PRINT_LINE_LENGTH)
 
@@ -126,8 +127,8 @@ extern void write_pc(State *state, uint64 value);
 extern void write_pstate_flag(State *state, PSTATE_flag flag, bool val);
 extern bool read_pstate_flag(State *state, PSTATE_flag flag);
 
-extern void sprint_all_registers(State *state, char *out);
-extern char *sprint_nonzero_memory(State *state);
+extern void fprint_all_registers(State *state, FILE *out);
+extern void fprint_nonzero_memory(State *state, FILE *out);
 
 extern void write_mem_64(State *state, uint64 addr, uint64 val);
 extern void write_mem_32(State *state, uint64 addr, uint32 val);

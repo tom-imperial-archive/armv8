@@ -203,63 +203,48 @@ char pstate_flag_to_char(PSTATE_flag flag, State *state) {
 }
 
 /*
-    Sprints the content of all registers to the string buffer out.
-    Precondition: Size of the out buffer >= PRINT_LINE_LENGTH * 33
+    fprints the content of all registers to the provided file
 */
-void sprint_all_registers(State *state, char *out) {
-    char nextLine[REG_PRINT_LINE_LENGTH];
+void fprint_all_registers(State *state, FILE *out) {
 
-    sprintf(nextLine, "Registers:\n");
-    strcat(out, nextLine);
+    fprintf(out, "Registers:\n");
 
     // General purpose
     for (int r = R0; r <= R30; r++) {
         uint64 val = read_reg_64(state, r);
-        sprintf(nextLine, "X%.2d = %016lx\n", r, val);
-        strcat(out, nextLine);
+        fprintf(out, "X%.2d = %016lx\n", r, val);
     }
 
     // Special
-    sprintf(nextLine, "PC = %016lx\n", read_reg_64(state, PC));
-    strcat(out, nextLine);
+    fprintf(out, "PC = %016lx\n", read_reg_64(state, PC));
 
     // PSTATE
-    sprintf(nextLine, "PSTATE : %c", pstate_flag_to_char(N, state));
-    strcat(out, nextLine);
-    sprintf(nextLine, "%c", pstate_flag_to_char(Z, state));
-    strcat(out, nextLine);
-    sprintf(nextLine, "%c", pstate_flag_to_char(C, state));
-    strcat(out, nextLine);
-    sprintf(nextLine, "%c", pstate_flag_to_char(V, state));
-    strcat(out, nextLine);
+    fprintf(out, "PSTATE : %c", pstate_flag_to_char(N, state));
+    fprintf(out, "%c", pstate_flag_to_char(Z, state));
+    fprintf(out, "%c", pstate_flag_to_char(C, state));
+    fprintf(out, "%c\n", pstate_flag_to_char(V, state));
 }
 
 /*
-    Sprints the content of memory addresses where the value is non-zero.
-    Must call free() on the pointer returned when done using.
+    fprints addresses and contents for all non-zero memory locations
+    to the provided file
 */
-char *sprint_nonzero_memory(State *state) {
+void fprint_nonzero_memory(State *state, FILE *out) {
     int nonzero_count = 0;
 
     NonZeroMemory *memory_data = get_non_zero_memory(state->m, &nonzero_count);
 
-    char *out = malloc(30 + (25 * nonzero_count));
-    if (out == NULL) {
-        ERROR((Error){.type = FAILED_TO_ALLOCATE});
-    }
-    sprintf(out, "Non-zero memory:\n");
+    fprintf(out, "Non-zero memory:\n");
 
     if (memory_data == NULL) {
-        return out;
+        return;
     }
 
-    char new[REG_PRINT_LINE_LENGTH];
     for (int i = 0; i < nonzero_count; i++) {
-        sprintf(new, "0x%08lx: %08x\n", memory_data[i].address,
+        fprintf(out, "0x%08lx: %08x\n", memory_data[i].address,
                 memory_data[i].value);
-        strcat(out, new);
     }
-    free(memory_data);
 
-    return out;
+    // Free memory_data that was allocated by get_non_zero_memory
+    free(memory_data);
 }

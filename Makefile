@@ -29,7 +29,8 @@ ASSEMBLE_SRCS = \
 	src/assembler/pass2/operands.c \
 	src/assembler/symbol_table/symbol_table.c \
 	src/common/instruction.c \
-	src/common/error.c
+	src/common/error.c \
+	src/utils/parseutils.c
 
 TEST_UTILS_SRCS = \
 	tests/utils/test_hashset.c \
@@ -72,7 +73,8 @@ TEST_PASS1_SRCS = \
 	tests/assembler/pass1/test_scanner.c \
 	src/assembler/pass1/scanner.c \
 	src/assembler/symbol_table/symbol_table.c \
-	src/common/error.c
+	src/common/error.c \
+	src/utils/parseutils.c
 
 TEST_PARSER_SRCS = \
     tests/assembler/pass2/test_parser.c \
