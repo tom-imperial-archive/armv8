@@ -186,7 +186,7 @@ void play(GameState state) {
                     // If a ship was sunk, send details
                     if (sunk != -1) {
                         ShipState sunk_state = board_get_ship(other_player->board, sunk);
-                        hrp.sunk_pos = sunk_state.pwd.pos;
+                        hrp.sunk_pwd = sunk_state.pwd;
                     }
 
                     EnemyAttackPayload eap = { .shot = *fire_payload, .result = hrp};

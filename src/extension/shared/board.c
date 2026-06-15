@@ -86,6 +86,8 @@ Add the following ships at given the board is empty.
 It is the caller's responsibility to keep track of how many ships are already on
 the board. This should only be used for initialisation and never after gameplay
 has started. If you are adding multiple ships, see board_is_valid_placement_set.
+This function does not clear the board if it is invalid. The caller must provide a valid
+placement set before any of the game code has defined behaviour,
 */
 bool board_add_placement_set(InitialShipDefs ship_defs, Board board) {
     // Bit n in declared_types being set to 1 corresponds to having a ship of
