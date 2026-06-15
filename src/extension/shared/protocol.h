@@ -12,7 +12,8 @@ typedef enum {
     MSG_GAME_START,
     MSG_FIRE,
     MSG_ATTACKED,
-    MSG_GAME_OVER
+    MSG_GAME_OVER,
+    MSG_INVALID_BOARD
 } MessageType;
 
 // Universal header for every packet

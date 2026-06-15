@@ -146,8 +146,12 @@ void play(GameState state) {
     fprintf(stdout, "%s\n", "[DEBUG] Requesting ship positions from the clients.");
 
     // Populate ships
-    while (!populate_ships(state, state->player1));
-    while (!populate_ships(state, state->player2));
+    while (!populate_ships(state, state->player1)) {
+        send_packet(state->player1->socket_fd, MSG_INVALID_BOARD, NULL, 0);
+    }
+    while (!populate_ships(state, state->player2)) {
+        send_packet(state->player2->socket_fd, MSG_INVALID_BOARD, NULL, 0);
+    }
 
     // Inform clients we are ready and inform them of whos turn it is
     send_start_packets(state);
