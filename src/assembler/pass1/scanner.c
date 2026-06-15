@@ -11,6 +11,8 @@
 #include <string.h>
 #define is_label_char(c)                                                       \
     isalnum(c) || c == '_' || c == '.' || c == '\\' || c == '$'
+#define is_label_start_char(c)                                                 \
+    isalpha(c) || c == '_' || c == '.' || c == '\\'
 
 #define INSTRUCTION_SIZE 4
 #define MAX_FILE_LINE_LENGTH 120
@@ -35,19 +37,22 @@ static void read_line(char *buf, uint64 *address, SymbolTable *table) {
     }
 
     // Line is not whitespace
-    int i = 0;
-    while (is_label_char(buf[i])) {
-        i++;
-    }
 
-    if (buf[i] == ':') {
-        // We have a label
-        // Do not increment
-        buf[i] = '\0';
-        symbol_table_add(table, buf, *address);
-    } else {
-        *address += 4;
+    if (is_label_start_char(buf[0])) {
+        int i = 0;
+        while (is_label_char(buf[i])) {
+            i++;
+        }
+
+        if (buf[i] == ':') {
+            // We have a label
+            // Do not increment
+            buf[i] = '\0';
+            symbol_table_add(table, buf, *address);
+            return;
+        }
     }
+    *address += 4;
 }
 
 /*

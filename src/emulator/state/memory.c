@@ -12,9 +12,10 @@ at the lowest memory address. It expects data to contain the LSB at byte 0.
 */
 
 void check_mem_addr(Memory m, uint64 addr, long n) {
-    if (addr < 0 || n <= 0 || addr + n >= MEM_SIZE) {
+    if (n <= 0 || addr + n >= MEM_SIZE) {
         // Address and size combination invalid
-        // todo handle error
+        // This is a fatal error
+        ERROR((Error) {.type = MEMORY_ADDR_OUT_OF_BOUNDS, ·});
     }
 }
 

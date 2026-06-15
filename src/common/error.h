@@ -5,7 +5,7 @@
 
 #define ERROR(...) _error(__VA_ARGS__, __FILE__, __LINE__, __func__)
 
-static const int max_file_name_length = 32;
+static const int MAX_FILE_NAME_LENGTH = 32;
 
 typedef enum {
     FAILED_TO_ALLOCATE,
@@ -34,7 +34,8 @@ typedef enum {
     UNKNOWN_MNENOMIC,
     INVALID_REGISTER_PREFIX,
     INVALID_IMMEDIATE_FORMAT_HASH,
-    LABEL_NOT_FOUND
+    LABEL_NOT_FOUND,
+    MEMORY_ADDR_OUT_OF_BOUNDS
 } ErrorType;
 
 typedef struct {
@@ -46,6 +47,7 @@ typedef struct {
         char *str;
         uint32 instruction;
         long shift_amount;
+        uint64 addr;
     };
 } Error;
 
