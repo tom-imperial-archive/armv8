@@ -13,7 +13,7 @@ struct Board {
     (pos.x >= 0 && pos.x < BOARD_SIZE && pos.y >= 0 && pos.y < BOARD_SIZE)
 #define mask_bit_for_ship(ship) (1 << ship)
 
-static int ship_length(ShipType ship) {
+int ship_length(ShipType ship) {
     switch (ship) {
     case SHIP_BATTLESHIP:
         return 5;

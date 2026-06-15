@@ -149,6 +149,9 @@ void reset_ui_ships(void) {
     int y = 750;
     for (int i = 0; i < NUM_SHIPS; i++) {
         ui_state.is_dragging[i] = false;
+        ui_state.is_placed[i] = false;
+        ui_state.is_rotated[i] = false;
+
         ui_state.ship_rectangles[i] = (Rectangle){
             .x = (i + 1) * 100,
             .y = y,
@@ -177,49 +180,105 @@ static void draw_peg(Rectangle bounds, CellState cell) {
 }
 
 void render_frame(const ClientState *state) {
+    // Process anything currently being dragged
+    bool is_any_dragging = false;
     for (int i = 0; i < NUM_SHIPS; i++) {
-        Rectangle *rectangle = &ui_state.ship_rectangles[i];
-        Vector2 mouse = GetMousePosition();
-        bool is_hovering = CheckCollisionPointRec(mouse, *rectangle);
-        if (is_hovering && IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && !ui_state.is_confirmed) {
-            ui_state.is_dragging[i] = true;
-            TraceLog(LOG_INFO, "started dragging");
-        }
-        if (is_hovering && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !ui_state.is_confirmed) {
-            ui_state.is_rotated[i] = !ui_state.is_rotated[i];
-
-            float temp = rectangle->width;
-            rectangle->width = rectangle->height;
-            rectangle->height = temp;
-        }
-
         if (ui_state.is_dragging[i]) {
+            is_any_dragging = true;
+            Rectangle *rectangle = &ui_state.ship_rectangles[i];
+            
+            // Move with mouse
             Vector2 mouse_delta = GetMouseDelta();
             rectangle->x += mouse_delta.x;
             rectangle->y += mouse_delta.y;
 
+            // Handle rotation
+            if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !ui_state.is_confirmed) {
+                ui_state.is_rotated[i] = !ui_state.is_rotated[i];
+
+                // Rotate about cursor
+                Vector2 mouse = GetMousePosition();
+                float offset_x = mouse.x - rectangle->x;
+                float offset_y = mouse.y - rectangle->y;
+                
+                float temp = rectangle->width;
+                rectangle->width = rectangle->height;
+                rectangle->height = temp;
+                
+                rectangle->x = mouse.x - offset_y;
+                rectangle->y = mouse.y - offset_x;
+            }
+
+            // Handle dropping and snapping
             if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
                 ui_state.is_dragging[i] = false;
+                // Look at centre of top-left cell
                 ScreenCoord coords = {
-                    .x = rectangle->x,
-                    .y = rectangle->y,
+                    .x = rectangle->x + (CELL_WIDTH / 2),
+                    .y = rectangle->y + (CELL_WIDTH / 2),
                 };
-                // Lock to nearest thing
+
                 if (in_own_board(coords)) {
                     Coordinate c = coordinates_to_cell(coords);
+
+                    // Check for tail clipping
+                    int len = ship_length(i);
+                    bool fits = ui_state.is_rotated[i] ? (c.x + len <= BOARD_SIZE) : (c.y + len <= BOARD_SIZE);
+
+                    if (fits) {
                     ScreenCoord sc = cell_coordinates(c, true);
-                    ui_state.ship_coordinates[i] = c;
-                    ui_state.ship_rectangles[i].x = sc.x;
-                    ui_state.ship_rectangles[i].y = sc.y;
-                    ui_state.is_placed[i] = true;
-                    printf("Is above %d : %d\n", c.x, c.y);
+                        ui_state.ship_coordinates[i] = c;
+                        ui_state.ship_rectangles[i].x = sc.x;
+                        ui_state.ship_rectangles[i].y = sc.y;
+                        ui_state.is_placed[i] = true;
+                    } else {
+                        ui_state.is_placed[i] = false; // Rejected for hanging off board
+                    }
                 } else {
-                    ui_state.is_placed[i] = false;
+                    ui_state.is_placed[i] = false; // Rejected for head not being on board
                 }
-                TraceLog(LOG_INFO, "stopped dragging");
+                // TraceLog(LOG_INFO, "stopped dragging");
+            }
+            break; // stop looping, since at this stage we only check currently dragging ship
+        }
+    }
+
+    // Now check for new interactions
+    if (!is_any_dragging && !ui_state.is_confirmed) {    
+        // Loop backwards to choose top most ship if any overlap
+        for (int i = NUM_SHIPS - 1; i >= 0; i--) {
+            Rectangle *rectangle = &ui_state.ship_rectangles[i];
+            Vector2 mouse = GetMousePosition();
+            
+            if (CheckCollisionPointRec(mouse, *rectangle)) {
+                if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                    ui_state.is_dragging[i] = true;
+                    ui_state.is_placed[i] = false; 
+                    break; // break to prevent moving two ships at the same time
+                } 
+                else if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+                    // Rotate without dragging
+                    ui_state.is_rotated[i] = !ui_state.is_rotated[i];
+                    
+                    float offset_x = mouse.x - rectangle->x;
+                    float offset_y = mouse.y - rectangle->y;
+                    
+                    float temp = rectangle->width;
+                    rectangle->width = rectangle->height;
+                    rectangle->height = temp;
+                    
+                    rectangle->x = mouse.x - offset_y;
+                    rectangle->y = mouse.y - offset_x;
+                    
+                    // TODO - DECIDE IF THIS (UNSNAPPING) IS OPTIMAL
+                    ui_state.is_placed[i] = false; 
+                    break; 
+                }
             }
         }
     }
+
+        
 
     BeginDrawing();
 

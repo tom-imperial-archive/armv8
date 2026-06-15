@@ -65,6 +65,8 @@ extern bool all_ships_destroyed(Board board);
 
 extern void print_board(Board b, FILE *out);
 
+extern int ship_length(ShipType ship);
+
 extern CellState get_cell(Board b, int x, int y);
 
 #endif
