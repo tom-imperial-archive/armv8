@@ -100,12 +100,20 @@ static void handle_incoming_packet(ClientState *state, PacketHeader header,
     case MSG_ATTACKED:
         handle_msg_attack(state, (EnemyAttackPayload *)payload);
         break;
-    case MSG_GAME_OVER: {
+    case MSG_GAME_OVER: 
         // This is also called unexpectedly in the case where the opponent
         // resigned or similar
         handle_msg_game_over(state, (GameOverPayload *)payload);
         break;
-    }
+    case MSG_INVALID_BOARD:
+        fprintf(stdout, "[ERROR] Invalid placement: ships overlap "
+                            "or are out of bounds!\n");
+
+        reset_staged_ships();
+
+        free_board(state->game.my_board);
+        state->game.my_board = create_empty_board();    
+        break;
     default:
         fprintf(stderr, "%s\n", "[ERROR] Unexpected packet type received");
     }
