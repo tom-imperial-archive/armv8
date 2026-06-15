@@ -9,8 +9,8 @@ typedef enum {
     MSG_JOIN,
     MSG_REQ_BOARD,
     MSG_INIT_BOARD_LAYOUT,
+    MSG_GAME_START,
     MSG_FIRE,
-    MSG_RESULT,
     MSG_ATTACKED,
     MSG_GAME_OVER
 } MessageType;
@@ -33,14 +33,18 @@ typedef struct {
 
 typedef struct {
     bool success;
-    bool destroyed_ship;
-    ShipType ship; // Only added if destroyed
+    ShipType ship; // -1 if no ship destroyed
+    PositionWithDirection sunk_pwd; // the root position and orientation of the sunk ship
 } HitResultPayload;
 
 typedef struct {
     FirePayload shot;
     HitResultPayload result;
 } EnemyAttackPayload;
+
+typedef struct {
+    bool your_turn;
+} GameStartPayload;
 
 typedef struct {
     bool you_won;

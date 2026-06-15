@@ -24,7 +24,7 @@ int send_packet(int sockfd, MessageType type, const void *payload, uint32 payloa
     header.payload_length = htonl(payload_length);
 
     // Send the header
-    int sent = send(sockfd, &header, sizeof(PacketHeader), 0);
+    int sent = send(sockfd, &header, sizeof(PacketHeader), MSG_DONTWAIT);
     if (sent < 0) {
         fprintf(stdout, "%s\n", "[ERROR] Failed to send packet header");
         return -1;
@@ -54,7 +54,7 @@ int send_packet(int sockfd, MessageType type, const void *payload, uint32 payloa
 
 int receive_packet(int sockfd, PacketHeader *out_header, void **out_payload) {
     // Attempt to read the header
-    int n = recv(sockfd, out_header, sizeof(PacketHeader), 0);
+    int n = recv(sockfd, out_header, sizeof(PacketHeader), MSG_DONTWAIT);
 
     if (n < 0) {
         if (errno == EWOULDBLOCK || errno == EAGAIN) {
@@ -64,7 +64,8 @@ int receive_packet(int sockfd, PacketHeader *out_header, void **out_payload) {
         // If we got some other error, then that's a genuine error
         fprintf(stderr, "%s\n", "[ERROR] Socket error during receive");
     } else if (n == 0) {
-        fprintf(stderr, "%s\n", "[ERROR] Server closed the connection");
+        fprintf(stderr, "%s\n", "[ERROR] Connection was closed");
+        return -1;
     }
 
     // Now we have a header

@@ -45,13 +45,20 @@ int start_server(int port) {
         exit(EXIT_FAILURE);
     }
 
+    // Get the hostname where the server is running
+    char hostname[256];
+    if (gethostname(hostname, sizeof(hostname)) == -1) {
+        // Fallback just in case gethostname fails
+        strncpy(hostname, "unknown-host", sizeof(hostname));
+    }
+
     // Listen for incoming connections, with a max queue length of 2
     if (listen(server_fd, 2) < 0) {
         fprintf(stderr, "%s\n", "[ERROR] Listen failed");
         exit(EXIT_FAILURE);
     }
 
-    fprintf(stdout, "[DEBUG] Server listening on port %d\n", port);
+    fprintf(stdout, "[DEBUG] Server %s listening on port %d\n", hostname, port);
     return server_fd;
 }
 

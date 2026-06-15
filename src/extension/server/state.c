@@ -1,5 +1,0 @@
-/*
-Stores the main state machine tracking the server
-Connects to the players
-Also holds logic to clean board before passing on to enemy client
-*/
