@@ -110,14 +110,8 @@ bool init_graphics(void) {
         "./assets/ShipDestroyerHull.png",
     };
 
-    // const float scale_factors[NUM_SHIPS] = {
-    //     1.5f, 1.20f, 1.5f, 1.3f, 1.25f,
-    // };
-
     for (int i = 0; i < NUM_SHIPS; i++) {
         Image image = LoadImage(image_paths[i]);
-        // ImageResizeNN(&image, image.width * scale_factors[i],
-        //               image.height * scale_factors[i]);
         assets.textures[i] = LoadTextureFromImage(image);
         ImageRotateCCW(&image);
         assets.rotated_textures[i] = LoadTextureFromImage(image);
@@ -150,6 +144,8 @@ bool init_graphics(void) {
 bool is_window_open(void) { return !WindowShouldClose(); }
 
 void reset_ui_ships(void) {
+    ui_state.is_confirmed = false;
+    
     int y = 750;
     for (int i = 0; i < NUM_SHIPS; i++) {
         ui_state.is_dragging[i] = false;
@@ -248,32 +244,6 @@ void render_frame(const ClientState *state) {
     // Draw target grid
     for (int x = 0; x < BOARD_SIZE; x++) {
         for (int y = 0; y < BOARD_SIZE; y++) {
-            // int original_normal = GuiGetStyle(BUTTON, BASE_COLOR_NORMAL);
-            // int original_focused = GuiGetStyle(BUTTON, BASE_COLOR_FOCUSED);
-            // int original_text_normal = GuiGetStyle(BUTTON, TEXT_COLOR_NORMAL);
-            // int original_text_focused = GuiGetStyle(BUTTON, TEXT_COLOR_FOCUSED);
-
-            // const char *button_text = "";
-            // switch (get_cell(state->game.target_board, x, y)) {
-            // case CELL_MISS:
-            //     GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(WHITE));
-            //     GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(WHITE));
-            //     GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(BLACK));
-            //     break;
-            // case CELL_HIT:
-            //     GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(RED));
-            //     GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(RED));
-            //     GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(WHITE));
-            //     break;
-            // case CELL_SUNK:
-            //     GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(MAROON)); // Darker red
-            //     GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(MAROON));
-            //     GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(WHITE));
-            //     button_text = "X";
-            // default:
-            //     break;
-            // }
-
             Rectangle bounds = cell_bounds((Coordinate){.x = x, .y = y}, false);
             if (GuiButton(bounds, "")) {
                 input_state = (InputData){
@@ -300,11 +270,6 @@ void render_frame(const ClientState *state) {
                     break;
                 }
             } 
-            // // Resets global styles.
-            // GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, original_normal);
-            // GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, original_focused);
-            // GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, original_text_normal);
-            // GuiSetStyle(BUTTON, TEXT_COLOR_FOCUSED, original_text_focused);
         }
     }
 

@@ -14,5 +14,6 @@ extern void reset_ui_ships(void);
 
 void reset_staged_ships(void) {
     reset_ui_ships();
+    
     input_state.type = INPUT_NONE;
 }
