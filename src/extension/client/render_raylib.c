@@ -102,6 +102,10 @@ Rectangle ship_bounds(Coordinate coord, int width, int height,
 bool init_graphics(void) {
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Battleship");
 
+    // Use logical colours for board
+    GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(WHITE));
+    GuiSetStyle(BUTTON, BASE_COLOR_DISABLED, ColorToInt(LIGHTGRAY));
+
     SetTargetFPS(FRAME_RATE);
 
     const char image_paths[NUM_SHIPS][50] = {
@@ -167,7 +171,7 @@ static void draw_peg(Rectangle bounds, CellState cell) {
     float radius = bounds.width / 4.0f;
 
     if (cell == CELL_MISS) {
-        DrawCircle(center_x, center_y, radius, RAYWHITE); 
+        DrawCircle(center_x, center_y, radius, BLUE); 
         DrawCircleLines(center_x, center_y, radius, LIGHTGRAY);
     } else if (cell == CELL_HIT) {
         DrawCircle(center_x, center_y, radius, RED); 
@@ -287,20 +291,26 @@ void render_frame(const ClientState *state) {
     DrawText("Your board", CELL_WIDTH, 5, FONT_SIZE, DARKGRAY);
     DrawText("Opponent's board", CELL_WIDTH * 12, 5, FONT_SIZE, DARKGRAY);
 
-    GuiSetState(STATE_DISABLED);
+    //GuiSetState(STATE_DISABLED);
     for (int x = 0; x < BOARD_SIZE; x++) {
         for (int y = 0; y < BOARD_SIZE; y++) {
             Rectangle bounds = cell_bounds((Coordinate){x, y}, true);
-            if (GuiButton(bounds, "")) {
-                char f[16];
-                sprintf(f, "x: %d, y: %d", x, y);
-                TraceLog(LOG_INFO, f);
-            }
+            // if (GuiButton(bounds, "")) {
+            //     char f[16];
+            //     sprintf(f, "x: %d, y: %d", x, y);
+            //     TraceLog(LOG_INFO, f);
+            // }
+            DrawRectangleRec(bounds, WHITE);
+            DrawRectangleLinesEx(bounds, 2, GRAY);
         }
     }
-    GuiSetState(STATE_NORMAL);
+    //GuiSetState(STATE_NORMAL);
 
     // Draw target grid
+    // Lock buttons if it is not our turn
+    if (state->current_state != UI_STATE_MY_TURN) {
+        GuiSetState(STATE_DISABLED);
+    }
     for (int x = 0; x < BOARD_SIZE; x++) {
         for (int y = 0; y < BOARD_SIZE; y++) {
             Rectangle bounds = cell_bounds((Coordinate){.x = x, .y = y}, false);
@@ -313,14 +323,14 @@ void render_frame(const ClientState *state) {
                 case CELL_WATER: // MISS
                     // TODO: INPUT
                     TraceLog(LOG_INFO, "Miss.");
-                    GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(WHITE));
-                    GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(WHITE));
+                    // GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(WHITE));
+                    // GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(WHITE));
                     break;
                 case CELL_SHIP: // HIT
                     // TODO: INPUT
                     TraceLog(LOG_INFO, "HIT!!");
-                    GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(RED));
-                    GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(RED));
+                    // GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(RED));
+                    // GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(RED));
                     break;
                 case CELL_SUNK:
                 case CELL_HIT:
@@ -330,6 +340,10 @@ void render_frame(const ClientState *state) {
                 }
             } 
         }
+    }
+    // unlock after we finish drawing the board
+    if (state->current_state != UI_STATE_MY_TURN) {
+        GuiSetState(STATE_NORMAL);
     }
 
     // Draw known enemy ships
