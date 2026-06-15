@@ -34,7 +34,7 @@ typedef struct {
 typedef struct {
     bool success;
     ShipType ship; // -1 if no ship destroyed
-    Position sunk_pos; // the root position and orientation of the sunk ship
+    PositionWithDirection sunk_pwd; // the root position and orientation of the sunk ship
 } HitResultPayload;
 
 typedef struct {

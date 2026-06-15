@@ -15,18 +15,22 @@ typedef struct Board *Board;
 typedef struct {
     int x;
     int y;
-    bool horizontal;
 } Position;
 
 typedef struct {
-    ShipType ship;
     Position pos;
+    bool horizontal;
+} PositionWithDirection;
+
+typedef struct {
+    ShipType ship;
+    PositionWithDirection pwd;
     bool destroyed;
 } ShipState;
 
 typedef struct {
     ShipType ship;
-    Position pos;
+    PositionWithDirection pwd;
 } InitialShipState;
 
 typedef ShipState ShipDefs[NUM_SHIPS];
@@ -53,7 +57,7 @@ extern void free_board(Board board);
 
 extern void board_mark_strike(Board board, Position pos, bool success);
 
-extern void board_mark_sunk_ship(Board board, ShipType type, Position pos);
+extern void board_mark_sunk_ship(Board board, ShipType type, PositionWithDirection pwd);
 
 extern ShipState board_get_ship(Board board, int index);
 
