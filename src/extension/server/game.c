@@ -143,7 +143,7 @@ void populate_turn_players(GameState state, PlayerState *turn_taker, PlayerState
 
 void play(GameState state) {
     // Keep requesting a ship placement until we get a valid one
-    printf("Requesting ship positions from the clients");
+    fprintf(stdout, "%s\n", "[DEBUG] Requesting ship positions from the clients.");
 
     // Populate ships
     while (!populate_ships(state, state->player1));

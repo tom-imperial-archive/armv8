@@ -3,9 +3,16 @@
 InputData input_state;
 
 InputData get_user_input(void) {
-    return input_state;
+    InputData current = input_state;
+
+    input_state.type = INPUT_NONE;
+ 
+    return current;
 }
 
+extern void reset_ui_ships(void);
+
 void reset_staged_ships(void) {
-    fprintf(stderr, "%s\n", "NOT YET IMPLEMENTED!!");
+    reset_ui_ships();
+    input_state.type = INPUT_NONE;
 }
