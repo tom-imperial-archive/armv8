@@ -39,12 +39,18 @@ CLIENT_CLI_SRCS = \
 	client/render_text.c \
 	client/input_text.c
 
+TEST_SRCS = \
+	test/test_extension.c \
+	test/test_board.c \
+	shared/board.c
+
 # OBJECT FILES
 SHARED_OBJS = $(SHARED_SRCS:.c=.o)
 SERVER_OBJS = $(SERVER_SRCS:.c=.o)
 CLIENT_CORE_OBJS = $(CLIENT_CORE_SRCS:.c=.o)
 CLIENT_GUI_OBJS = $(CLIENT_GUI_SRCS:.c=.o)
 CLIENT_CLI_OBJS = $(CLIENT_CLI_SRCS:.c=.o)
+TEST_OBJS = $(TEST_SRCS:.c=.o)
 
 # BUILD TARGETS AND RULES
 .PHONY: all clean format server client-gui client-client demo
@@ -66,6 +72,10 @@ client-cli: bin/client-cli
 bin/demo: main.o
 	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS)
 demo: bin/demo
+
+bin/test: $(TEST_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@
+test: bin/test
 
 # Compiles any missing .o file, and places next to its .c counterpart
 %.o: %.c

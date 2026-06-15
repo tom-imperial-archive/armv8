@@ -22,9 +22,9 @@ ClientState init_client_state(void) {
 
     for (int i = 0; i < NUM_SHIPS; i++) {
         state.placement.placements[i].ship = 0;
-        state.placement.placements[i].pos.x = 0;
-        state.placement.placements[i].pos.y = 0;
-        state.placement.placements[i].pos.horizontal = true;
+        state.placement.placements[i].pwd.pos.x = 0;
+        state.placement.placements[i].pwd.pos.y = 0;
+        state.placement.placements[i].pwd.horizontal = true;
     }
     state.placement.ships_placed = 0;
     state.placement.placing_horizontal = true;
