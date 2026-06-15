@@ -110,14 +110,14 @@ bool init_graphics(void) {
         "./assets/ShipDestroyerHull.png",
     };
 
-    const float scale_factors[NUM_SHIPS] = {
-        1.5f, 1.20f, 1.5f, 1.3f, 1.25f,
-    };
+    // const float scale_factors[NUM_SHIPS] = {
+    //     1.5f, 1.20f, 1.5f, 1.3f, 1.25f,
+    // };
 
     for (int i = 0; i < NUM_SHIPS; i++) {
         Image image = LoadImage(image_paths[i]);
-        ImageResizeNN(&image, image.width * scale_factors[i],
-                      image.height * scale_factors[i]);
+        // ImageResizeNN(&image, image.width * scale_factors[i],
+        //               image.height * scale_factors[i]);
         assets.textures[i] = LoadTextureFromImage(image);
         ImageRotateCCW(&image);
         assets.rotated_textures[i] = LoadTextureFromImage(image);
