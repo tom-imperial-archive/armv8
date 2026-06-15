@@ -168,7 +168,7 @@ void play(GameState state) {
                 Position p = { .x = fire_payload->x, .y = fire_payload->y};
 
                 bool was_hit = false;
-                ShipType sunk;
+                ShipType sunk = -1;
 
                 bool res = board_try_hit(other_player->board, p, &was_hit, &sunk);
 
