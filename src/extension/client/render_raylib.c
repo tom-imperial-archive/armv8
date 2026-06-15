@@ -1,6 +1,8 @@
 #include "client/input.h"
 #include "raylib.h"
+#include "shared/board.h"
 #include "shared/types.h"
+#include <assert.h>
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
 
@@ -15,11 +17,15 @@
 
 typedef struct {
     Texture2D textures[NUM_SHIPS];
+    Texture2D rotated_textures[NUM_SHIPS];
 } GameAssets;
 
 typedef struct {
     bool is_dragging[NUM_SHIPS];
     bool is_rotated[NUM_SHIPS];
+    bool is_placed[NUM_SHIPS];
+    bool is_confirmed;
+    Coordinate ship_coordinates[NUM_SHIPS];
     Rectangle ship_rectangles[NUM_SHIPS];
 } UiState;
 
@@ -33,16 +39,38 @@ typedef struct {
 
 extern InputData input_state;
 
-ScreenCoord cell_coordinates(int column, int row, bool is_board_1) {
+bool all_ships_placed(void) {
+    for (int i = 0; i < NUM_SHIPS; i++) {
+        if (!ui_state.is_placed[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+ScreenCoord cell_coordinates(Coordinate coord, bool is_board_1) {
     int left_offset = is_board_1 ? CELL_WIDTH : (BOARD_SIZE + 2) * CELL_WIDTH;
     return (ScreenCoord){
-        .x = left_offset + CELL_WIDTH * column,
-        .y = CELL_WIDTH + CELL_WIDTH * row,
+        .x = left_offset + CELL_WIDTH * coord.x,
+        .y = CELL_WIDTH + CELL_WIDTH * coord.y,
     };
 }
 
-Rectangle cell_bounds(int column, int row, bool is_board_1) {
-    ScreenCoord coords = cell_coordinates(column, row, is_board_1);
+bool in_own_board(ScreenCoord coord) {
+    return CELL_WIDTH <= coord.x && coord.x < CELL_WIDTH * (BOARD_SIZE + 1) &&
+           CELL_WIDTH <= coord.y && coord.y < CELL_WIDTH * (BOARD_SIZE + 1);
+}
+
+Coordinate coordinates_to_cell(ScreenCoord coord) {
+    assert(in_own_board(coord));
+    return (Coordinate){
+        .x = (coord.x - CELL_WIDTH) / CELL_WIDTH,
+        .y = (coord.y - CELL_WIDTH) / CELL_WIDTH,
+    };
+}
+
+Rectangle cell_bounds(Coordinate coord, bool is_board_1) {
+    ScreenCoord coords = cell_coordinates(coord, is_board_1);
     Rectangle bounds = {
         .x = (float)coords.x,
         .y = (float)coords.y,
@@ -59,9 +87,9 @@ ScreenCoord ship_coordinates(int column, int row) {
     };
 }
 
-Rectangle ship_bounds(int column, int row, int width, int height,
+Rectangle ship_bounds(Coordinate coord, int width, int height,
                       bool is_board_1) {
-    ScreenCoord coords = cell_coordinates(column, row, is_board_1);
+    ScreenCoord coords = cell_coordinates(coord, is_board_1);
     Rectangle bounds = {
         .x = (float)coords.x,
         .y = (float)coords.y,
@@ -76,24 +104,23 @@ bool init_graphics(void) {
 
     SetTargetFPS(FRAME_RATE);
 
-    char image_paths[NUM_SHIPS][50] = {
+    const char image_paths[NUM_SHIPS][50] = {
         "./assets/ShipCarrierHull.png",   "./assets/ShipBattleshipHull.png",
         "./assets/ShipCruiserHull.png",   "./assets/ShipSubMarineHull.png",
         "./assets/ShipDestroyerHull.png",
     };
 
-    float scale_factors[NUM_SHIPS] = {
-        1.3f,
-        1.5f,
-        1.5f,
-        1.5f,
-        1.3f,
+    const float scale_factors[NUM_SHIPS] = {
+        1.3f, 1.5f, 1.5f, 1.5f, 1.3f,
     };
 
     for (int i = 0; i < NUM_SHIPS; i++) {
         Image image = LoadImage(image_paths[i]);
-        ImageResizeNN(&image, image.width * scale_factors[i], image.height * scale_factors[i]);
+        ImageResizeNN(&image, image.width * scale_factors[i],
+                      image.height * scale_factors[i]);
         assets.textures[i] = LoadTextureFromImage(image);
+        ImageRotateCCW(&image);
+        assets.rotated_textures[i] = LoadTextureFromImage(image);
         UnloadImage(image);
 
         if (!IsTextureValid(assets.textures[i])) {
@@ -109,7 +136,7 @@ bool init_graphics(void) {
     int y = 750;
     for (int i = 0; i < NUM_SHIPS; i++) {
         ui_state.is_dragging[i] = false;
-        ui_state.ship_rectangles[i] = (Rectangle) {
+        ui_state.ship_rectangles[i] = (Rectangle){
             .x = (i + 1) * 100,
             .y = y,
             .width = assets.textures[i].width,
@@ -125,19 +152,7 @@ bool is_window_open(void) { return !WindowShouldClose(); }
 void render_frame(const ClientState *state) {
     for (int i = 0; i < NUM_SHIPS; i++) {
         Rectangle *rectangle = &ui_state.ship_rectangles[i];
-        // Camera2D ship_camera = {0};
-        // ship_camera.zoom = 1.0f;
-        // ship_camera.rotation = 270.0f;
-        // Vector2 ship_pos = (Vector2) {
-        //     .x = rectangle->x,
-        //     .y = rectangle->y,
-        // };
-        // ship_camera.target = ship_pos;
-        // ship_camera.offset = ship_pos;
-
-        // Vector2 worldMouse = GetScreenToWorld2D(GetMousePosition(), ship_camera);
         Vector2 mouse = GetMousePosition();
-
         bool is_hovering = CheckCollisionPointRec(mouse, *rectangle);
         if (is_hovering && IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             ui_state.is_dragging[i] = true;
@@ -145,6 +160,10 @@ void render_frame(const ClientState *state) {
         }
         if (is_hovering && IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
             ui_state.is_rotated[i] = !ui_state.is_rotated[i];
+
+            float temp = rectangle->width;
+            rectangle->width = rectangle->height;
+            rectangle->height = temp;
         }
 
         if (ui_state.is_dragging[i]) {
@@ -154,6 +173,22 @@ void render_frame(const ClientState *state) {
 
             if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
                 ui_state.is_dragging[i] = false;
+                ScreenCoord coords = {
+                    .x = rectangle->x,
+                    .y = rectangle->y,
+                };
+                // Lock to nearest thing
+                if (in_own_board(coords)) {
+                    Coordinate c = coordinates_to_cell(coords);
+                    ScreenCoord sc = cell_coordinates(c, true);
+                    ui_state.ship_coordinates[i] = c;
+                    ui_state.ship_rectangles[i].x = sc.x;
+                    ui_state.ship_rectangles[i].y = sc.y;
+                    ui_state.is_placed[i] = true;
+                    printf("Is above %d : %d\n", c.x, c.y);
+                } else {
+                    ui_state.is_placed[i] = false;
+                }
                 TraceLog(LOG_INFO, "stopped dragging");
             }
         }
@@ -169,7 +204,7 @@ void render_frame(const ClientState *state) {
     GuiSetState(STATE_DISABLED);
     for (int x = 0; x < BOARD_SIZE; x++) {
         for (int y = 0; y < BOARD_SIZE; y++) {
-            Rectangle bounds = cell_bounds(x, y, true);
+            Rectangle bounds = cell_bounds((Coordinate){x, y}, true);
             if (GuiButton(bounds, "")) {
                 char f[16];
                 sprintf(f, "x: %d, y: %d", x, y);
@@ -178,8 +213,6 @@ void render_frame(const ClientState *state) {
         }
     }
     GuiSetState(STATE_NORMAL);
-
-    // GuiSetStyle(DEFAULT, TEXT_SIZE, FONT_SIZE);
 
     for (int x = 0; x < BOARD_SIZE; x++) {
         for (int y = 0; y < BOARD_SIZE; y++) {
@@ -203,13 +236,10 @@ void render_frame(const ClientState *state) {
                 break;
             }
 
-            Rectangle bounds = cell_bounds(x, y, false);
+            Rectangle bounds = cell_bounds((Coordinate){.x = x, .y = y}, false);
             if (GuiButton(bounds, "")) {
                 input_state = (InputData){
-                    .grid_pos = {
-                        .x = x,
-                        .y = y
-                    },
+                    .grid_pos = {.x = x, .y = y},
                     .type = INPUT_FIRE,
                 };
                 switch (get_cell(state->target_board, x, y)) {
@@ -239,36 +269,48 @@ void render_frame(const ClientState *state) {
         }
     }
 
-    // ScreenCoord coords = cell_coordinates(4, 3, false);
-    // DrawTexture(carrier_texture, coords.x, coords.y, WHITE);
-
-    // BeginMode2D(ship_camera);
     for (int i = 0; i < NUM_SHIPS; i++) {
-
-        // DrawTexturePro(carrier_texture, carrier_box, carrier_rectangle,
-        //                (Vector2){0.0f, 0.0f}, 270.0f, WHITE);
-        // DrawTexture(assets.textures[i], ui_state.ship_rectangles[i].x,
-        //             ui_state.ship_rectangles[i].y, WHITE);
-        float angle = ui_state.is_rotated[i] ? 270.0f : 0.0f;
-        Rectangle rectangle = ui_state.ship_rectangles[i];
-        Rectangle ship_box = {
-            .x = 0,
-            .y = 0,
-            .height = rectangle.height,
-            .width = rectangle.width,
-        };
-        Vector2 origin = {
-            .x = rectangle.width / 2,
-            .y = rectangle.height / 2,
-        };
-        DrawTexturePro(assets.textures[i], ship_box, rectangle, origin, angle, WHITE);
+        Texture2D texture = ui_state.is_rotated[i] ? assets.rotated_textures[i]
+                                                   : assets.textures[i];
+        int x = ui_state.ship_rectangles[i].x;
+        int y = ui_state.ship_rectangles[i].y;
+        DrawTexture(texture, x, y, WHITE);
+        // FOR DEBUGGING
+        // DrawRectangleLinesEx(ui_state.ship_rectangles[i], 1, RED);
     }
-    // EndMode2D();
+
+    Rectangle confirm_rectangle = {
+        .x = CELL_WIDTH * 9,
+        .y = CELL_WIDTH * 12,
+        .height = CELL_WIDTH,
+        .width = CELL_WIDTH * 2,
+    };
+    if (!all_ships_placed()) {
+        GuiSetState(STATE_DISABLED);
+    }
+    if (GuiButton(confirm_rectangle, "Confirm")) {
+        ui_state.is_confirmed = true;
+        TraceLog(LOG_INFO, "Confirmed!");
+        input_state = (InputData){
+            .type = INPUT_PLACED_SHIPS,
+        };
+        for (int i = 0; i < NUM_SHIPS; i++) {
+            input_state.ships[i] =
+                (InitialShipState){.ship = i,
+                                   .pos = {
+                                       .x = ui_state.ship_coordinates[i].x,
+                                       .y = ui_state.ship_coordinates[i].y,
+                                       .horizontal = ui_state.is_rotated[i],
+                                   }};
+        }
+    }
+    if (!all_ships_placed()) {
+        GuiSetState(STATE_NORMAL);
+    }
 
     EndDrawing();
 }
 
-/* Frees textures, closes windows, resets terminal. */
 void cleanup_graphics(void) {
     for (int i = 0; i < NUM_SHIPS; i++) {
         UnloadTexture(assets.textures[i]);
