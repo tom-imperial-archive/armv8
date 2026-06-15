@@ -221,7 +221,7 @@ void render_frame(const ClientState *state) {
             int original_text_normal = GuiGetStyle(BUTTON, TEXT_COLOR_NORMAL);
             int original_text_focused = GuiGetStyle(BUTTON, TEXT_COLOR_FOCUSED);
 
-            switch (get_cell(state->target_board, x, y)) {
+            switch (get_cell(state->game.target_board, x, y)) {
             case CELL_MISS:
                 GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(WHITE));
                 GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(WHITE));
@@ -242,7 +242,7 @@ void render_frame(const ClientState *state) {
                     .grid_pos = {.x = x, .y = y},
                     .type = INPUT_FIRE,
                 };
-                switch (get_cell(state->target_board, x, y)) {
+                switch (get_cell(state->game.target_board, x, y)) {
                 case CELL_WATER: // MISS
                     // TODO: INPUT
                     TraceLog(LOG_INFO, "Miss.");
@@ -255,6 +255,7 @@ void render_frame(const ClientState *state) {
                     GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(RED));
                     GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(RED));
                     break;
+                case CELL_SUNK:
                 case CELL_HIT:
                 case CELL_MISS: // ALREADY ATTEMPTED
                     TraceLog(LOG_INFO, "Already sent a missile there.");
