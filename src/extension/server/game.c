@@ -181,7 +181,14 @@ void play(GameState state) {
                     exit(EXIT_FAILURE);
                 } else {
                     // Inform player of result
-                    HitResultPayload hrp = {.success = was_hit, .destroyed_ship = sunk};
+                    HitResultPayload hrp = {.success = was_hit, .ship = sunk};
+
+                    // If a ship was sunk, send details
+                    if (sunk != -1) {
+                        ShipState sunk_state = board_get_ship(other_player->board, sunk);
+                        hrp.sunk_pos = sunk_state.pos;
+                    }
+
                     EnemyAttackPayload eap = { .shot = *fire_payload, .result = hrp};
 
                     send_packet(turn_taker->socket_fd, MSG_ATTACKED, &eap, sizeof(EnemyAttackPayload));

@@ -171,25 +171,36 @@ struct PosShipPair {
     ShipType *ship;
 };
 
+
+void board_mark_sunk_ship(Board board, ShipType type, Position pos) {
+    int len = ship_length(type);
+    for (int i = 0; i < len; i++) {
+        board->cells[pos.x][pos.y] = CELL_SUNK;
+        next_position(&pos);
+    }
+}
+
 static void check_destroyed(Board board, ShipState *s, void *data) {
+    if (s->destroyed) { return; }
+
     int len = ship_length(s->ship);
     struct PosShipPair *psp = (struct PosShipPair *)data;
-
-    Position hit_pos = psp->pos;
-    ShipType *ship = psp->ship;
+    ShipType *sunk_ship = psp->ship;
     Position pos = s->pos;
+
     s->destroyed = true;
 
     for (int i = 0; i < len; i++) {
-        if (pos.x == hit_pos.x && pos.y == hit_pos.y) {
-            *ship = s->ship;
-        }
-
         if (board->cells[pos.x][pos.y] != CELL_HIT) {
             s->destroyed = false;
             break;
         }
         next_position(&pos);
+    }
+
+    if (s->destroyed) {
+        *sunk_ship = s->ship;
+        board_mark_sunk_ship(board, s->ship, s->pos);
     }
 }
 
@@ -232,6 +243,7 @@ bool board_try_hit(Board opponent_ships_board, Position pos, bool *was_hit,
         for_each_ship(opponent_ships_board, *check_destroyed, &psp);
     }; break;
     case CELL_HIT:
+    case CELL_SUNK:
     case CELL_MISS:
         return false;
     }
@@ -276,14 +288,13 @@ bool all_ships_destroyed(Board board) {
 static char cell_to_char(CellState cell) {
     switch (cell) {
     case CELL_HIT:
+        return 'x';
+    case CELL_SUNK:
         return 'X';
-        break;
     case CELL_MISS:
         return 'O';
-        break;
     case CELL_SHIP:
         return '*';
-        break;
     default:
         return '-';
     }

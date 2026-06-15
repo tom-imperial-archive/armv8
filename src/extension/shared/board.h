@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef enum { CELL_WATER, CELL_SHIP, CELL_MISS, CELL_HIT } CellState;
+typedef enum { CELL_WATER, CELL_SHIP, CELL_MISS, CELL_HIT, CELL_SUNK } CellState;
 
 // 0, 0 is the top left
 struct Board;
@@ -52,6 +52,10 @@ extern Board create_empty_board(void);
 extern void free_board(Board board);
 
 extern void board_mark_strike(Board board, Position pos, bool success);
+
+extern void board_mark_sunk_ship(Board board, ShipType type, Position pos);
+
+extern ShipState board_get_ship(Board board, int index);
 
 extern bool valid_attack_pos(Board board, Position pos);
 

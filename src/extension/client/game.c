@@ -63,7 +63,13 @@ static void handle_msg_attack(ClientState *state, EnemyAttackPayload *hit_data) 
 
     board_mark_strike(target, (Position){.x = shot.x, .y = shot.y}, result.success);
 
-    fprintf(stdout, "%s\n", "[DEBUG] Marked the hit.");
+    // Now check if the shot sank a ship
+    if (result.ship != -1) {
+        board_mark_sunk_ship(target, result.ship, result.sunk_pos);
+        fprintf(stdout, "%s\n", "[DEBUG] Ship sunk!");
+    } else {
+        fprintf(stdout, "%s\n", "[DEBUG] Marked the hit.");
+    }
 
     state->current_state = next_state;
 }
