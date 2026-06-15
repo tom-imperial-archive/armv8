@@ -111,7 +111,7 @@ bool init_graphics(void) {
     };
 
     const float scale_factors[NUM_SHIPS] = {
-        1.5f, 1.3f, 1.5f, 1.5f, 1.3f,
+        1.5f, 1.20f, 1.5f, 1.3f, 1.25f,
     };
 
     for (int i = 0; i < NUM_SHIPS; i++) {
@@ -159,6 +159,24 @@ void reset_ui_ships(void) {
             .width = assets.textures[i].width,
             .height = assets.textures[i].height,
         };
+    }
+}
+
+static void draw_peg(Rectangle bounds, CellState cell) {
+    float center_x = bounds.x + bounds.width / 2.0f;
+    float center_y = bounds.y + bounds.height / 2.0f;
+    float radius = bounds.width / 4.0f;
+
+    if (cell == CELL_MISS) {
+        DrawCircle(center_x, center_y, radius, RAYWHITE); 
+        DrawCircleLines(center_x, center_y, radius, LIGHTGRAY);
+    } else if (cell == CELL_HIT) {
+        DrawCircle(center_x, center_y, radius, RED); 
+        DrawCircleLines(center_x, center_y, radius, DARKGRAY);
+    } else if (cell == CELL_SUNK) {
+        DrawCircle(center_x, center_y, radius, MAROON); 
+        DrawCircleLines(center_x, center_y, radius, BLACK);
+        DrawText("X", center_x - 6, center_y - 10, 20, WHITE);
     }
 }
 
@@ -227,36 +245,37 @@ void render_frame(const ClientState *state) {
     }
     GuiSetState(STATE_NORMAL);
 
+    // Draw target grid
     for (int x = 0; x < BOARD_SIZE; x++) {
         for (int y = 0; y < BOARD_SIZE; y++) {
-            int original_normal = GuiGetStyle(BUTTON, BASE_COLOR_NORMAL);
-            int original_focused = GuiGetStyle(BUTTON, BASE_COLOR_FOCUSED);
-            int original_text_normal = GuiGetStyle(BUTTON, TEXT_COLOR_NORMAL);
-            int original_text_focused = GuiGetStyle(BUTTON, TEXT_COLOR_FOCUSED);
+            // int original_normal = GuiGetStyle(BUTTON, BASE_COLOR_NORMAL);
+            // int original_focused = GuiGetStyle(BUTTON, BASE_COLOR_FOCUSED);
+            // int original_text_normal = GuiGetStyle(BUTTON, TEXT_COLOR_NORMAL);
+            // int original_text_focused = GuiGetStyle(BUTTON, TEXT_COLOR_FOCUSED);
 
-            const char *button_text = "";
-            switch (get_cell(state->game.target_board, x, y)) {
-            case CELL_MISS:
-                GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(WHITE));
-                GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(WHITE));
-                GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(BLACK));
-                break;
-            case CELL_HIT:
-                GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(RED));
-                GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(RED));
-                GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(WHITE));
-                break;
-            case CELL_SUNK:
-                GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(MAROON)); // Darker red
-                GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(MAROON));
-                GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(WHITE));
-                button_text = "X";
-            default:
-                break;
-            }
+            // const char *button_text = "";
+            // switch (get_cell(state->game.target_board, x, y)) {
+            // case CELL_MISS:
+            //     GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(WHITE));
+            //     GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(WHITE));
+            //     GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(BLACK));
+            //     break;
+            // case CELL_HIT:
+            //     GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(RED));
+            //     GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(RED));
+            //     GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(WHITE));
+            //     break;
+            // case CELL_SUNK:
+            //     GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(MAROON)); // Darker red
+            //     GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(MAROON));
+            //     GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, ColorToInt(WHITE));
+            //     button_text = "X";
+            // default:
+            //     break;
+            // }
 
             Rectangle bounds = cell_bounds((Coordinate){.x = x, .y = y}, false);
-            if (GuiButton(bounds, button_text)) {
+            if (GuiButton(bounds, "")) {
                 input_state = (InputData){
                     .grid_pos = {.x = x, .y = y},
                     .type = INPUT_FIRE,
@@ -281,14 +300,28 @@ void render_frame(const ClientState *state) {
                     break;
                 }
             } 
-            // Resets global styles.
-            GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, original_normal);
-            GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, original_focused);
-            GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, original_text_normal);
-            GuiSetStyle(BUTTON, TEXT_COLOR_FOCUSED, original_text_focused);
+            // // Resets global styles.
+            // GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, original_normal);
+            // GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, original_focused);
+            // GuiSetStyle(BUTTON, TEXT_COLOR_NORMAL, original_text_normal);
+            // GuiSetStyle(BUTTON, TEXT_COLOR_FOCUSED, original_text_focused);
         }
     }
 
+    // Draw known enemy ships
+    for (int i = 0; i < NUM_SHIPS; i++) {
+        if (state->game.enemy_ships_sunk[i]) {
+            Position pos = state->game.enemy_ship_positions[i];
+            
+            // If the state says horizontal, use the base texture. Otherwise, rotated!
+            Texture2D texture = pos.horizontal ? assets.rotated_textures[i] : assets.textures[i];
+            
+            ScreenCoord sc = cell_coordinates((Coordinate){pos.x, pos.y}, false); 
+            DrawTexture(texture, sc.x, sc.y, WHITE);
+        }
+    }
+
+    // Draw own ships
     for (int i = 0; i < NUM_SHIPS; i++) {
         Texture2D texture = ui_state.is_rotated[i] ? assets.rotated_textures[i]
                                                    : assets.textures[i];
@@ -299,28 +332,21 @@ void render_frame(const ClientState *state) {
         // DrawRectangleLinesEx(ui_state.ship_rectangles[i], 1, RED);
     }
 
-    // Draw hit/miss pegs on own board
+    // Draw hit/miss pegs on both boards
     for (int x = 0; x < BOARD_SIZE; x++) {
         for (int y = 0; y < BOARD_SIZE; y++) {
+            // Check own board
             CellState my_cell = get_cell(state->game.my_board, x, y);
-            
             if (my_cell == CELL_HIT || my_cell == CELL_SUNK || my_cell == CELL_MISS) {
                 Rectangle bounds = cell_bounds((Coordinate){x, y}, true);
-                float center_x = bounds.x + bounds.width / 2.0f;
-                float center_y = bounds.y + bounds.height / 2.0f;
-                float radius = bounds.width / 4.0f;
-
-                if (my_cell == CELL_MISS) {
-                    DrawCircle(center_x, center_y, radius, BLUE); 
-                    DrawCircleLines(center_x, center_y, radius, LIGHTGRAY);
-                } else if (my_cell == CELL_HIT) {
-                    DrawCircle(center_x, center_y, radius, RED);
-                    DrawCircleLines(center_x, center_y, radius, DARKGRAY);
-                } else if (my_cell == CELL_SUNK) {
-                    DrawCircle(center_x, center_y, radius, MAROON);
-                    DrawCircleLines(center_x, center_y, radius, BLACK);
-                    DrawText("X", center_x - 6, center_y - 10, 20, WHITE);
-                }
+                draw_peg(bounds, my_cell);
+            }
+            
+            // Check target board
+            CellState target_cell = get_cell(state->game.target_board, x, y);
+            if (target_cell == CELL_HIT || target_cell == CELL_SUNK || target_cell == CELL_MISS) {
+                Rectangle bounds = cell_bounds((Coordinate){x, y}, false); 
+                draw_peg(bounds, target_cell); 
             }
         }
     }

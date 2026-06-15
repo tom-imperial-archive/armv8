@@ -15,6 +15,7 @@ ClientState init_client_state(void) {
 
     state.game.my_board = create_empty_board();
     state.game.target_board = create_empty_board();
+    for (int i = 0; i < NUM_SHIPS; i++) { state.game.enemy_ships_sunk[i] = false; }
     state.game.i_won = false;
 
     state.net.connection_fd = -1;

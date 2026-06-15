@@ -66,6 +66,11 @@ static void handle_msg_attack(ClientState *state, EnemyAttackPayload *hit_data) 
     // Now check if the shot sank a ship
     if (result.ship != -1) {
         board_mark_sunk_ship(target, result.ship, result.sunk_pos);
+        if (state->current_state == UI_STATE_MY_TURN) {
+            state->game.enemy_ships_sunk[result.ship] = true;
+            state->game.enemy_ship_positions[result.ship] = result.sunk_pos;
+        }
+
         fprintf(stdout, "%s\n", "[DEBUG] Ship sunk!");
     } else {
         fprintf(stdout, "%s\n", "[DEBUG] Marked the hit.");
