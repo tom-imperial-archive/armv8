@@ -181,7 +181,11 @@ static void draw_peg(Rectangle bounds, CellState cell) {
     } else if (cell == CELL_SUNK) {
         DrawCircle(center_x, center_y, radius, MAROON); 
         DrawCircleLines(center_x, center_y, radius, BLACK);
-        DrawText("X", center_x - 6, center_y - 10, 20, WHITE);
+        float offset = radius * 0.5f;
+        DrawLineEx((Vector2){center_x - offset, center_y - offset}, 
+                   (Vector2){center_x + offset, center_y + offset}, 3.0f, WHITE);
+        DrawLineEx((Vector2){center_x + offset, center_y - offset}, 
+                   (Vector2){center_x - offset, center_y + offset}, 3.0f, WHITE);
     }
 }
 
