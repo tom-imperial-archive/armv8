@@ -17,7 +17,7 @@ typedef struct {
     Board my_board;
     Board target_board;
     bool enemy_ships_sunk[NUM_SHIPS];
-    Position enemy_ship_positions[NUM_SHIPS];
+    PositionWithDirection enemy_ship_positions[NUM_SHIPS];
     bool i_won;
 } GameState;
 

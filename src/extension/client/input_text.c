@@ -49,9 +49,9 @@ InputData get_user_input(void) {
         if (sscanf(input, "%d %d %c", &x, &y, &orientation) == 3) {
             // Save ths ship to local staging array
             staged_ships[staged_count].ship = (ShipType)staged_count;
-            staged_ships[staged_count].pos.x = x;
-            staged_ships[staged_count].pos.y = y;
-            staged_ships[staged_count].pos.horizontal =
+            staged_ships[staged_count].pwd.pos.x = x;
+            staged_ships[staged_count].pwd.pos.y = y;
+            staged_ships[staged_count].pwd.horizontal =
                 (orientation == 'h' || orientation == 'H');
 
             staged_count++;

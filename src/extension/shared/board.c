@@ -29,11 +29,11 @@ int ship_length(ShipType ship) {
     }
 }
 
-static void next_position(Position *pos) {
-    if (pos->horizontal) {
-        pos->x++;
+static void next_position(PositionWithDirection *pwd) {
+    if (pwd->horizontal) {
+        pwd->pos.x++;
     } else {
-        pos->y++;
+        pwd->pos.y++;
     }
 }
 
@@ -44,9 +44,10 @@ static bool place_ship(ShipState sl, Board board) {
         return false;
     }
 
-    Position pos = sl.pos;
+    PositionWithDirection pwd = sl.pwd;
 
     for (int i = 0; i < len; i++) {
+        Position pos = pwd.pos;
         if (!check_pos_in_bounds(pos)) {
             // Illegal position - the placement must not be valid
             return false;
@@ -58,7 +59,7 @@ static bool place_ship(ShipState sl, Board board) {
         }
 
         board->cells[pos.x][pos.y] = CELL_SHIP;
-        next_position(&pos);
+        next_position(&pwd);
     }
 
     return true;
@@ -66,46 +67,10 @@ static bool place_ship(ShipState sl, Board board) {
 
 bool board_add_single_ship(InitialShipState isl, Board board) {
     ShipState sl =
-        (ShipState){.ship = isl.ship, .pos = isl.pos, .destroyed = false};
+        (ShipState){.ship = isl.ship, .pwd = isl.pwd, .destroyed = false};
 
     return place_ship(sl, board);
 }
-
-/*
-Add the following ship at given there are already n ships on the board.
-It is the caller's responsibility to keep track of how many ships are already on
-the board. This should only be used for initialisation and never after gameplay
-has started. If you are adding multiple ships, see board_is_valid_placement_set.
-*/
-/*static bool board_add_placement(ShipState sl, Board board, int n) {
-    if (n < 0 || n >= NUM_SHIPS) {
-        return false;
-    }
-
-    bool other_ship_of_same_type = false;
-
-    for (int i = 0; i < n; i++) {
-        if (board->ships[i].ship == sl.ship) {
-            other_ship_of_same_type = true;
-            break;
-        }
-    }
-
-    if (!other_ship_of_same_type) {
-        // No ship of this type declared yet
-        if (!place_ship(sl, board)) {
-            // Ship position was invalid or ship type invalid
-            return false;
-        }
-
-        board->ships[n] = sl;
-    } else {
-        printf("Already ship of same type\n");
-        // Tried to add two ships of the same type
-        return false;
-    }
-    return true;
-}*/
 
 ShipState board_get_ship(Board board, int index) {
     if (index >= 0 && index < NUM_SHIPS) {
@@ -121,6 +86,8 @@ Add the following ships at given the board is empty.
 It is the caller's responsibility to keep track of how many ships are already on
 the board. This should only be used for initialisation and never after gameplay
 has started. If you are adding multiple ships, see board_is_valid_placement_set.
+This function does not clear the board if it is invalid. The caller must provide a valid
+placement set before any of the game code has defined behaviour,
 */
 bool board_add_placement_set(InitialShipDefs ship_defs, Board board) {
     // Bit n in declared_types being set to 1 corresponds to having a ship of
@@ -131,7 +98,7 @@ bool board_add_placement_set(InitialShipDefs ship_defs, Board board) {
         // Initialise internal struct
         InitialShipState isl = ship_defs[i];
         ShipState sl =
-            (ShipState){.ship = isl.ship, .pos = isl.pos, .destroyed = false};
+            (ShipState){.ship = isl.ship, .pwd = isl.pwd, .destroyed = false};
 
         int mask = mask_bit_for_ship(sl.ship);
         if ((declared_types & mask) == 0) {
@@ -172,11 +139,11 @@ struct PosShipPair {
 };
 
 
-void board_mark_sunk_ship(Board board, ShipType type, Position pos) {
+void board_mark_sunk_ship(Board board, ShipType type, PositionWithDirection pwd) {
     int len = ship_length(type);
     for (int i = 0; i < len; i++) {
-        board->cells[pos.x][pos.y] = CELL_SUNK;
-        next_position(&pos);
+        board->cells[pwd.pos.x][pwd.pos.y] = CELL_SUNK;
+        next_position(&pwd);
     }
 }
 
@@ -186,21 +153,22 @@ static void check_destroyed(Board board, ShipState *s, void *data) {
     int len = ship_length(s->ship);
     struct PosShipPair *psp = (struct PosShipPair *)data;
     ShipType *sunk_ship = psp->ship;
-    Position pos = s->pos;
+    PositionWithDirection pwd = s->pwd;
 
     s->destroyed = true;
 
     for (int i = 0; i < len; i++) {
+        Position pos = pwd.pos;
         if (board->cells[pos.x][pos.y] != CELL_HIT) {
             s->destroyed = false;
             break;
         }
-        next_position(&pos);
+        next_position(&pwd);
     }
 
     if (s->destroyed) {
         *sunk_ship = s->ship;
-        board_mark_sunk_ship(board, s->ship, s->pos);
+        board_mark_sunk_ship(board, s->ship, s->pwd);
     }
 }
 
@@ -324,87 +292,3 @@ CellState get_cell(Board b, int x, int y) {
     }
     return b->cells[x][y];
 }
-
-// Testing
-/*
-int main(void) {
-    Board b = create_empty_board();
-
-    InitialShipState defs[5];
-    InitialShipState sl0 = {
-        .ship = SHIP_CARRIER,
-        .pos = {
-            .x = 0,
-            .y = 0,
-            .horizontal = true
-        }
-    };
-    InitialShipState sl1 = {
-        .ship = SHIP_BATTLESHIP,
-        .pos = {
-            .x = 0,
-            .y = 1,
-            .horizontal = true
-        }
-    };
-    InitialShipState sl2 = {
-        .ship = SHIP_CRUISER,
-        .pos = {
-            .x = 5,
-            .y = 0,
-            .horizontal = true
-        }
-    };
-    InitialShipState sl3 = {
-        .ship = SHIP_SUBMARINE,
-        .pos = {
-            .x = 0,
-            .y = 2,
-            .horizontal = false
-        }
-    };
-    InitialShipState sl4 = {
-        .ship = SHIP_DESTROYER,
-        .pos = {
-            .x = 1,
-            .y = 2,
-            .horizontal = false
-        }
-    };
-    defs[0] = sl0;
-    defs[1] = sl1;
-    defs[2] = sl2;
-    defs[3] = sl3;
-    defs[4] = sl4;
-    printf("Checking placement: %d\n", board_add_placement_set(defs, b));
-    print_board(b, stdout);
-
-    Position p = {
-            .x = 1,
-            .y = 2,
-        };
-    printf("%d\n", board_try_hit(b, p));
-    p.x = 5;
-    printf("%d\n", board_try_hit(b, p));
-
-    printf("Board: \n");
-    print_board(b, stdout);
-
-//     printf("Game over? %d\n", all_ships_destroyed(b));
-
-    for (int i = 0; i < BOARD_SIZE; i++) {
-        for (int j = 0; j < BOARD_SIZE; j++) {
-            p.x = i;
-            p.y = j;
-            board_try_hit(b, p);
-        }
-    }
-
-    printf("Board: \n");
-    print_board(b, stdout);
-    printf("Game over? %d\n", all_ships_destroyed(b));
-
-    free(b);
-    return 0;
-}
-*/

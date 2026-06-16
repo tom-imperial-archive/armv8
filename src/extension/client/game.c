@@ -65,10 +65,10 @@ static void handle_msg_attack(ClientState *state, EnemyAttackPayload *hit_data) 
 
     // Now check if the shot sank a ship
     if (result.ship != -1) {
-        board_mark_sunk_ship(target, result.ship, result.sunk_pos);
+        board_mark_sunk_ship(target, result.ship, result.sunk_pwd);
         if (state->current_state == UI_STATE_MY_TURN) {
             state->game.enemy_ships_sunk[result.ship] = true;
-            state->game.enemy_ship_positions[result.ship] = result.sunk_pos;
+            state->game.enemy_ship_positions[result.ship] = result.sunk_pwd;
         }
 
         fprintf(stdout, "%s\n", "[DEBUG] Ship sunk!");
@@ -120,44 +120,7 @@ static void handle_incoming_packet(ClientState *state, PacketHeader header,
     }
 }
 
-static void hardcode_ship_placement(ClientState *state) {
-    InitialShipDefs my_ships = {
-        {SHIP_BATTLESHIP,
-         {1, 1, true}}, // Length 5: Horizontal at (1,1) -> covers X: 1 to 5
-        {SHIP_CARRIER,
-         {8, 2, false}}, // Length 4: Vertical at (8,2) -> covers Y: 2 to 5
-        {SHIP_CRUISER,
-         {2, 4, true}}, // Length 3: Horizontal at (2,4) -> covers X: 2 to 4
-        {SHIP_SUBMARINE,
-         {5, 6, false}}, // Length 3: Vertical at (5,6) -> covers Y: 6 to 8
-        {SHIP_DESTROYER,
-         {0, 8, true}} // Length 2: Horizontal at (0,8) -> covers X: 0 to 1
-    };
-
-    // Populate underlying logic board
-    if (!board_add_placement_set(my_ships, state->game.my_board)) {
-        fprintf(stderr, "[ERROR] Hardcoded ship placement was invalid!\n");
-        return;
-    }
-
-    // Copy to placement buffer
-    for (int i = 0; i < NUM_SHIPS; i++) {
-        state->placement.placements[i] = my_ships[i];
-    }
-
-    // Switch to next state
-    state->current_state = UI_STATE_WAITING_FOR_OPPONENT;
-
-    fprintf(stdout, "[DEBUG] Auto-placed ships, yet to send layout.\n");
-}
-
 static void handle_state_placing_ships(ClientState *state, InputData input) {
-    // HARDCODED VERSION - FOR DEBUGGING
-    bool hardcode_ships = false;
-    if (hardcode_ships) {
-        hardcode_ship_placement(state);
-        return;
-    }
     // ACTUAL VERSION
     // Attempt to place
     if (input.type == INPUT_PLACED_SHIPS) {

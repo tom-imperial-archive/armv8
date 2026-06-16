@@ -362,12 +362,12 @@ void render_frame(const ClientState *state) {
     // Draw known enemy ships
     for (int i = 0; i < NUM_SHIPS; i++) {
         if (state->game.enemy_ships_sunk[i]) {
-            Position pos = state->game.enemy_ship_positions[i];
+            PositionWithDirection pwd = state->game.enemy_ship_positions[i];
             
             // If the state says horizontal, use the base texture. Otherwise, rotated!
-            Texture2D texture = pos.horizontal ? assets.rotated_textures[i] : assets.textures[i];
+            Texture2D texture = pwd.horizontal ? assets.rotated_textures[i] : assets.textures[i];
             
-            ScreenCoord sc = cell_coordinates((Coordinate){pos.x, pos.y}, false); 
+            ScreenCoord sc = cell_coordinates((Coordinate){pwd.pos.x, pwd.pos.y}, false); 
             DrawTexture(texture, sc.x, sc.y, WHITE);
         }
     }
@@ -422,11 +422,11 @@ void render_frame(const ClientState *state) {
             for (int i = 0; i < NUM_SHIPS; i++) {
                 input_state.ships[i] =
                     (InitialShipState){.ship = i,
-                                    .pos = {
+                                    .pwd.pos = {
                                         .x = ui_state.ship_coordinates[i].x,
                                         .y = ui_state.ship_coordinates[i].y,
-                                        .horizontal = ui_state.is_rotated[i],
-                                    }};
+                                    },
+                                    .pwd.horizontal = ui_state.is_rotated[i],};
             }
         }
         if (!all_ships_placed()) {
