@@ -179,6 +179,7 @@ void play(GameState state) {
                 if (!res) {
                     // A proper client will have ensured that this was a valid position to attack.
                     // The player probably interfered wth our networking. They lose.
+                    free(fire_payload);
                     end_game(state, other_player, turn_taker);
                     close_connections(state);
                     free_game_state(state);
@@ -194,6 +195,7 @@ void play(GameState state) {
                     }
 
                     EnemyAttackPayload eap = { .shot = *fire_payload, .result = hrp};
+                    free(fire_payload);
 
                     send_packet(turn_taker->socket_fd, MSG_ATTACKED, &eap, sizeof(EnemyAttackPayload));
                     // Inform opponent of result
@@ -205,6 +207,7 @@ void play(GameState state) {
             }
         } else if (res == -1) {
             // Player disconnected or some other connection issue occurred on their turn. They lose.
+            free(fire_payload);
             end_game(state, other_player, turn_taker);
             close_connections(state);
             free_game_state(state);

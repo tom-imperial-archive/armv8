@@ -88,6 +88,8 @@ int receive_packet(int sockfd, PacketHeader *out_header, void **out_payload) {
                 total_read += payload_bytes;
             } else if (payload_bytes < 0 && errno != EWOULDBLOCK && errno != EAGAIN) {
                 fprintf(stderr, "%s\n", "[ERROR] Failed to read complete payload");
+                free(*out_payload);
+                *out_payload = NULL;
                 return -1;
             }
         }
