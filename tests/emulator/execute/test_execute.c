@@ -1,4 +1,5 @@
 #include "test_execute.h"
+#include "common/instruction.h"
 #include "emulator/execute/execute.h"
 #include "test_branch.h"
 #include "test_dpii.h"

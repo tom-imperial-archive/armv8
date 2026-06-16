@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
     2. Second pass - one line at a time:
         call parse_line,
         then call encode_instruction,
-        then write the result to the output file
+        then write the encoded instruction to the output file
     */
 
     if (argc < 2) {
@@ -23,6 +23,7 @@ int main(int argc, char **argv) {
 
     char *in = argv[1];
     char *out = argv[2];
+
     if (out == NULL) {
         out = "out.bin";
     }
@@ -34,38 +35,34 @@ int main(int argc, char **argv) {
 
     char buf[MAX_FILE_LINE_LENGTH];
     SymbolTable *table = create_symbol_table();
-    uint64 output_size = scan_file(in, table);
-    uint32 *res = malloc(output_size);
+    //todo handle file logic
+    scan_file(file_in, table);
 
-    if (res == NULL) {
-        ERROR((Error){.type = FAILED_TO_ALLOCATE});
-    }
-    // todo graceful error handling if over line length
-    // todo no hard upper limit on lines
-    int64 PC = 0;
-    int instr_index = 0;
-    while (fgets(buf, MAX_FILE_LINE_LENGTH, file_in) != NULL) {
-        Instruction instr;
-        bool instruction = parse_line(buf, &instr, table, PC);
-        if (instruction) {
-            res[instr_index] = encode_instruction(&instr);
-            printf("Instruction %d: %08x\n", instr_index, res[instr_index]);
-            PC += 4;
-            instr_index++;
-        }
-    }
-    fclose(file_in);
-
-    // Write results to file
+    // Open the output file
     FILE *file_out = fopen(out, "wb");
     if (file_out == NULL) {
+        fclose(file_in);
+        free_symbol_table(table);
         ERROR((Error){.type = ERROR_WRITING_FILE, .str = out});
-    } else {
-        fwrite(res, sizeof(uint32), instr_index, file_out);
-        fclose(file_out);
     }
 
-    free(res);
+    Instruction instruction;
+    uint64 pc = 0;
+
+    // Main assembler loop
+    // For each instruction in the input, we parse and then encode
+    // The result of the encoding is then written to the output file
+    while (fgets(buf, MAX_FILE_LINE_LENGTH, file_in) != NULL) {
+        if (parse_line(buf, &instruction, table, pc)) {
+            uint32 bits = encode_instruction(&instruction);
+            fwrite(&bits, sizeof(uint32), 1, file_out);
+            pc += 4;
+        }
+    }
+
+    fclose(file_in);
+    fclose(file_out);
+
     free_symbol_table(table);
     return EXIT_SUCCESS;
 }

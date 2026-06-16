@@ -1,6 +1,6 @@
 movz x0, #0x3f20, lsl #16
 ldr w1, [x0, #8]
-movz w2, #0x09
+movz w2, #0x08
 movz w3, #0x38
 bic w1, w1, w3
 orr w1, w1, w2

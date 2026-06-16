@@ -94,9 +94,11 @@ void _error(Error error, const char *file, int line, const char *func) {
         fprintf(stderr, "Invalid register prefix: %s\n", error.str);
         break;
     case INVALID_IMMEDIATE_FORMAT_HASH:
-        fprintf(stderr, "Error: Invalid immediate format '%s' (missing '#')\n",
+        fprintf(stderr, "Invalid immediate format '%s' (missing '#')\n",
                 error.str);
         break;
+    case LABEL_NOT_FOUND:
+        fprintf(stderr, "Label %s does not exist in symbol table", error.str);
     }
     // Finally, exit the program
     exit(EXIT_FAILURE);
