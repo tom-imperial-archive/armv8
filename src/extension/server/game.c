@@ -19,11 +19,11 @@ GameState init_game_state(void) {
         return NULL;
     }
 
+    srand(time(NULL));
+
     state->player1 = NULL;
     state->player2 = NULL;
     state->is_player1_turn = rand() > (RAND_MAX / 2);
-
-    srand(time(NULL));
 
     return state;
 }
