@@ -43,64 +43,27 @@ typedef struct {
 
 extern InputData input_state;
 
-bool all_ships_placed(void) {
+// ==========================
+// INITIALISATION AND CLEANUP
+// ==========================
+
+void reset_ui_ships(void) {
+    ui_state.is_confirmed = false;
+    ui_state.invalid_board_timer = 3.0f;
+    
+    int y = 750;
     for (int i = 0; i < NUM_SHIPS; i++) {
-        if (!ui_state.is_placed[i]) {
-            return false;
-        }
+        ui_state.is_dragging[i] = false;
+        ui_state.is_placed[i] = false;
+        ui_state.is_rotated[i] = false;
+
+        ui_state.ship_rectangles[i] = (Rectangle){
+            .x = (i + 1) * 100,
+            .y = y,
+            .width = assets.textures[i].width,
+            .height = assets.textures[i].height,
+        };
     }
-    return true;
-}
-
-ScreenCoord cell_coordinates(Coordinate coord, bool is_board_1) {
-    int left_offset = is_board_1 ? CELL_WIDTH : (BOARD_SIZE + 2) * CELL_WIDTH;
-    return (ScreenCoord){
-        .x = left_offset + CELL_WIDTH * coord.x,
-        .y = CELL_WIDTH + CELL_WIDTH * coord.y,
-    };
-}
-
-bool in_own_board(ScreenCoord coord) {
-    return CELL_WIDTH <= coord.x && coord.x < CELL_WIDTH * (BOARD_SIZE + 1) &&
-           CELL_WIDTH <= coord.y && coord.y < CELL_WIDTH * (BOARD_SIZE + 1);
-}
-
-Coordinate coordinates_to_cell(ScreenCoord coord) {
-    assert(in_own_board(coord));
-    return (Coordinate){
-        .x = (coord.x - CELL_WIDTH) / CELL_WIDTH,
-        .y = (coord.y - CELL_WIDTH) / CELL_WIDTH,
-    };
-}
-
-Rectangle cell_bounds(Coordinate coord, bool is_board_1) {
-    ScreenCoord coords = cell_coordinates(coord, is_board_1);
-    Rectangle bounds = {
-        .x = (float)coords.x,
-        .y = (float)coords.y,
-        .width = (float)CELL_WIDTH,
-        .height = (float)CELL_WIDTH,
-    };
-    return bounds;
-}
-
-ScreenCoord ship_coordinates(int column, int row) {
-    return (ScreenCoord){
-        .x = CELL_WIDTH + CELL_WIDTH * column,
-        .y = CELL_WIDTH + CELL_WIDTH * row,
-    };
-}
-
-Rectangle ship_bounds(Coordinate coord, int width, int height,
-                      bool is_board_1) {
-    ScreenCoord coords = cell_coordinates(coord, is_board_1);
-    Rectangle bounds = {
-        .x = (float)coords.x,
-        .y = (float)coords.y,
-        .width = (float)width,
-        .height = (float)height,
-    };
-    return bounds;
 }
 
 bool init_graphics(void) {
@@ -117,6 +80,9 @@ bool init_graphics(void) {
     // Use logical colours for board
     GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(WHITE));
     GuiSetStyle(BUTTON, BASE_COLOR_DISABLED, ColorToInt(LIGHTGRAY));
+
+    // Make text larger
+    GuiSetStyle(DEFAULT, TEXT_SIZE, 28);
 
     SetTargetFPS(FRAME_RATE);
 
@@ -143,17 +109,7 @@ bool init_graphics(void) {
         }
     }
 
-    int y = 750;
-    for (int i = 0; i < NUM_SHIPS; i++) {
-        ui_state.is_dragging[i] = false;
-        ui_state.ship_rectangles[i] = (Rectangle){
-            .x = (i + 1) * 100,
-            .y = y,
-            .width = assets.textures[i].width,
-            .height = assets.textures[i].height,
-        };
-    }
-
+    reset_ui_ships();
     ui_state.invalid_board_timer = 0.0f;
 
     return true;
@@ -163,57 +119,66 @@ bool is_window_open(void) {
     return !WindowShouldClose(); 
 }
 
-void reset_ui_ships(void) {
-    ui_state.is_confirmed = false;
-
-    ui_state.invalid_board_timer = 3.0f;
-    
-    int y = 750;
+void cleanup_graphics(void) {
     for (int i = 0; i < NUM_SHIPS; i++) {
-        ui_state.is_dragging[i] = false;
-        ui_state.is_placed[i] = false;
-        ui_state.is_rotated[i] = false;
-
-        ui_state.ship_rectangles[i] = (Rectangle){
-            .x = (i + 1) * 100,
-            .y = y,
-            .width = assets.textures[i].width,
-            .height = assets.textures[i].height,
-        };
+        UnloadTexture(assets.textures[i]);
     }
+    UnloadRenderTexture(render_target);
+    CloseWindow();
 }
 
-static void draw_peg(Rectangle bounds, CellState cell) {
-    float center_x = bounds.x + bounds.width / 2.0f;
-    float center_y = bounds.y + bounds.height / 2.0f;
-    float radius = bounds.width / 4.0f;
+// ============================
+// COORDINATE AND LOGIC HELPERS
+// ============================
 
-    if (cell == CELL_MISS) {
-        DrawCircle(center_x, center_y, radius, BLUE); 
-        DrawCircleLines(center_x, center_y, radius, LIGHTGRAY);
-    } else if (cell == CELL_HIT) {
-        DrawCircle(center_x, center_y, radius, RED); 
-        DrawCircleLines(center_x, center_y, radius, DARKGRAY);
-    } else if (cell == CELL_SUNK) {
-        DrawCircle(center_x, center_y, radius, MAROON); 
-        DrawCircleLines(center_x, center_y, radius, BLACK);
-        float offset = radius * 0.5f;
-        DrawLineEx((Vector2){center_x - offset, center_y - offset}, 
-                   (Vector2){center_x + offset, center_y + offset}, 3.0f, WHITE);
-        DrawLineEx((Vector2){center_x + offset, center_y - offset}, 
-                   (Vector2){center_x - offset, center_y + offset}, 3.0f, WHITE);
+static bool all_ships_placed(void) {
+    for (int i = 0; i < NUM_SHIPS; i++) {
+        if (!ui_state.is_placed[i]) {
+            return false;
+        }
     }
+    return true;
 }
 
-void render_frame(const ClientState *state) {
-    // Calculate mouse coords in case window has been stretched
-    float scale_x = (float)GetScreenWidth() / SCREEN_WIDTH;
-    float scale_y = (float)GetScreenHeight() / SCREEN_HEIGHT;
-    float scale = (scale_x < scale_y) ? scale_x : scale_y; // Keep aspect ratio
-    SetMouseOffset(-(GetScreenWidth() - (SCREEN_WIDTH * scale)) * 0.5f, 
-                   -(GetScreenHeight() - (SCREEN_HEIGHT * scale)) * 0.5f);
-    SetMouseScale(1.0f / scale, 1.0f / scale);
-    
+static ScreenCoord cell_coordinates(Coordinate coord, bool is_board_1) {
+    int left_offset = is_board_1 ? CELL_WIDTH : (BOARD_SIZE + 2) * CELL_WIDTH;
+    return (ScreenCoord){
+        .x = left_offset + CELL_WIDTH * coord.x,
+        .y = CELL_WIDTH + CELL_WIDTH * coord.y,
+    };
+}
+
+static bool in_own_board(ScreenCoord coord) {
+    return CELL_WIDTH <= coord.x && coord.x < CELL_WIDTH * (BOARD_SIZE + 1) &&
+           CELL_WIDTH <= coord.y && coord.y < CELL_WIDTH * (BOARD_SIZE + 1);
+}
+
+static Coordinate coordinates_to_cell(ScreenCoord coord) {
+    assert(in_own_board(coord));
+    return (Coordinate){
+        .x = (coord.x - CELL_WIDTH) / CELL_WIDTH,
+        .y = (coord.y - CELL_WIDTH) / CELL_WIDTH,
+    };
+}
+
+static Rectangle cell_bounds(Coordinate coord, bool is_board_1) {
+    ScreenCoord coords = cell_coordinates(coord, is_board_1);
+    Rectangle bounds = {
+        .x = (float)coords.x,
+        .y = (float)coords.y,
+        .width = (float)CELL_WIDTH,
+        .height = (float)CELL_WIDTH,
+    };
+    return bounds;
+}
+
+// ===========
+// INPUT LOGIC
+// ===========
+
+static void update_ship_dragging(void) {
+    if (ui_state.is_confirmed) { return; }
+
     // Process anything currently being dragged
     bool is_any_dragging = false;
     for (int i = 0; i < NUM_SHIPS; i++) {
@@ -227,7 +192,7 @@ void render_frame(const ClientState *state) {
             rectangle->y += mouse_delta.y;
 
             // Handle rotation
-            if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) && !ui_state.is_confirmed) {
+            if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
                 ui_state.is_rotated[i] = !ui_state.is_rotated[i];
 
                 // Rotate about cursor
@@ -278,7 +243,7 @@ void render_frame(const ClientState *state) {
     }
 
     // Now check for new interactions
-    if (!is_any_dragging && !ui_state.is_confirmed) {    
+    if (!is_any_dragging) {    
         // Loop backwards to choose top most ship if any overlap
         for (int i = NUM_SHIPS - 1; i >= 0; i--) {
             Rectangle *rectangle = &ui_state.ship_rectangles[i];
@@ -311,30 +276,45 @@ void render_frame(const ClientState *state) {
             }
         }
     }
+}
 
-        
-    // Draw onto virtual canvas
-    BeginTextureMode(render_target);
+// ==============
+// RENDER HELPERS
+// ==============
 
-    ClearBackground(RAYWHITE);
+static void draw_peg(Rectangle bounds, CellState cell) {
+    float center_x = bounds.x + bounds.width / 2.0f;
+    float center_y = bounds.y + bounds.height / 2.0f;
+    float radius = bounds.width / 4.0f;
 
+    if (cell == CELL_MISS) {
+        DrawCircle(center_x, center_y, radius, BLUE); 
+        DrawCircleLines(center_x, center_y, radius, LIGHTGRAY);
+    } else if (cell == CELL_HIT) {
+        DrawCircle(center_x, center_y, radius, RED); 
+        DrawCircleLines(center_x, center_y, radius, DARKGRAY);
+    } else if (cell == CELL_SUNK) {
+        DrawCircle(center_x, center_y, radius, MAROON); 
+        DrawCircleLines(center_x, center_y, radius, BLACK);
+        float offset = radius * 0.5f;
+        DrawLineEx((Vector2){center_x - offset, center_y - offset}, 
+                   (Vector2){center_x + offset, center_y + offset}, 3.0f, WHITE);
+        DrawLineEx((Vector2){center_x + offset, center_y - offset}, 
+                   (Vector2){center_x - offset, center_y + offset}, 3.0f, WHITE);
+    }
+}
+
+static void draw_boards(const ClientState *state) {
     DrawText("Your board", CELL_WIDTH, 5, FONT_SIZE, DARKGRAY);
     DrawText("Opponent's board", CELL_WIDTH * 12, 5, FONT_SIZE, DARKGRAY);
 
-    //GuiSetState(STATE_DISABLED);
     for (int x = 0; x < BOARD_SIZE; x++) {
         for (int y = 0; y < BOARD_SIZE; y++) {
             Rectangle bounds = cell_bounds((Coordinate){x, y}, true);
-            // if (GuiButton(bounds, "")) {
-            //     char f[16];
-            //     sprintf(f, "x: %d, y: %d", x, y);
-            //     TraceLog(LOG_INFO, f);
-            // }
             DrawRectangleRec(bounds, WHITE);
             DrawRectangleLinesEx(bounds, 2, GRAY);
         }
     }
-    //GuiSetState(STATE_NORMAL);
 
     // Draw target grid
     // Lock buttons if it is not our turn
@@ -349,25 +329,6 @@ void render_frame(const ClientState *state) {
                     .grid_pos = {.x = x, .y = y},
                     .type = INPUT_FIRE,
                 };
-                switch (get_cell(state->game.target_board, x, y)) {
-                case CELL_WATER: // MISS
-                    // TODO: INPUT
-                    TraceLog(LOG_INFO, "Miss.");
-                    // GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(WHITE));
-                    // GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(WHITE));
-                    break;
-                case CELL_SHIP: // HIT
-                    // TODO: INPUT
-                    TraceLog(LOG_INFO, "HIT!!");
-                    // GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(RED));
-                    // GuiSetStyle(BUTTON, BASE_COLOR_FOCUSED, ColorToInt(RED));
-                    break;
-                case CELL_SUNK:
-                case CELL_HIT:
-                case CELL_MISS: // ALREADY ATTEMPTED
-                    TraceLog(LOG_INFO, "Already sent a missile there.");
-                    break;
-                }
             } 
         }
     }
@@ -375,7 +336,9 @@ void render_frame(const ClientState *state) {
     if (state->current_state != UI_STATE_MY_TURN) {
         GuiSetState(STATE_NORMAL);
     }
+}
 
+static void draw_fleets_and_pegs(const ClientState *state) {
     // Draw known enemy ships
     for (int i = 0; i < NUM_SHIPS; i++) {
         if (state->game.enemy_ships_sunk[i]) {
@@ -418,39 +381,40 @@ void render_frame(const ClientState *state) {
             }
         }
     }
+}
 
-
-    if (state->current_state == UI_STATE_PLACING_SHIPS) {
-        Rectangle confirm_rectangle = {
-            .x = CELL_WIDTH * 9,
-            .y = CELL_WIDTH * 12,
-            .height = CELL_WIDTH,
-            .width = CELL_WIDTH * 2,
+static void draw_confirm_button() {
+    Rectangle confirm_rectangle = {
+        .x = CELL_WIDTH * 9,
+        .y = CELL_WIDTH * 12,
+        .height = CELL_WIDTH,
+        .width = CELL_WIDTH * 2,
+    };
+    if (!all_ships_placed()) {
+        GuiSetState(STATE_DISABLED);
+    }
+    if (GuiButton(confirm_rectangle, "Confirm")) {
+        ui_state.is_confirmed = true;
+        TraceLog(LOG_INFO, "Confirmed!");
+        input_state = (InputData){
+            .type = INPUT_PLACED_SHIPS,
         };
-        if (!all_ships_placed()) {
-            GuiSetState(STATE_DISABLED);
-        }
-        if (GuiButton(confirm_rectangle, "Confirm")) {
-            ui_state.is_confirmed = true;
-            TraceLog(LOG_INFO, "Confirmed!");
-            input_state = (InputData){
-                .type = INPUT_PLACED_SHIPS,
-            };
-            for (int i = 0; i < NUM_SHIPS; i++) {
-                input_state.ships[i] =
-                    (InitialShipState){.ship = i,
-                                    .pwd.pos = {
-                                        .x = ui_state.ship_coordinates[i].x,
-                                        .y = ui_state.ship_coordinates[i].y,
-                                    },
-                                    .pwd.horizontal = ui_state.is_rotated[i],};
-            }
-        }
-        if (!all_ships_placed()) {
-            GuiSetState(STATE_NORMAL);
+        for (int i = 0; i < NUM_SHIPS; i++) {
+            input_state.ships[i] =
+                (InitialShipState){.ship = i,
+                                .pwd.pos = {
+                                    .x = ui_state.ship_coordinates[i].x,
+                                    .y = ui_state.ship_coordinates[i].y,
+                                },
+                                .pwd.horizontal = ui_state.is_rotated[i],};
         }
     }
+    if (!all_ships_placed()) {
+        GuiSetState(STATE_NORMAL);
+    }
+}
 
+static void draw_status_text(const ClientState *state) {
     const char *status_text = "";
     Color text_color = DARKGRAY;
 
@@ -481,8 +445,7 @@ void render_frame(const ClientState *state) {
         
         // Push the text a little lower if we are currently showing the confirm button
         int center_y = (state->current_state == UI_STATE_PLACING_SHIPS) 
-                        ? CELL_WIDTH * 14 
-                        : CELL_WIDTH * 12; 
+                        ? CELL_WIDTH * 14 : CELL_WIDTH * 12; 
 
         DrawText(status_text, center_x, center_y, FONT_SIZE, text_color);
     }
@@ -501,35 +464,66 @@ void render_frame(const ClientState *state) {
                  error_font_size, 
                  RED);
     }
+}
 
+static void draw_game_over(const ClientState *state) {
     // Game over overlay
     if (state->current_state == UI_STATE_GAME_OVER) {
         // Background
         DrawRectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, (Color){ 30, 30, 30, 200 });
 
+        // Test if opponent disconnected
+        bool all_enemy_sunk = true;
+        for (int i = 0; i < NUM_SHIPS; i++) {
+            if (!state->game.enemy_ships_sunk[i]) {
+                all_enemy_sunk = false;
+                break;
+            }
+        }
+        bool opponent_fled = (state->game.i_won && !all_enemy_sunk);
+
         // Text
-        const char *end_text = state->game.i_won ? "VICTORY" : "DEFEAT";
-        Color end_color = state->game.i_won ? GOLD : RED;
-        int big_font_size = 100;
+        const char *end_text;
+        Color end_color;
+        const char *sub_text;
+        if (opponent_fled) {
+            end_text = "FORFEIT";
+            end_color = ORANGE;
+            sub_text = "Your opponent disconnected.";
+        } else if (state->game.i_won) {
+            end_text = "VICTORY";
+            end_color = GOLD;
+            sub_text = "You sank the enemy fleet!";
+        } else {
+            end_text = "DEFEAT";
+            end_color = RED;
+            sub_text = "Your fleet was destroyed.";
+        }
+
+        const int title_font_size = 100;
+        const int sub_font_size = 30;
         
-        int text_width = MeasureText(end_text, big_font_size);
-        DrawText(end_text, (SCREEN_WIDTH - text_width) / 2, SCREEN_HEIGHT / 2 - 120, big_font_size, end_color);
+        const int button_width = 200;
+        const int button_height = 60;
 
-        const char *sub_text = state->game.i_won ? "You sank the enemy fleet!" : "Your fleet was destroyed.";
-        int sub_width = MeasureText(sub_text, 30);
-        DrawText(sub_text, (SCREEN_WIDTH - sub_width) / 2, SCREEN_HEIGHT / 2 + 10, 30, LIGHTGRAY);
+        const int title_offset_y = -120;
+        const int sub_offset_y = 10;
+        const int button_offset_y = 80;
 
+        const int center_x = SCREEN_WIDTH / 2;
+        const int center_y = SCREEN_HEIGHT / 2;
+
+        DrawText(end_text, center_x - (MeasureText(end_text, title_font_size) / 2), center_y + title_offset_y, title_font_size, end_color);
+        DrawText(sub_text, center_x - (MeasureText(sub_text, sub_font_size) / 2), center_y + sub_offset_y, sub_font_size, LIGHTGRAY);
+        
         // Quit button
-        Rectangle quit_bounds = {
-            .x = (SCREEN_WIDTH - 200) / 2,
-            .y = SCREEN_HEIGHT / 2 + 80,
-            .width = 200,
-            .height = 60
-        };
-
-        // Ensure button will be clickable
         GuiSetState(STATE_NORMAL);
-        
+        Rectangle quit_bounds = {
+            .x = center_x - (button_width / 2), 
+            .y = center_y + button_offset_y, 
+            .width = button_width, 
+            .height = button_height
+        };
         if (GuiButton(quit_bounds, "QUIT GAME")) {
             input_state = (InputData){
                 .type = INPUT_QUIT
@@ -537,6 +531,38 @@ void render_frame(const ClientState *state) {
             TraceLog(LOG_INFO, "Player pressed Quit from game over screen.");
         }
     }
+}
+
+// ================
+// MAIN RENDER LOOP
+// ================
+
+void render_frame(const ClientState *state) {
+    // Calculate mouse coords in case window has been stretched
+    float scale_x = (float)GetScreenWidth() / SCREEN_WIDTH;
+    float scale_y = (float)GetScreenHeight() / SCREEN_HEIGHT;
+    float scale = (scale_x < scale_y) ? scale_x : scale_y; // Keep aspect ratio
+    SetMouseOffset(-(GetScreenWidth() - (SCREEN_WIDTH * scale)) * 0.5f, 
+                   -(GetScreenHeight() - (SCREEN_HEIGHT * scale)) * 0.5f);
+    SetMouseScale(1.0f / scale, 1.0f / scale);
+    
+    
+    // Process ship placements first
+    if (state->current_state == UI_STATE_PLACING_SHIPS) {
+        update_ship_dragging();
+    }
+        
+    // Draw onto virtual canvas
+    BeginTextureMode(render_target);
+    ClearBackground(RAYWHITE);
+
+    draw_boards(state);
+    draw_fleets_and_pegs(state);
+    if (state->current_state == UI_STATE_PLACING_SHIPS) {
+        draw_confirm_button();
+    }
+    draw_status_text(state);
+    draw_game_over(state);
 
     EndTextureMode();
 
@@ -553,14 +579,6 @@ void render_frame(const ClientState *state) {
     };
     
     DrawTexturePro(render_target.texture, source, dest, (Vector2){ 0, 0 }, 0.0f, WHITE);
-    
     EndDrawing();
 }
 
-void cleanup_graphics(void) {
-    for (int i = 0; i < NUM_SHIPS; i++) {
-        UnloadTexture(assets.textures[i]);
-    }
-    UnloadRenderTexture(render_target);
-    CloseWindow();
-}
