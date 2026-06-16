@@ -12,7 +12,7 @@
 #define FONT_SIZE 40
 
 #define SCREEN_WIDTH ((2 * BOARD_SIZE + 3) * CELL_WIDTH)
-#define SCREEN_HEIGHT ((BOARD_SIZE + 6) * CELL_WIDTH)
+#define SCREEN_HEIGHT ((BOARD_SIZE + 7) * CELL_WIDTH)
 #define FRAME_RATE 120
 
 typedef struct {
@@ -33,6 +33,7 @@ typedef struct {
 } UiState;
 
 static GameAssets assets;
+static RenderTexture2D render_target;
 static UiState ui_state;
 
 typedef struct {
@@ -103,7 +104,15 @@ Rectangle ship_bounds(Coordinate coord, int width, int height,
 }
 
 bool init_graphics(void) {
+    // Ensure window can be resized
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_ALWAYS_RUN);
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Battleship");
+
+    SetWindowMinSize(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+
+    // Virtual canvas to target when rendering
+    render_target = LoadRenderTexture(SCREEN_WIDTH, SCREEN_HEIGHT);
+    SetTextureFilter(render_target.texture, TEXTURE_FILTER_BILINEAR);
 
     // Use logical colours for board
     GuiSetStyle(BUTTON, BASE_COLOR_NORMAL, ColorToInt(WHITE));
@@ -197,6 +206,14 @@ static void draw_peg(Rectangle bounds, CellState cell) {
 }
 
 void render_frame(const ClientState *state) {
+    // Calculate mouse coords in case window has been stretched
+    float scale_x = (float)GetScreenWidth() / SCREEN_WIDTH;
+    float scale_y = (float)GetScreenHeight() / SCREEN_HEIGHT;
+    float scale = (scale_x < scale_y) ? scale_x : scale_y; // Keep aspect ratio
+    SetMouseOffset(-(GetScreenWidth() - (SCREEN_WIDTH * scale)) * 0.5f, 
+                   -(GetScreenHeight() - (SCREEN_HEIGHT * scale)) * 0.5f);
+    SetMouseScale(1.0f / scale, 1.0f / scale);
+    
     // Process anything currently being dragged
     bool is_any_dragging = false;
     for (int i = 0; i < NUM_SHIPS; i++) {
@@ -296,8 +313,8 @@ void render_frame(const ClientState *state) {
     }
 
         
-
-    BeginDrawing();
+    // Draw onto virtual canvas
+    BeginTextureMode(render_target);
 
     ClearBackground(RAYWHITE);
 
@@ -443,7 +460,7 @@ void render_frame(const ClientState *state) {
             text_color = DARKBLUE;
             break;
         case UI_STATE_WAITING_FOR_OPPONENT:
-            status_text = "WAITING FOR OPPONENT TO JOIN...";
+            status_text = "WAITING FOR OPPONENT...";
             text_color = ORANGE;
             break;
         case UI_STATE_MY_TURN:
@@ -521,6 +538,22 @@ void render_frame(const ClientState *state) {
         }
     }
 
+    EndTextureMode();
+
+    // Now draw to actual window
+    BeginDrawing();
+    ClearBackground(BLACK); // Adds black bars if necessary
+
+    Rectangle source = { 0.0f, 0.0f, (float)render_target.texture.width, -(float)render_target.texture.height };
+    Rectangle dest = { 
+        (GetScreenWidth() - ((float)SCREEN_WIDTH * scale)) * 0.5f, 
+        (GetScreenHeight() - ((float)SCREEN_HEIGHT * scale)) * 0.5f, 
+        (float)SCREEN_WIDTH * scale, 
+        (float)SCREEN_HEIGHT * scale 
+    };
+    
+    DrawTexturePro(render_target.texture, source, dest, (Vector2){ 0, 0 }, 0.0f, WHITE);
+    
     EndDrawing();
 }
 
@@ -528,5 +561,6 @@ void cleanup_graphics(void) {
     for (int i = 0; i < NUM_SHIPS; i++) {
         UnloadTexture(assets.textures[i]);
     }
+    UnloadRenderTexture(render_target);
     CloseWindow();
 }
