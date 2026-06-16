@@ -25,6 +25,9 @@ typedef struct {
     bool is_rotated[NUM_SHIPS];
     bool is_placed[NUM_SHIPS];
     bool is_confirmed;
+    
+    float invalid_board_timer;
+
     Coordinate ship_coordinates[NUM_SHIPS];
     Rectangle ship_rectangles[NUM_SHIPS];
 } UiState;
@@ -142,6 +145,8 @@ bool init_graphics(void) {
         };
     }
 
+    ui_state.invalid_board_timer = 0.0f;
+
     return true;
 }
 
@@ -151,6 +156,8 @@ bool is_window_open(void) {
 
 void reset_ui_ships(void) {
     ui_state.is_confirmed = false;
+
+    ui_state.invalid_board_timer = 3.0f;
     
     int y = 750;
     for (int i = 0; i < NUM_SHIPS; i++) {
@@ -461,6 +468,21 @@ void render_frame(const ClientState *state) {
                         : CELL_WIDTH * 12; 
 
         DrawText(status_text, center_x, center_y, FONT_SIZE, text_color);
+    }
+
+    // Show error for bad ship placement
+    if (ui_state.invalid_board_timer > 0.0f) {
+        ui_state.invalid_board_timer -= GetFrameTime();
+
+        const char *error_msg = "INVALID LAYOUT: Ships are overlapping or out of bounds!";
+        int error_font_size = 20;
+        int error_width = MeasureText(error_msg, error_font_size);
+        
+        DrawText(error_msg, 
+                 (SCREEN_WIDTH - error_width) / 2, 
+                 CELL_WIDTH * 14 + 50, 
+                 error_font_size, 
+                 RED);
     }
 
     // Game over overlay
