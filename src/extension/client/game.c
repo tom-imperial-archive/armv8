@@ -80,8 +80,9 @@ static void handle_msg_attack(ClientState *state, EnemyAttackPayload *hit_data) 
 }
 
 static void handle_msg_game_over(ClientState *state, GameOverPayload *result_data) {
-    state->is_running = false;
     state->game.i_won = result_data->you_won;
+
+    state->current_state = UI_STATE_GAME_OVER;
 
     char *winner = state->game.i_won ? "You" : "Your opponent";
     fprintf(stdout, "[DEBUG] %s won!\n", winner);
@@ -208,24 +209,27 @@ static void handle_state_my_turn(ClientState *state, InputData input) {
 
 void client_loop(ClientState *state) {
     while (state->is_running && is_window_open()) {
-        // Receive data from server
-        PacketHeader header;
-        void *payload = NULL;
-        int recv_status;
-        while ((recv_status = receive_packet(state->net.connection_fd, &header,
-                                             &payload)) == 1) {
-            handle_incoming_packet(state, header, payload);
-            if (payload) {
-                free(payload);
+        // Server shuts down after game over, so we must check this to avoid exiting
+            if (state->current_state != UI_STATE_GAME_OVER) {
+            // Receive data from server
+            PacketHeader header;
+            void *payload = NULL;
+            int recv_status;
+            while ((recv_status = receive_packet(state->net.connection_fd, &header,
+                                                &payload)) == 1) {
+                handle_incoming_packet(state, header, payload);
+                if (payload) {
+                    free(payload);
+                }
             }
-        }
 
-        // Check for crash/disconnect
-        if (recv_status == -1) {
-            fprintf(stderr,
-                    "\n[ERROR] Lost connection to the server! Exiting...\n");
-            state->is_running = false;
-            break; // Break out of the game loop immediately
+            // Check for crash/disconnect
+            if (recv_status == -1 && state->current_state != UI_STATE_GAME_OVER) {
+                fprintf(stderr,
+                        "\n[ERROR] Lost connection to the server! Exiting...\n");
+                state->is_running = false;
+                break; // Break out of the game loop immediately
+            }
         }
 
         // Receive input
@@ -242,7 +246,6 @@ void client_loop(ClientState *state) {
                 handle_state_my_turn(state, input);
                 break;
             case UI_STATE_GAME_OVER:
-                // DONT THINK WE NEED ANYTHING HERE - BUT CHECK
             case UI_STATE_OPPONENT_TURN:
             case UI_STATE_WAITING_FOR_OPPONENT:
             case UI_STATE_CONNECTING:

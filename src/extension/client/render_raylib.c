@@ -145,7 +145,9 @@ bool init_graphics(void) {
     return true;
 }
 
-bool is_window_open(void) { return !WindowShouldClose(); }
+bool is_window_open(void) { 
+    return !WindowShouldClose(); 
+}
 
 void reset_ui_ships(void) {
     ui_state.is_confirmed = false;
@@ -441,10 +443,6 @@ void render_frame(const ClientState *state) {
             status_text = "OPPONENT'S TURN: BRACE FOR IMPACT!";
             text_color = MAROON;
             break;
-        case UI_STATE_GAME_OVER:
-            status_text = state->game.i_won ? "VICTORY! YOU WON!" : "DEFEAT! YOU LOST!";
-            text_color = state->game.i_won ? GOLD : RED;
-            break;
         default:
             break;
     }
@@ -459,6 +457,42 @@ void render_frame(const ClientState *state) {
                         : CELL_WIDTH * 12; 
 
         DrawText(status_text, center_x, center_y, FONT_SIZE, text_color);
+    }
+
+    // Game over overlay
+    if (state->current_state == UI_STATE_GAME_OVER) {
+        // Background
+        DrawRectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, (Color){ 30, 30, 30, 200 });
+
+        // Text
+        const char *end_text = state->game.i_won ? "VICTORY" : "DEFEAT";
+        Color end_color = state->game.i_won ? GOLD : RED;
+        int big_font_size = 100;
+        
+        int text_width = MeasureText(end_text, big_font_size);
+        DrawText(end_text, (SCREEN_WIDTH - text_width) / 2, SCREEN_HEIGHT / 2 - 120, big_font_size, end_color);
+
+        const char *sub_text = state->game.i_won ? "You sank the enemy fleet!" : "Your fleet was destroyed.";
+        int sub_width = MeasureText(sub_text, 30);
+        DrawText(sub_text, (SCREEN_WIDTH - sub_width) / 2, SCREEN_HEIGHT / 2 + 10, 30, LIGHTGRAY);
+
+        // Quit button
+        Rectangle quit_bounds = {
+            .x = (SCREEN_WIDTH - 200) / 2,
+            .y = SCREEN_HEIGHT / 2 + 80,
+            .width = 200,
+            .height = 60
+        };
+
+        // Ensure button will be clickable
+        GuiSetState(STATE_NORMAL);
+        
+        if (GuiButton(quit_bounds, "QUIT GAME")) {
+            input_state = (InputData){
+                .type = INPUT_QUIT
+            };
+            TraceLog(LOG_INFO, "Player pressed Quit from game over screen.");
+        }
     }
 
     EndDrawing();
