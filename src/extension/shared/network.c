@@ -10,6 +10,7 @@
 #include <errno.h>
 #include "types.h"
 #include "protocol.h"
+#include "log.h"
 
 /* Sends a packet header and optional payload to the server.
    Receives the connected socket file descriptor, the MessageType enum,
@@ -26,7 +27,7 @@ int send_packet(int sockfd, MessageType type, const void *payload, uint32 payloa
     // Send the header
     int sent = send(sockfd, &header, sizeof(PacketHeader), MSG_DONTWAIT);
     if (sent < 0) {
-        fprintf(stdout, "%s\n", "[ERROR] Failed to send packet header");
+        LOG_ERROR("%s", "Failed to send packet header");
         return -1;
     }
 
@@ -34,12 +35,12 @@ int send_packet(int sockfd, MessageType type, const void *payload, uint32 payloa
     if (payload_length > 0 && payload != NULL) {
         sent = send(sockfd, payload, payload_length, 0);
         if (sent < 0) {
-            fprintf(stderr, "%s\n", "[ERROR] Failed to send packet payload");
+            LOG_ERROR("%s", "Failed to send packet payload");
             return -1;
         }
     }
 
-    fprintf(stdout, "[DEBUG] Sent packet (Type: %d, Payload Size: %u bytes)\n", type, payload_length);
+    LOG_DEBUG("Sent packet (Type: %d, Payload Size: %u bytes)", type, payload_length);
     return 0;
 }
 
@@ -62,9 +63,9 @@ int receive_packet(int sockfd, PacketHeader *out_header, void **out_payload) {
             return 0;
         }
         // If we got some other error, then that's a genuine error
-        fprintf(stderr, "%s\n", "[ERROR] Socket error during receive");
+        LOG_ERROR("%s", "Socket error during receive");
     } else if (n == 0) {
-        fprintf(stderr, "%s\n", "[ERROR] Connection was closed");
+        LOG_ERROR("%s", "Connection was closed");
         return -1;
     }
 
@@ -76,7 +77,7 @@ int receive_packet(int sockfd, PacketHeader *out_header, void **out_payload) {
         *out_payload = malloc(out_header->payload_length);
 
         if (*out_payload == NULL) {
-            fprintf(stderr, "%s\n", "[ERROR] Memory allocation faield for payload");
+            LOG_ERROR("%s", "Memory allocation failed for payload");
             return -1;
         }
 
@@ -87,7 +88,7 @@ int receive_packet(int sockfd, PacketHeader *out_header, void **out_payload) {
             if (payload_bytes  > 0) {
                 total_read += payload_bytes;
             } else if (payload_bytes < 0 && errno != EWOULDBLOCK && errno != EAGAIN) {
-                fprintf(stderr, "%s\n", "[ERROR] Failed to read complete payload");
+                LOG_ERROR("%s", "Failed to read complete payload");
                 free(*out_payload);
                 *out_payload = NULL;
                 return -1;
@@ -98,6 +99,6 @@ int receive_packet(int sockfd, PacketHeader *out_header, void **out_payload) {
         *out_payload = NULL;
     }
 
-    fprintf(stdout, "[DEBUG] Recieved packet (Type: %d, Payload Size: %u bytes)\n", out_header->type, out_header->payload_length);
+    LOG_DEBUG("Received packet (Type: %d, Payload Size: %u bytes)", out_header->type, out_header->payload_length);
     return 1;
 }

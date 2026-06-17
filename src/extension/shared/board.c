@@ -1,4 +1,5 @@
 #include "board.h"
+#include "log.h"
 
 /*
 Shared logic for validing ship placements, testing collisions
@@ -77,7 +78,7 @@ ShipState board_get_ship(Board board, int index) {
         return board->ships[index];
     }
 
-    fprintf(stderr, "%s\n", "[ERROR] Invalid index provided");
+    LOG_ERROR("Invalid index (%d) provided", index);
     exit(EXIT_FAILURE);
 }
 
@@ -111,7 +112,7 @@ bool board_add_placement_set(InitialShipDefs ship_defs, Board board) {
             board->ships[i] = sl;
             declared_types = declared_types | mask;
         } else {
-            printf("Already ship of same type\n");
+            LOG_ERROR("%s", "Already ship of same type");
             // Tried to add two ships of the same type
             return false;
         }
@@ -287,7 +288,7 @@ void print_board(Board board, FILE *out) {
 CellState get_cell(Board b, int x, int y) {
     Position p = { .x = x, .y = y };
     if (!check_pos_in_bounds(p)) {
-        fprintf(stderr, "[ERROR] position not in bounds\n");
+        LOG_ERROR("Position (%d, %d) not in bounds", x, y);
         exit(1);
     }
     return b->cells[x][y];

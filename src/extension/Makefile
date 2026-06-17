@@ -22,6 +22,7 @@ SERVER_SRCS = \
 	server/main.c \
 	server/game.c \
 	server/network.c \
+	shared/log.c \
 	shared/network.c
 
 CLIENT_CORE_SRCS = \
@@ -29,6 +30,7 @@ CLIENT_CORE_SRCS = \
 	client/state.c \
 	client/network.c \
 	client/game.c \
+	shared/log.c \
 	shared/network.c
 
 CLIENT_GUI_SRCS = \
