@@ -102,10 +102,16 @@ bool init_graphics(void) {
         assets.rotated_textures[i] = LoadTextureFromImage(image);
         UnloadImage(image);
 
-        if (!IsTextureValid(assets.textures[i])) {
+        if (!IsTextureValid(assets.textures[i]) || !IsTextureValid(assets.rotated_textures[i])) {
             // Unload all the textures that have already been loaded.
             for (int j = 0; j < i; j++) {
                 UnloadTexture(assets.textures[j]);
+                UnloadTexture(assets.rotated_textures[j]);
+            }
+
+            // Also check if base loaded but rotated one failed
+            if (IsTextureValid(assets.textures[i])) {
+                UnloadTexture(assets.textures[i]);
             }
             LOG_ERROR("%s", "Failed to load texture!");
             return false;
@@ -125,6 +131,7 @@ bool is_window_open(void) {
 void cleanup_graphics(void) {
     for (int i = 0; i < NUM_SHIPS; i++) {
         UnloadTexture(assets.textures[i]);
+        UnloadTexture(assets.rotated_textures[i]);
     }
     UnloadRenderTexture(render_target);
     CloseWindow();
