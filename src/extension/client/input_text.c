@@ -74,9 +74,7 @@ InputData get_user_input(void) {
 
             fprintf(stdout, "[DEBUG] Parsed fire input!\n");
             return data;
-        }
-
-        else {
+        } else {
             fprintf(stdout, "[DEBUG] Couldn't parse input: '%s'\n", input);
         }
     }

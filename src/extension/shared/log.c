@@ -1,4 +1,6 @@
 #include "shared/log.h"
+#include <stdbool.h>
+#include <stdio.h>
 
 FILE *log_out = NULL;
 FILE *log_err = NULL;

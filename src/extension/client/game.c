@@ -18,14 +18,14 @@ bool start_client_systems(ClientState *state, char *hostname, int port) {
     fprintf(stdout, "%s\n", "[DEBUG] Attempting to connect to server...\n");
     state->net.connection_fd = connect_to_server(hostname, port);
 
-    if (state->net.connection_fd != -1) {
-        fprintf(stdout, "%s\n", "[DEBUG] Connected successfully!");
-        state->current_state = UI_STATE_PLACING_SHIPS;
-        return true;
-    } else {
+    if (state->net.connection_fd == -1) {
         fprintf(stdout, "%s\n", "[ERROR] Failed to connect to server!");
         return false;
     }
+
+    fprintf(stdout, "%s\n", "[DEBUG] Connected successfully!");
+    state->current_state = UI_STATE_PLACING_SHIPS;
+    return true;
 }
 
 static void send_board_to_server(ClientState *state) {
@@ -131,50 +131,53 @@ static void handle_incoming_packet(ClientState *state, PacketHeader header,
 static void handle_state_placing_ships(ClientState *state, InputData input) {
     // ACTUAL VERSION
     // Attempt to place
-    if (input.type == INPUT_PLACED_SHIPS) {
-        if (board_add_placement_set(input.ships, state->game.my_board)) {
-            // Success
-            for (int i = 0; i < NUM_SHIPS; i++) {
-                state->placement.placements[i] = input.ships[i];
-            }
+    if (input.type != INPUT_PLACED_SHIPS) {
+        return;
+    }
 
-            state->current_state = UI_STATE_WAITING_FOR_OPPONENT;
-            fprintf(stdout, "[DEBUG] Ships placed successfully! "
-                            "Waiting for opponent...\n");
-
-            if (state->net.server_requested_board) {
-                send_board_to_server(state);
-            }
-        } else {
-            // Invalid!
-            fprintf(stdout, "[ERROR] Invalid placement: ships overlap "
-                            "or are out of bounds!\n");
-
-            reset_staged_ships();
-
-            free_board(state->game.my_board);
-            state->game.my_board = create_empty_board();
+    if (board_add_placement_set(input.ships, state->game.my_board)) {
+        // Success
+        for (int i = 0; i < NUM_SHIPS; i++) {
+            state->placement.placements[i] = input.ships[i];
         }
+
+        state->current_state = UI_STATE_WAITING_FOR_OPPONENT;
+        fprintf(stdout, "[DEBUG] Ships placed successfully! "
+                        "Waiting for opponent...\n");
+
+        if (state->net.server_requested_board) {
+            send_board_to_server(state);
+        }
+    } else {
+        // Invalid!
+        fprintf(stdout, "[ERROR] Invalid placement: ships overlap "
+                        "or are out of bounds!\n");
+
+        reset_staged_ships();
+
+        free_board(state->game.my_board);
+        state->game.my_board = create_empty_board();
     }
 }
 
 static void handle_state_my_turn(ClientState *state, InputData input) {
     // Check if we got an input
-    if (input.type == INPUT_FIRE) {
-        if (valid_attack_pos(
-                state->game.target_board,
-                (Position){.x = input.grid_pos.x, .y = input.grid_pos.y})) {
-            FirePayload fire_req;
-            fire_req.x = input.grid_pos.x;
-            fire_req.y = input.grid_pos.y;
+    if (input.type != INPUT_FIRE) {
+        return;
+    }
+    if (valid_attack_pos(
+            state->game.target_board,
+            (Position){.x = input.grid_pos.x, .y = input.grid_pos.y})) {
+        FirePayload fire_req;
+        fire_req.x = input.grid_pos.x;
+        fire_req.y = input.grid_pos.y;
 
-            send_packet(state->net.connection_fd, MSG_FIRE, &fire_req,
-                        sizeof(fire_req));
-            fprintf(stdout, "[DEBUG] Fired at %d, %d!\n", input.grid_pos.x,
-                    input.grid_pos.y);
-        } else {
-            fprintf(stdout, "[DEBUG] Invalid coordinate!\n");
-        }
+        send_packet(state->net.connection_fd, MSG_FIRE, &fire_req,
+                    sizeof(fire_req));
+        fprintf(stdout, "[DEBUG] Fired at %d, %d!\n", input.grid_pos.x,
+                input.grid_pos.y);
+    } else {
+        fprintf(stdout, "[DEBUG] Invalid coordinate!\n");
     }
 }
 

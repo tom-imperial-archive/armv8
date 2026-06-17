@@ -183,28 +183,29 @@ static void snap_to_grid(int ship_index) {
         .y = rectangle->y + (CELL_WIDTH / 2),
     };
 
-    if (in_own_board(coords)) {
-        Coordinate c = coordinates_to_cell(coords);
-
-        // Check for tail clipping
-        int len = ship_length(ship_index);
-        bool fits = ui_state.is_rotated[ship_index] ? (c.x + len <= BOARD_SIZE)
-                                                    : (c.y + len <= BOARD_SIZE);
-
-        if (fits) {
-            ScreenCoord sc = cell_coordinates(c, true);
-            ui_state.ship_coordinates[ship_index] = c;
-            ui_state.ship_rectangles[ship_index].x = sc.x;
-            ui_state.ship_rectangles[ship_index].y = sc.y;
-            ui_state.is_placed[ship_index] = true;
-        } else {
-            ui_state.is_placed[ship_index] =
-                false; // Rejected for hanging off board
-        }
-    } else {
-        ui_state.is_placed[ship_index] =
-            false; // Rejected for head not being on board
+    if (!in_own_board(coords)) {
+        // Rejected for head not being on board
+        ui_state.is_placed[ship_index] = false;
+        return;
     }
+
+    Coordinate c = coordinates_to_cell(coords);
+
+    // Check for tail clipping
+    int len = ship_length(ship_index);
+    bool fits = ui_state.is_rotated[ship_index] ? (c.x + len <= BOARD_SIZE)
+                                                : (c.y + len <= BOARD_SIZE);
+
+    if (!fits) {
+        // Rejected for hanging off board
+        ui_state.is_placed[ship_index] = false;
+    }
+
+    ScreenCoord sc = cell_coordinates(c, true);
+    ui_state.ship_coordinates[ship_index] = c;
+    ui_state.ship_rectangles[ship_index].x = sc.x;
+    ui_state.ship_rectangles[ship_index].y = sc.y;
+    ui_state.is_placed[ship_index] = true;
 }
 
 static void update_ship_dragging(void) {
@@ -215,76 +216,82 @@ static void update_ship_dragging(void) {
     // Process anything currently being dragged
     bool is_any_dragging = false;
     for (int i = 0; i < NUM_SHIPS; i++) {
-        if (ui_state.is_dragging[i]) {
-            is_any_dragging = true;
-            Rectangle *rectangle = &ui_state.ship_rectangles[i];
-
-            // Move with mouse
-            Vector2 mouse_delta = GetMouseDelta();
-            rectangle->x += mouse_delta.x;
-            rectangle->y += mouse_delta.y;
-
-            // Handle rotation
-            if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
-                ui_state.is_rotated[i] = !ui_state.is_rotated[i];
-
-                // Rotate about cursor
-                Vector2 mouse = GetMousePosition();
-                float offset_x = mouse.x - rectangle->x;
-                float offset_y = mouse.y - rectangle->y;
-
-                float temp = rectangle->width;
-                rectangle->width = rectangle->height;
-                rectangle->height = temp;
-
-                rectangle->x = mouse.x - offset_y;
-                rectangle->y = mouse.y - offset_x;
-            }
-
-            // Handle dropping and snapping
-            if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
-                ui_state.is_dragging[i] = false;
-                // Look at centre of top-left cell
-                snap_to_grid(i);
-                // TraceLog(LOG_INFO, "stopped dragging");
-            }
-            break; // stop looping, since at this stage we only check currently
-                   // dragging ship
+        if (!ui_state.is_dragging[i]) {
+            continue;
         }
+
+        is_any_dragging = true;
+        Rectangle *rectangle = &ui_state.ship_rectangles[i];
+
+        // Move with mouse
+        Vector2 mouse_delta = GetMouseDelta();
+        rectangle->x += mouse_delta.x;
+        rectangle->y += mouse_delta.y;
+
+        // Handle rotation
+        if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+            ui_state.is_rotated[i] = !ui_state.is_rotated[i];
+
+            // Rotate about cursor
+            Vector2 mouse = GetMousePosition();
+            float offset_x = mouse.x - rectangle->x;
+            float offset_y = mouse.y - rectangle->y;
+
+            float temp = rectangle->width;
+            rectangle->width = rectangle->height;
+            rectangle->height = temp;
+
+            rectangle->x = mouse.x - offset_y;
+            rectangle->y = mouse.y - offset_x;
+        }
+
+        // Handle dropping and snapping
+        if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
+            ui_state.is_dragging[i] = false;
+            // Look at centre of top-left cell
+            snap_to_grid(i);
+            // TraceLog(LOG_INFO, "stopped dragging");
+        }
+        break; // stop looping, since at this stage we only check currently
+               // dragging ship
     }
 
     // Now check for new interactions
-    if (!is_any_dragging) {
-        // Loop backwards to choose top most ship if any overlap
-        for (int i = NUM_SHIPS - 1; i >= 0; i--) {
-            Rectangle *rectangle = &ui_state.ship_rectangles[i];
-            Vector2 mouse = GetMousePosition();
+    if (is_any_dragging) {
+        return;
+    }
 
-            if (CheckCollisionPointRec(mouse, *rectangle)) {
-                if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-                    ui_state.is_dragging[i] = true;
-                    ui_state.is_placed[i] = false;
-                    break; // break to prevent moving two ships at the same time
-                } else if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
-                    // Rotate without dragging
-                    ui_state.is_rotated[i] = !ui_state.is_rotated[i];
+    // Loop backwards to choose top most ship if any overlap
+    for (int i = NUM_SHIPS - 1; i >= 0; i--) {
+        Rectangle *rectangle = &ui_state.ship_rectangles[i];
+        Vector2 mouse = GetMousePosition();
 
-                    float offset_x = mouse.x - rectangle->x;
-                    float offset_y = mouse.y - rectangle->y;
+        if (!CheckCollisionPointRec(mouse, *rectangle)) {
+            continue;
+        }
 
-                    float temp = rectangle->width;
-                    rectangle->width = rectangle->height;
-                    rectangle->height = temp;
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+            ui_state.is_dragging[i] = true;
+            ui_state.is_placed[i] = false;
+            break; // break to prevent moving two ships at the same time
+        } else if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT)) {
+            // Rotate without dragging
+            ui_state.is_rotated[i] = !ui_state.is_rotated[i];
 
-                    rectangle->x = mouse.x - offset_y;
-                    rectangle->y = mouse.y - offset_x;
+            float offset_x = mouse.x - rectangle->x;
+            float offset_y = mouse.y - rectangle->y;
 
-                    snap_to_grid(i);
+            float temp = rectangle->width;
+            rectangle->width = rectangle->height;
+            rectangle->height = temp;
 
-                    ui_state.is_placed[i] = false;
-                    break;
-                }
-            }
+            rectangle->x = mouse.x - offset_y;
+            rectangle->y = mouse.y - offset_x;
+
+            snap_to_grid(i);
+
+            ui_state.is_placed[i] = false;
+            break;
         }
     }
 }
@@ -334,6 +341,7 @@ static void draw_boards(const ClientState *state) {
     if (state->current_state != UI_STATE_MY_TURN) {
         GuiSetState(STATE_DISABLED);
     }
+
     for (int x = 0; x < BOARD_SIZE; x++) {
         for (int y = 0; y < BOARD_SIZE; y++) {
             Rectangle bounds = cell_bounds((Coordinate){.x = x, .y = y}, false);
@@ -354,18 +362,20 @@ static void draw_boards(const ClientState *state) {
 static void draw_fleets_and_pegs(const ClientState *state) {
     // Draw known enemy ships
     for (int i = 0; i < NUM_SHIPS; i++) {
-        if (state->game.enemy_ships_sunk[i]) {
-            PositionWithDirection pwd = state->game.enemy_ship_positions[i];
-
-            // If the state says horizontal, use the base texture. Otherwise,
-            // rotated!
-            Texture2D texture = pwd.horizontal ? assets.rotated_textures[i]
-                                               : assets.textures[i];
-
-            ScreenCoord sc =
-                cell_coordinates((Coordinate){pwd.pos.x, pwd.pos.y}, false);
-            DrawTexture(texture, sc.x, sc.y, WHITE);
+        if (!state->game.enemy_ships_sunk[i]) {
+            continue;
         }
+
+        PositionWithDirection pwd = state->game.enemy_ship_positions[i];
+
+        // If the state says horizontal, use the base texture. Otherwise,
+        // rotated!
+        Texture2D texture =
+            pwd.horizontal ? assets.rotated_textures[i] : assets.textures[i];
+
+        ScreenCoord sc =
+            cell_coordinates((Coordinate){pwd.pos.x, pwd.pos.y}, false);
+        DrawTexture(texture, sc.x, sc.y, WHITE);
     }
 
     // Draw own ships
@@ -489,69 +499,67 @@ static void draw_status_text(const ClientState *state) {
 
 static void draw_game_over(const ClientState *state) {
     // Game over overlay
-    if (state->current_state == UI_STATE_GAME_OVER) {
-        // Background
-        DrawRectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT,
-                      (Color){30, 30, 30, 200});
+    if (state->current_state != UI_STATE_GAME_OVER) {
+        return;
+    }
+    // Background
+    DrawRectangle(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, (Color){30, 30, 30, 200});
 
-        // Test if opponent disconnected
-        bool all_enemy_sunk = true;
-        for (int i = 0; i < NUM_SHIPS; i++) {
-            if (!state->game.enemy_ships_sunk[i]) {
-                all_enemy_sunk = false;
-                break;
-            }
+    // Test if opponent disconnected
+    bool all_enemy_sunk = true;
+    for (int i = 0; i < NUM_SHIPS; i++) {
+        if (!state->game.enemy_ships_sunk[i]) {
+            all_enemy_sunk = false;
+            break;
         }
-        bool opponent_fled = (state->game.i_won && !all_enemy_sunk);
+    }
+    bool opponent_fled = (state->game.i_won && !all_enemy_sunk);
 
-        // Text
-        const char *end_text;
-        Color end_color;
-        const char *sub_text;
-        if (opponent_fled) {
-            end_text = "FORFEIT";
-            end_color = ORANGE;
-            sub_text = "Your opponent disconnected.";
-        } else if (state->game.i_won) {
-            end_text = "VICTORY";
-            end_color = GOLD;
-            sub_text = "You sank the enemy fleet!";
-        } else {
-            end_text = "DEFEAT";
-            end_color = RED;
-            sub_text = "Your fleet was destroyed.";
-        }
+    // Text
+    const char *end_text;
+    Color end_color;
+    const char *sub_text;
+    if (opponent_fled) {
+        end_text = "FORFEIT";
+        end_color = ORANGE;
+        sub_text = "Your opponent disconnected.";
+    } else if (state->game.i_won) {
+        end_text = "VICTORY";
+        end_color = GOLD;
+        sub_text = "You sank the enemy fleet!";
+    } else {
+        end_text = "DEFEAT";
+        end_color = RED;
+        sub_text = "Your fleet was destroyed.";
+    }
 
-        const int title_font_size = 100;
-        const int sub_font_size = 30;
+    const int title_font_size = 100;
+    const int sub_font_size = 30;
 
-        const int button_width = 200;
-        const int button_height = 60;
+    const int button_width = 200;
+    const int button_height = 60;
 
-        const int title_offset_y = -120;
-        const int sub_offset_y = 10;
-        const int button_offset_y = 80;
+    const int title_offset_y = -120;
+    const int sub_offset_y = 10;
+    const int button_offset_y = 80;
 
-        const int center_x = SCREEN_WIDTH / 2;
-        const int center_y = SCREEN_HEIGHT / 2;
+    const int center_x = SCREEN_WIDTH / 2;
+    const int center_y = SCREEN_HEIGHT / 2;
 
-        DrawText(end_text,
-                 center_x - (MeasureText(end_text, title_font_size) / 2),
-                 center_y + title_offset_y, title_font_size, end_color);
-        DrawText(sub_text,
-                 center_x - (MeasureText(sub_text, sub_font_size) / 2),
-                 center_y + sub_offset_y, sub_font_size, LIGHTGRAY);
+    DrawText(end_text, center_x - (MeasureText(end_text, title_font_size) / 2),
+             center_y + title_offset_y, title_font_size, end_color);
+    DrawText(sub_text, center_x - (MeasureText(sub_text, sub_font_size) / 2),
+             center_y + sub_offset_y, sub_font_size, LIGHTGRAY);
 
-        // Quit button
-        GuiSetState(STATE_NORMAL);
-        Rectangle quit_bounds = {.x = center_x - (button_width / 2),
-                                 .y = center_y + button_offset_y,
-                                 .width = button_width,
-                                 .height = button_height};
-        if (GuiButton(quit_bounds, "QUIT GAME")) {
-            input_state = (InputData){.type = INPUT_QUIT};
-            TraceLog(LOG_INFO, "Player pressed Quit from game over screen.");
-        }
+    // Quit button
+    GuiSetState(STATE_NORMAL);
+    Rectangle quit_bounds = {.x = center_x - (button_width / 2),
+                             .y = center_y + button_offset_y,
+                             .width = button_width,
+                             .height = button_height};
+    if (GuiButton(quit_bounds, "QUIT GAME")) {
+        input_state = (InputData){.type = INPUT_QUIT};
+        TraceLog(LOG_INFO, "Player pressed Quit from game over screen.");
     }
 }
 

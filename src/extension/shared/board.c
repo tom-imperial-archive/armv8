@@ -102,20 +102,20 @@ bool board_add_placement_set(InitialShipDefs ship_defs, Board board) {
             (ShipState){.ship = isl.ship, .pwd = isl.pwd, .destroyed = false};
 
         int mask = mask_bit_for_ship(sl.ship);
-        if ((declared_types & mask) == 0) {
-            // No ship of this type declared yet
-            if (!place_ship(sl, board)) {
-                // Ship position was invalid or ship type invalid
-                return false;
-            }
-
-            board->ships[i] = sl;
-            declared_types = declared_types | mask;
-        } else {
+        if ((declared_types & mask) != 0) {
             printf("Already ship of same type\n");
             // Tried to add two ships of the same type
             return false;
         }
+
+        // No ship of this type declared yet
+        if (!place_ship(sl, board)) {
+            // Ship position was invalid or ship type invalid
+            return false;
+        }
+
+        board->ships[i] = sl;
+        declared_types = declared_types | mask;
     }
 
     return true;
@@ -200,11 +200,11 @@ bool board_try_hit(Board opponent_ships_board, Position pos, bool *was_hit,
     CellState target = opponent_ships_board->cells[pos.x][pos.y];
 
     switch (target) {
-    case CELL_WATER: {
+    case CELL_WATER:
         opponent_ships_board->cells[pos.x][pos.y] = CELL_MISS;
         *was_hit = false;
-    }; break;
-    case CELL_SHIP: {
+        break;
+    case CELL_SHIP:
         opponent_ships_board->cells[pos.x][pos.y] = CELL_HIT;
         *was_hit = true;
 
@@ -212,7 +212,7 @@ bool board_try_hit(Board opponent_ships_board, Position pos, bool *was_hit,
         *sunk = -1;
         struct PosShipPair psp = {.pos = pos, .ship = sunk};
         for_each_ship(opponent_ships_board, *check_destroyed, &psp);
-    }; break;
+        break;
     case CELL_HIT:
     case CELL_SUNK:
     case CELL_MISS:
