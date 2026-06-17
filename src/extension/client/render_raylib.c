@@ -176,6 +176,35 @@ static Rectangle cell_bounds(Coordinate coord, bool is_board_1) {
 // INPUT LOGIC
 // ===========
 
+static void snap_to_grid(int ship_index) {
+    Rectangle *rectangle = &ui_state.ship_rectangles[ship_index];
+
+    ScreenCoord coords = {
+        .x = rectangle->x + (CELL_WIDTH / 2),
+        .y = rectangle->y + (CELL_WIDTH / 2),
+    };
+
+    if (in_own_board(coords)) {
+        Coordinate c = coordinates_to_cell(coords);
+
+        // Check for tail clipping
+        int len = ship_length(ship_index);
+        bool fits = ui_state.is_rotated[ship_index] ? (c.x + len <= BOARD_SIZE) : (c.y + len <= BOARD_SIZE);
+
+        if (fits) {
+        ScreenCoord sc = cell_coordinates(c, true);
+            ui_state.ship_coordinates[ship_index] = c;
+            ui_state.ship_rectangles[ship_index].x = sc.x;
+            ui_state.ship_rectangles[ship_index].y = sc.y;
+            ui_state.is_placed[ship_index] = true;
+        } else {
+            ui_state.is_placed[ship_index] = false; // Rejected for hanging off board
+        }
+    } else {
+        ui_state.is_placed[ship_index] = false; // Rejected for head not being on board
+    }
+}
+
 static void update_ship_dragging(void) {
     if (ui_state.is_confirmed) { return; }
 
@@ -212,30 +241,7 @@ static void update_ship_dragging(void) {
             if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT)) {
                 ui_state.is_dragging[i] = false;
                 // Look at centre of top-left cell
-                ScreenCoord coords = {
-                    .x = rectangle->x + (CELL_WIDTH / 2),
-                    .y = rectangle->y + (CELL_WIDTH / 2),
-                };
-
-                if (in_own_board(coords)) {
-                    Coordinate c = coordinates_to_cell(coords);
-
-                    // Check for tail clipping
-                    int len = ship_length(i);
-                    bool fits = ui_state.is_rotated[i] ? (c.x + len <= BOARD_SIZE) : (c.y + len <= BOARD_SIZE);
-
-                    if (fits) {
-                    ScreenCoord sc = cell_coordinates(c, true);
-                        ui_state.ship_coordinates[i] = c;
-                        ui_state.ship_rectangles[i].x = sc.x;
-                        ui_state.ship_rectangles[i].y = sc.y;
-                        ui_state.is_placed[i] = true;
-                    } else {
-                        ui_state.is_placed[i] = false; // Rejected for hanging off board
-                    }
-                } else {
-                    ui_state.is_placed[i] = false; // Rejected for head not being on board
-                }
+                snap_to_grid(i);
                 // TraceLog(LOG_INFO, "stopped dragging");
             }
             break; // stop looping, since at this stage we only check currently dragging ship
@@ -269,7 +275,8 @@ static void update_ship_dragging(void) {
                     rectangle->x = mouse.x - offset_y;
                     rectangle->y = mouse.y - offset_x;
                     
-                    // TODO - DECIDE IF THIS (UNSNAPPING) IS OPTIMAL
+                    snap_to_grid(i);
+
                     ui_state.is_placed[i] = false; 
                     break; 
                 }
