@@ -1,4 +1,5 @@
 #include "board.h"
+#include <stdlib.h>
 
 /*
 Shared logic for validing ship placements, testing collisions

@@ -1,6 +1,7 @@
 #include "game.h"
 #include "shared/network.h"
 #include "shared/protocol.h"
+#include <stdlib.h>
 #include <time.h>
 
 /*
