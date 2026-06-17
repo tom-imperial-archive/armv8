@@ -5,6 +5,7 @@
 #include "common/error.h"
 #include <stdio.h>
 #include <stdlib.h>
+
 #define MAX_FILE_LINE_LENGTH 120
 
 int main(int argc, char **argv) {
@@ -35,7 +36,7 @@ int main(int argc, char **argv) {
 
     char buf[MAX_FILE_LINE_LENGTH];
     SymbolTable *table = create_symbol_table();
-    //todo handle file logic
+    // todo handle file logic
     scan_file(file_in, table);
 
     // Open the output file

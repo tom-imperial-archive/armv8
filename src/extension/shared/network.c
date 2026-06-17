@@ -1,22 +1,23 @@
+#include "protocol.h"
+#include "types.h"
+#include <errno.h>
+#include <fcntl.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <errno.h>
-#include "types.h"
-#include "protocol.h"
+#include <unistd.h>
 
 /* Sends a packet header and optional payload to the server.
    Receives the connected socket file descriptor, the MessageType enum,
    a pointer to the payload being sent (which can be NULL) and the
    payload lenght in bytes.
    Returns 0 on successful transmission, -1 on failure. */
-int send_packet(int sockfd, MessageType type, const void *payload, uint32 payload_length) {
+int send_packet(int sockfd, MessageType type, const void *payload,
+                uint32 payload_length) {
     PacketHeader header;
     header.type = type;
 
@@ -39,7 +40,8 @@ int send_packet(int sockfd, MessageType type, const void *payload, uint32 payloa
         }
     }
 
-    fprintf(stdout, "[DEBUG] Sent packet (Type: %d, Payload Size: %u bytes)\n", type, payload_length);
+    fprintf(stdout, "[DEBUG] Sent packet (Type: %d, Payload Size: %u bytes)\n",
+            type, payload_length);
     return 0;
 }
 
@@ -76,18 +78,23 @@ int receive_packet(int sockfd, PacketHeader *out_header, void **out_payload) {
         *out_payload = malloc(out_header->payload_length);
 
         if (*out_payload == NULL) {
-            fprintf(stderr, "%s\n", "[ERROR] Memory allocation faield for payload");
+            fprintf(stderr, "%s\n",
+                    "[ERROR] Memory allocation faield for payload");
             return -1;
         }
 
         // Read the entire payload
         int total_read = 0;
         while (total_read < out_header->payload_length) {
-            int payload_bytes = recv(sockfd, (char*)*out_payload + total_read, out_header->payload_length - total_read, 0);
-            if (payload_bytes  > 0) {
+            int payload_bytes =
+                recv(sockfd, (char *)*out_payload + total_read,
+                     out_header->payload_length - total_read, 0);
+            if (payload_bytes > 0) {
                 total_read += payload_bytes;
-            } else if (payload_bytes < 0 && errno != EWOULDBLOCK && errno != EAGAIN) {
-                fprintf(stderr, "%s\n", "[ERROR] Failed to read complete payload");
+            } else if (payload_bytes < 0 && errno != EWOULDBLOCK &&
+                       errno != EAGAIN) {
+                fprintf(stderr, "%s\n",
+                        "[ERROR] Failed to read complete payload");
                 free(*out_payload);
                 *out_payload = NULL;
                 return -1;
@@ -98,6 +105,8 @@ int receive_packet(int sockfd, PacketHeader *out_header, void **out_payload) {
         *out_payload = NULL;
     }
 
-    fprintf(stdout, "[DEBUG] Recieved packet (Type: %d, Payload Size: %u bytes)\n", out_header->type, out_header->payload_length);
+    fprintf(stdout,
+            "[DEBUG] Recieved packet (Type: %d, Payload Size: %u bytes)\n",
+            out_header->type, out_header->payload_length);
     return 1;
 }

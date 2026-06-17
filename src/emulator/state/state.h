@@ -1,9 +1,11 @@
 #ifndef STATE_H
 #define STATE_H
+
 #include "emulator/state/memory.h"
 #include "utils/types.h"
 #include <stdbool.h>
 #include <stdio.h>
+
 #define REG_PRINT_LINE_LENGTH 24
 #define REG_PRINT_BUFFER_SIZE (33 * REG_PRINT_LINE_LENGTH)
 
@@ -134,7 +136,6 @@ extern void write_mem_64(State *state, uint64 addr, uint64 val);
 extern void write_mem_32(State *state, uint64 addr, uint32 val);
 
 extern uint64 read_mem_64(State *state, uint64 addr);
-
 extern uint32 read_mem_32(State *state, uint64 addr);
 
 #endif

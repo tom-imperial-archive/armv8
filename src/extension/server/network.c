@@ -1,14 +1,12 @@
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include "shared/types.h"
-#include "shared/protocol.h"
+#include <unistd.h>
 
 /* Starts the server, binds to the specified port, and begins listening.
    Exits if a failure occurs.
@@ -40,7 +38,8 @@ int start_server(int port) {
     server_addr.sin_port = htons(port);
 
     // Bind socket to port
-    if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+    if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) <
+        0) {
         fprintf(stderr, "%s\n", "[ERROR] Bind failed");
         exit(EXIT_FAILURE);
     }
@@ -68,7 +67,8 @@ int accept_client(int server_fd) {
     struct sockaddr_in client_addr;
     socklen_t client_len = sizeof(client_addr);
 
-    int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_len);
+    int client_fd =
+        accept(server_fd, (struct sockaddr *)&client_addr, &client_len);
     if (client_fd < 0) {
         fprintf(stderr, "%s\n", "[ERROR] Failed to accept client");
         return -1;

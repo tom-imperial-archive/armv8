@@ -1,3 +1,6 @@
-#include "shared/board.h"
+#ifndef TEST_BOARD_H
+#define TEST_BOARD_H
 
-extern void test_board();
+extern void test_board(void);
+
+#endif

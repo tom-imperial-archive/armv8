@@ -1,8 +1,8 @@
 #ifndef CLIENT_STATE_H
 #define CLIENT_STATE_H
 
-#include <stdbool.h>
 #include "shared/board.h"
+#include <stdbool.h>
 
 typedef enum {
     UI_STATE_CONNECTING,

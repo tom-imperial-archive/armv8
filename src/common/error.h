@@ -1,7 +1,7 @@
-#ifndef ERROR_H_
-#define ERROR_H_
+#ifndef ERROR_H
+#define ERROR_H
+
 #include "utils/types.h"
-#include <stdio.h>
 
 #define ERROR(...) _error(__VA_ARGS__, __FILE__, __LINE__, __func__)
 

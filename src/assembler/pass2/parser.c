@@ -1,14 +1,12 @@
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include "assembler/symbol_table/symbol_table.h"
 #include "common/error.h"
 #include "common/instruction.h"
 #include "operands.h"
-#include "utils/types.h"
 #include "utils/parseutils.h"
+#include "utils/types.h"
+#include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define ZERO_REG 31
 

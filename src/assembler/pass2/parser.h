@@ -3,7 +3,7 @@
 
 #include "assembler/symbol_table/symbol_table.h"
 #include "common/instruction.h"
-#include "stdbool.h"
+#include <stdbool.h>
 
 // Takes a single line of assembly
 // If it's an instruction, we populate the instruction struct and return true.

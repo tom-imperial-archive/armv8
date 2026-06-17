@@ -1,11 +1,6 @@
-#include "shared/protocol.h"
-#include "shared/network.h"
-#include "client/network.h"
-#include "client/state.h"
 #include "client/game.h"
+#include "client/state.h"
 #include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 /*
 Entry point for client executable

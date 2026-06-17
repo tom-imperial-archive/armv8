@@ -86,8 +86,8 @@ Add the following ships at given the board is empty.
 It is the caller's responsibility to keep track of how many ships are already on
 the board. This should only be used for initialisation and never after gameplay
 has started. If you are adding multiple ships, see board_is_valid_placement_set.
-This function does not clear the board if it is invalid. The caller must provide a valid
-placement set before any of the game code has defined behaviour,
+This function does not clear the board if it is invalid. The caller must provide
+a valid placement set before any of the game code has defined behaviour,
 */
 bool board_add_placement_set(InitialShipDefs ship_defs, Board board) {
     // Bit n in declared_types being set to 1 corresponds to having a ship of
@@ -138,8 +138,8 @@ struct PosShipPair {
     ShipType *ship;
 };
 
-
-void board_mark_sunk_ship(Board board, ShipType type, PositionWithDirection pwd) {
+void board_mark_sunk_ship(Board board, ShipType type,
+                          PositionWithDirection pwd) {
     int len = ship_length(type);
     for (int i = 0; i < len; i++) {
         board->cells[pwd.pos.x][pwd.pos.y] = CELL_SUNK;
@@ -148,7 +148,9 @@ void board_mark_sunk_ship(Board board, ShipType type, PositionWithDirection pwd)
 }
 
 static void check_destroyed(Board board, ShipState *s, void *data) {
-    if (s->destroyed) { return; }
+    if (s->destroyed) {
+        return;
+    }
 
     int len = ship_length(s->ship);
     struct PosShipPair *psp = (struct PosShipPair *)data;
@@ -285,7 +287,7 @@ void print_board(Board board, FILE *out) {
 }
 
 CellState get_cell(Board b, int x, int y) {
-    Position p = { .x = x, .y = y };
+    Position p = {.x = x, .y = y};
     if (!check_pos_in_bounds(p)) {
         fprintf(stderr, "[ERROR] position not in bounds\n");
         exit(1);

@@ -1,12 +1,12 @@
-/*
-Universal interface for output
-*/
-
 #ifndef CLIENT_RENDER_H
 #define CLIENT_RENDER_H
 
-#include <stdbool.h>
 #include "state.h"
+#include <stdbool.h>
+
+/*
+Universal interface for output
+*/
 
 
 /* Initialises window, loads textures/prepares terminal.
