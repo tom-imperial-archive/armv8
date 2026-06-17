@@ -1,5 +1,4 @@
 #include "common/instruction.h"
-#include "emulator/decode/decode.h"
 #include "emulator/execute/execute.h"
 #include "emulator/state/state.h"
 #include <assert.h>
@@ -25,7 +24,7 @@ Instruction create_reg_branch_inst(Register xn) {
     return i;
 }
 
-void test_unconditional_branch() {
+void test_unconditional_branch(void) {
     State state = {0};
     state.PC = 0x1000; // Arbitrary starting address
 
@@ -40,7 +39,7 @@ void test_unconditional_branch() {
     printf("test_unconditional_branch: OK\n");
 }
 
-void test_register_branch() {
+void test_register_branch(void) {
     State state = {0};
     state.PC = 0x1000;
 
@@ -57,7 +56,7 @@ void test_register_branch() {
     printf("test_register_branch: OK\n");
 }
 
-void test_conditional_branch_taken() {
+void test_conditional_branch_taken(void) {
     State state = {0};
     state.PC = 0x1000;
 
@@ -76,7 +75,7 @@ void test_conditional_branch_taken() {
     printf("test_conditional_branch_taken: OK\n");
 }
 
-void test_conditional_branch_not_taken() {
+void test_conditional_branch_not_taken(void) {
     State state = {0};
     state.PC = 0x1000;
 
@@ -94,7 +93,7 @@ void test_conditional_branch_not_taken() {
     printf("test_conditional_branch_not_taken: OK\n");
 }
 
-void test_conditional_branch_lt_taken() {
+void test_conditional_branch_lt_taken(void) {
     State state = {0};
     state.PC = 0x1000;
 
