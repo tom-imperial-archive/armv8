@@ -1,4 +1,5 @@
 #include "client/input.h"
+#include "shared/log.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -66,7 +67,7 @@ InputData get_user_input(void) {
                 staged_count = 0; // Reset for future
                 return data;
             }
-            fprintf(stdout, "[DEBUG] Parsed ship input!\n");
+            LOG_DEBUG("%s", "Parsed ship input!");
             return data; // Return INPUT_NONE; we are still building the list.
         } else if (sscanf(input, "%d %d", &x, &y) == 2) {
             // expect grid coords
@@ -74,12 +75,12 @@ InputData get_user_input(void) {
             data.grid_pos.x = x;
             data.grid_pos.y = y;
 
-            fprintf(stdout, "[DEBUG] Parsed fire input!\n");
+            LOG_DEBUG("%s", "Parsed fire input!");
             return data;
         }
 
         else {
-            fprintf(stdout, "[DEBUG] Couldn't parse input: '%s'\n", input);
+            LOG_DEBUG("Couldn't parse input: '%s'", input);
         }
     }
 

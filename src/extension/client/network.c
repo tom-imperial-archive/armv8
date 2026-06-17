@@ -25,13 +25,13 @@ int connect_to_server(char *hostname, int port) {
 
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
-        fprintf(stderr, "%s\n", "[ERROR] Could not open socket for server connection");
+        LOG_ERROR("%s", "Could not open socket for server connection");
         return -1;
     }
 
     server = gethostbyname(hostname);
     if (server == NULL) {
-        fprintf(stderr, "[ERROR] No such host\n");
+        LOG_ERROR("%s", "No such host");
         close(sockfd);
         return -1;
     }
@@ -43,12 +43,12 @@ int connect_to_server(char *hostname, int port) {
 
     // Attempt to connect
     if (connect(sockfd, (struct sockaddr *) &server_addr, sizeof(server_addr)) < 0) {
-        fprintf(stderr, "%s\n", "[ERROR] Could not connect to server");
+        LOG_ERROR("%s", "Could not connect to server");
         close(sockfd);
         return -1;
     }
 
-    fprintf(stdout, "%s\n", "[DEBUG] Connected to server");
+    LOG_INFO("%s", "Connected to server");
 
 
     // Set socket to non-blocking, so recv() calls don't freeze the gui

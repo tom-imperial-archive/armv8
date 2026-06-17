@@ -4,6 +4,7 @@
 #include "client/state.h"
 #include "shared/network.h"
 #include "shared/protocol.h"
+#include "shared/log.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -11,19 +12,19 @@
 // Returns true on success, false on failure
 bool start_client_systems(ClientState *state, char *hostname, int port) {
     if (!init_graphics()) {
-        fprintf(stderr, "%s\n", "[ERROR] Failed to initialise graphics engine");
+        LOG_ERROR("%s", "Failed to initialise graphics engine");
         return false;
     }
 
-    fprintf(stdout, "%s\n", "[DEBUG] Attempting to connect to server...\n");
+    LOG_INFO("%s", "Attempting to connect to server...");
     state->net.connection_fd = connect_to_server(hostname, port);
 
     if (state->net.connection_fd != -1) {
-        fprintf(stdout, "%s\n", "[DEBUG] Connected successfully!");
+        LOG_INFO("%s", "Connected successfully!");
         state->current_state = UI_STATE_PLACING_SHIPS;
         return true;
     } else {
-        fprintf(stdout, "%s\n", "[ERROR] Failed to connect to server!");
+        LOG_ERROR("%s", "Failed to connect to server!");
         return false;
     }
 }
@@ -35,23 +36,23 @@ static void send_board_to_server(ClientState *state) {
     }
     send_packet(state->net.connection_fd, MSG_INIT_BOARD_LAYOUT, &payload,
                 sizeof(payload));
-    fprintf(stdout, "%s\n", "[DEBUG] Sent board layout to server.");
+    LOG_DEBUG("%s", "Sent board layout to server.");
 }
 
 static void handle_msq_req_board(ClientState *state) {
     state->net.server_requested_board = true;
     if (state->current_state == UI_STATE_WAITING_FOR_OPPONENT) {
         send_board_to_server(state);
-        fprintf(stdout, "[DEBUG] Sent ship layout to server.\n");
+        LOG_DEBUG("%s", "Sent ship layout to server.");
     } else {
-        fprintf(stdout, "[DEBUG] Server requested board, but we are still placing ships.\n");
+        LOG_DEBUG("%s", "Server requested board, but we are still placing ships.");
     }
 }
 
 static void handle_msg_game_start(ClientState *state, GameStartPayload *start_data) {
     state->current_state =
             start_data->your_turn ? UI_STATE_MY_TURN : UI_STATE_OPPONENT_TURN;
-    fprintf(stdout, "[DEBUG] Game has been started.\n");
+    LOG_INFO("%s", "Game has been started.");
 }
 
 static void handle_msg_attack(ClientState *state, EnemyAttackPayload *hit_data) {
@@ -71,9 +72,9 @@ static void handle_msg_attack(ClientState *state, EnemyAttackPayload *hit_data) 
             state->game.enemy_ship_positions[result.ship] = result.sunk_pwd;
         }
 
-        fprintf(stdout, "%s\n", "[DEBUG] Ship sunk!");
+        LOG_INFO("%s", "Ship sunk!");
     } else {
-        fprintf(stdout, "%s\n", "[DEBUG] Marked the hit.");
+        LOG_DEBUG("%s", "Marked the hit.");
     }
 
     state->current_state = next_state;
@@ -85,7 +86,7 @@ static void handle_msg_game_over(ClientState *state, GameOverPayload *result_dat
     state->current_state = UI_STATE_GAME_OVER;
 
     char *winner = state->game.i_won ? "You" : "Your opponent";
-    fprintf(stdout, "[DEBUG] %s won!\n", winner);
+    LOG_INFO("%s won!", winner);
 }
 
 
@@ -101,27 +102,25 @@ static void handle_incoming_packet(ClientState *state, PacketHeader header,
     case MSG_ATTACKED:
         handle_msg_attack(state, (EnemyAttackPayload *)payload);
         break;
-    case MSG_GAME_OVER: 
+    case MSG_GAME_OVER:
         // This is also called unexpectedly in the case where the opponent
         // resigned or similar
         handle_msg_game_over(state, (GameOverPayload *)payload);
         break;
     case MSG_INVALID_BOARD:
-        fprintf(stdout, "[ERROR] Invalid placement: ships overlap "
-                            "or are out of bounds!\n");
+        LOG_ERROR("%s", "Invalid placement: ships overlap or are out of bounds!");
 
         reset_staged_ships();
 
         free_board(state->game.my_board);
-        state->game.my_board = create_empty_board();    
+        state->game.my_board = create_empty_board();
         break;
     default:
-        fprintf(stderr, "%s\n", "[ERROR] Unexpected packet type received");
+        LOG_ERROR("%s", "Unexpected packet type received");
     }
 }
 
 static void handle_state_placing_ships(ClientState *state, InputData input) {
-    // ACTUAL VERSION
     // Attempt to place
     if (input.type == INPUT_PLACED_SHIPS) {
         if (board_add_placement_set(input.ships, state->game.my_board)) {
@@ -131,16 +130,14 @@ static void handle_state_placing_ships(ClientState *state, InputData input) {
             }
 
             state->current_state = UI_STATE_WAITING_FOR_OPPONENT;
-            fprintf(stdout, "[DEBUG] Ships placed successfully! "
-                            "Waiting for opponent...\n");
+            LOG_INFO("%s", "Ships placed successfully! Waiting for opponent...");
 
             if (state->net.server_requested_board) {
                 send_board_to_server(state);
             }
         } else {
             // Invalid!
-            fprintf(stdout, "[ERROR] Invalid placement: ships overlap "
-                            "or are out of bounds!\n");
+            LOG_ERROR("%s", "Invalid placement: ships overlap or are out of bounds!");
 
             reset_staged_ships();
 
@@ -162,10 +159,9 @@ static void handle_state_my_turn(ClientState *state, InputData input) {
 
             send_packet(state->net.connection_fd, MSG_FIRE, &fire_req,
                         sizeof(fire_req));
-            fprintf(stdout, "[DEBUG] Fired at %d, %d!\n",
-                    input.grid_pos.x, input.grid_pos.y);
+            LOG_DEBUG("Fired at %d, %d!", input.grid_pos.x, input.grid_pos.y);
         } else {
-            fprintf(stdout, "[DEBUG] Invalid coordinate!\n");
+            LOG_DEBUG("%s", "Invalid coordinate!");
         }
     }
 }
@@ -188,8 +184,7 @@ void client_loop(ClientState *state) {
 
             // Check for crash/disconnect
             if (recv_status == -1 && state->current_state != UI_STATE_GAME_OVER) {
-                fprintf(stderr,
-                        "\n[ERROR] Lost connection to the server! Exiting...\n");
+                LOG_ERROR("%s", "Lost connection to the server! Exiting...");
                 state->is_running = false;
                 break; // Break out of the game loop immediately
             }
@@ -217,8 +212,6 @@ void client_loop(ClientState *state) {
         }
 
         render_frame(state);
-
-        usleep(16000);
     }
 }
 
@@ -229,5 +222,5 @@ void client_cleanup(ClientState *state) {
 
     free_client_state(state);
     cleanup_graphics();
-    fprintf(stdout, "%s\n", "[DEBUG] Client shut down cleanly.");
+    LOG_INFO("%s", "Client shut down cleanly.");
 }

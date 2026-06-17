@@ -9,6 +9,7 @@
 #include <arpa/inet.h>
 #include "shared/types.h"
 #include "shared/protocol.h"
+#include "shared/log.h"
 
 /* Starts the server, binds to the specified port, and begins listening.
    Exits if a failure occurs.
@@ -20,7 +21,7 @@ int start_server(int port) {
     // Create the socket
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd == -1) {
-        fprintf(stderr, "%s\n", "[ERROR] Socket c");
+        LOG_ERROR("%s", "Socket creation failed");
         exit(EXIT_FAILURE);
     }
 
@@ -29,7 +30,7 @@ int start_server(int port) {
     // so we must override that.
     int opt = 1;
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))) {
-        fprintf(stderr, "%s\n", "[ERROR] setsockopt failed");
+        LOG_ERROR("%s", "setsockopt failed");
         exit(EXIT_FAILURE);
     }
 
@@ -41,7 +42,7 @@ int start_server(int port) {
 
     // Bind socket to port
     if (bind(server_fd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        fprintf(stderr, "%s\n", "[ERROR] Bind failed");
+        LOG_ERROR("%s", "Bind failed");
         exit(EXIT_FAILURE);
     }
 
@@ -54,11 +55,11 @@ int start_server(int port) {
 
     // Listen for incoming connections, with a max queue length of 2
     if (listen(server_fd, 2) < 0) {
-        fprintf(stderr, "%s\n", "[ERROR] Listen failed");
+        LOG_ERROR("%s", "Listen failed");
         exit(EXIT_FAILURE);
     }
 
-    fprintf(stdout, "[DEBUG] Server %s listening on port %d\n", hostname, port);
+    LOG_INFO("Server %s listening on port %d", hostname, port);
     return server_fd;
 }
 
@@ -70,11 +71,11 @@ int accept_client(int server_fd) {
 
     int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_len);
     if (client_fd < 0) {
-        fprintf(stderr, "%s\n", "[ERROR] Failed to accept client");
+        LOG_ERROR("%s", "Failed to accept client");
         return -1;
     }
 
-    fprintf(stdout, "[DEBUG] Client connected from %s:%d\n",
+    LOG_INFO("Client connected from %s:%d",
             inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
 
     // Set newly accepted client socket to non-blocking
