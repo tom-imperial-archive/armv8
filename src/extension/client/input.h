@@ -1,12 +1,13 @@
-/*
-Universal interface for output
-*/
-
 #ifndef CLIENT_INPUT_H
 #define CLIENT_INPUT_H
 
 #include "shared/board.h"
 #include <stdbool.h>
+
+/*
+Universal interface for output
+*/
+
 
 typedef enum {
     INPUT_NONE,

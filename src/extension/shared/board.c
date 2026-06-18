@@ -87,8 +87,8 @@ Add the following ships at given the board is empty.
 It is the caller's responsibility to keep track of how many ships are already on
 the board. This should only be used for initialisation and never after gameplay
 has started. If you are adding multiple ships, see board_is_valid_placement_set.
-This function does not clear the board if it is invalid. The caller must provide a valid
-placement set before any of the game code has defined behaviour,
+This function does not clear the board if it is invalid. The caller must provide
+a valid placement set before any of the game code has defined behaviour,
 */
 bool board_add_placement_set(InitialShipDefs ship_defs, Board board) {
     // Bit n in declared_types being set to 1 corresponds to having a ship of
@@ -102,20 +102,19 @@ bool board_add_placement_set(InitialShipDefs ship_defs, Board board) {
             (ShipState){.ship = isl.ship, .pwd = isl.pwd, .destroyed = false};
 
         int mask = mask_bit_for_ship(sl.ship);
-        if ((declared_types & mask) == 0) {
-            // No ship of this type declared yet
-            if (!place_ship(sl, board)) {
-                // Ship position was invalid or ship type invalid
-                return false;
-            }
-
-            board->ships[i] = sl;
-            declared_types = declared_types | mask;
-        } else {
+        if ((declared_types & mask) != 0) {
             LOG_ERROR("%s", "Already ship of same type");
-            // Tried to add two ships of the same type
             return false;
         }
+
+        // No ship of this type declared yet
+        if (!place_ship(sl, board)) {
+            // Ship position was invalid or ship type invalid
+            return false;
+        }
+
+        board->ships[i] = sl;
+        declared_types = declared_types | mask;
     }
 
     return true;
@@ -139,8 +138,8 @@ struct PosShipPair {
     ShipType *ship;
 };
 
-
-void board_mark_sunk_ship(Board board, ShipType type, PositionWithDirection pwd) {
+void board_mark_sunk_ship(Board board, ShipType type,
+                          PositionWithDirection pwd) {
     int len = ship_length(type);
     for (int i = 0; i < len; i++) {
         board->cells[pwd.pos.x][pwd.pos.y] = CELL_SUNK;
@@ -149,7 +148,9 @@ void board_mark_sunk_ship(Board board, ShipType type, PositionWithDirection pwd)
 }
 
 static void check_destroyed(Board board, ShipState *s, void *data) {
-    if (s->destroyed) { return; }
+    if (s->destroyed) {
+        return;
+    }
 
     int len = ship_length(s->ship);
     struct PosShipPair *psp = (struct PosShipPair *)data;
@@ -198,11 +199,11 @@ bool board_try_hit(Board opponent_ships_board, Position pos, bool *was_hit,
     CellState target = opponent_ships_board->cells[pos.x][pos.y];
 
     switch (target) {
-    case CELL_WATER: {
+    case CELL_WATER:
         opponent_ships_board->cells[pos.x][pos.y] = CELL_MISS;
         *was_hit = false;
-    }; break;
-    case CELL_SHIP: {
+        break;
+    case CELL_SHIP:
         opponent_ships_board->cells[pos.x][pos.y] = CELL_HIT;
         *was_hit = true;
 
@@ -210,7 +211,7 @@ bool board_try_hit(Board opponent_ships_board, Position pos, bool *was_hit,
         *sunk = -1;
         struct PosShipPair psp = {.pos = pos, .ship = sunk};
         for_each_ship(opponent_ships_board, *check_destroyed, &psp);
-    }; break;
+        break;
     case CELL_HIT:
     case CELL_SUNK:
     case CELL_MISS:
@@ -286,7 +287,7 @@ void print_board(Board board, FILE *out) {
 }
 
 CellState get_cell(Board b, int x, int y) {
-    Position p = { .x = x, .y = y };
+    Position p = {.x = x, .y = y};
     if (!check_pos_in_bounds(p)) {
         LOG_ERROR("Position (%d, %d) not in bounds", x, y);
         exit(1);

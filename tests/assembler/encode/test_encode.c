@@ -4,7 +4,6 @@
 
 #include "assembler/encode/encode.h"
 #include "common/instruction.h"
-#include "utils/types.h"
 
 // HALT INSTRUCTION
 void test_encode_halt(void) {

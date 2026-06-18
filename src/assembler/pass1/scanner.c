@@ -1,14 +1,12 @@
 #include "assembler/symbol_table/symbol_table.h"
-#include "common/error.h"
-#include "utils/types.h"
 #include "utils/parseutils.h"
+#include "utils/types.h"
 #include <assert.h>
 #include <ctype.h>
 #include <regex.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
 #define is_label_char(c)                                                       \
     isalnum(c) || c == '_' || c == '.' || c == '\\' || c == '$'
 

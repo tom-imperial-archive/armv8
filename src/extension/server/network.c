@@ -1,9 +1,10 @@
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -69,7 +70,8 @@ int accept_client(int server_fd) {
     struct sockaddr_in client_addr;
     socklen_t client_len = sizeof(client_addr);
 
-    int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_len);
+    int client_fd =
+        accept(server_fd, (struct sockaddr *)&client_addr, &client_len);
     if (client_fd < 0) {
         LOG_ERROR("%s", "Failed to accept client");
         return -1;

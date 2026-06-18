@@ -1,12 +1,9 @@
 #include "test_execute.h"
-#include "common/instruction.h"
-#include "emulator/execute/execute.h"
 #include "test_branch.h"
 #include "test_dpii.h"
 #include "test_dpir.h"
 #include "test_load_literal.h"
 #include "test_single_data_transfer.h"
-#include "utils/types.h"
 #include <stdio.h>
 
 int main(void) {

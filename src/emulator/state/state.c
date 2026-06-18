@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #define INSTRUCTION_LENGTH 4
 
 static uint64 *get_register(State *state, Register reg) {

@@ -1,4 +1,5 @@
 #include "common/error.h"
+#include "emulator/decode/decode.h"
 #include "emulator/execute/execute.h"
 #include "emulator/io/filehandlers.h"
 #include "emulator/io/output.h"

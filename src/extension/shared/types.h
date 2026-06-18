@@ -20,10 +20,7 @@ typedef int8_t int8;
 #define MAX_USERNAME_LEN 16
 
 // Universal data structures
-typedef enum {
-    DIR_HORIZONTAL = 0,
-    DIR_VERTICAL = 1
-} Orientation;
+typedef enum { DIR_HORIZONTAL = 0, DIR_VERTICAL = 1 } Orientation;
 
 typedef enum {
     SHIP_BATTLESHIP,

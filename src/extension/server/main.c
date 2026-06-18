@@ -1,6 +1,3 @@
-#include "shared/protocol.h"
-#include "shared/network.h"
-#include "server/network.h"
 #include "server/game.h"
 #include "shared/log.h"
 #include <stdio.h>
@@ -73,7 +70,6 @@ int main(int argc, char **argv) {
 
     send_packet(player1_fd, MSG_REQ_BOARD, NULL, 0);
     send_packet(player2_fd, MSG_REQ_BOARD, NULL, 0);
-
 
     // Set up players
     PlayerState p1 = new_player(player1_fd);

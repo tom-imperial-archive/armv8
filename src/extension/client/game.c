@@ -1,4 +1,4 @@
-#include "client/input.h"
+zz#include "client/input.h"
 #include "client/network.h"
 #include "client/render.h"
 #include "client/state.h"
@@ -19,14 +19,14 @@ bool start_client_systems(ClientState *state, char *hostname, int port) {
     LOG_INFO("%s", "Attempting to connect to server...");
     state->net.connection_fd = connect_to_server(hostname, port);
 
-    if (state->net.connection_fd != -1) {
-        LOG_INFO("%s", "Connected successfully!");
-        state->current_state = UI_STATE_PLACING_SHIPS;
-        return true;
-    } else {
+    if (state->net.connection_fd == -1) {
         LOG_ERROR("%s", "Failed to connect to server!");
         return false;
     }
+    
+    fprintf(stdout, "%s\n", "[DEBUG] Connected successfully!");
+    state->current_state = UI_STATE_PLACING_SHIPS;
+    return true;
 }
 
 static void send_board_to_server(ClientState *state) {
@@ -49,20 +49,27 @@ static void handle_msq_req_board(ClientState *state) {
     }
 }
 
-static void handle_msg_game_start(ClientState *state, GameStartPayload *start_data) {
+static void handle_msg_game_start(ClientState *state,
+                                  GameStartPayload *start_data) {
     state->current_state =
             start_data->your_turn ? UI_STATE_MY_TURN : UI_STATE_OPPONENT_TURN;
     LOG_INFO("%s", "Game has been started.");
 }
 
-static void handle_msg_attack(ClientState *state, EnemyAttackPayload *hit_data) {
+static void handle_msg_attack(ClientState *state,
+                              EnemyAttackPayload *hit_data) {
     FirePayload shot = hit_data->shot;
     HitResultPayload result = hit_data->result;
 
-    Board target = (state->current_state == UI_STATE_MY_TURN) ? state->game.target_board : state->game.my_board;
-    UIState next_state = (state->current_state == UI_STATE_MY_TURN) ? UI_STATE_OPPONENT_TURN : UI_STATE_MY_TURN;
+    Board target = (state->current_state == UI_STATE_MY_TURN)
+                       ? state->game.target_board
+                       : state->game.my_board;
+    UIState next_state = (state->current_state == UI_STATE_MY_TURN)
+                             ? UI_STATE_OPPONENT_TURN
+                             : UI_STATE_MY_TURN;
 
-    board_mark_strike(target, (Position){.x = shot.x, .y = shot.y}, result.success);
+    board_mark_strike(target, (Position){.x = shot.x, .y = shot.y},
+                      result.success);
 
     // Now check if the shot sank a ship
     if (result.ship != -1) {
@@ -80,7 +87,8 @@ static void handle_msg_attack(ClientState *state, EnemyAttackPayload *hit_data) 
     state->current_state = next_state;
 }
 
-static void handle_msg_game_over(ClientState *state, GameOverPayload *result_data) {
+static void handle_msg_game_over(ClientState *state,
+                                 GameOverPayload *result_data) {
     state->game.i_won = result_data->you_won;
 
     state->current_state = UI_STATE_GAME_OVER;
@@ -88,7 +96,6 @@ static void handle_msg_game_over(ClientState *state, GameOverPayload *result_dat
     char *winner = state->game.i_won ? "You" : "Your opponent";
     LOG_INFO("%s won!", winner);
 }
-
 
 static void handle_incoming_packet(ClientState *state, PacketHeader header,
                                    void *payload) {
@@ -122,60 +129,64 @@ static void handle_incoming_packet(ClientState *state, PacketHeader header,
 
 static void handle_state_placing_ships(ClientState *state, InputData input) {
     // Attempt to place
-    if (input.type == INPUT_PLACED_SHIPS) {
-        if (board_add_placement_set(input.ships, state->game.my_board)) {
-            // Success
-            for (int i = 0; i < NUM_SHIPS; i++) {
-                state->placement.placements[i] = input.ships[i];
-            }
+    if (input.type != INPUT_PLACED_SHIPS) {
+        return;
+    }
 
-            state->current_state = UI_STATE_WAITING_FOR_OPPONENT;
-            LOG_INFO("%s", "Ships placed successfully! Waiting for opponent...");
-
-            if (state->net.server_requested_board) {
-                send_board_to_server(state);
-            }
-        } else {
-            // Invalid!
-            LOG_ERROR("%s", "Invalid placement: ships overlap or are out of bounds!");
-
-            reset_staged_ships();
-
-            free_board(state->game.my_board);
-            state->game.my_board = create_empty_board();
+    if (board_add_placement_set(input.ships, state->game.my_board)) {
+        // Success
+        for (int i = 0; i < NUM_SHIPS; i++) {
+            state->placement.placements[i] = input.ships[i];
         }
+
+        state->current_state = UI_STATE_WAITING_FOR_OPPONENT;
+        LOG_INFO("%s", "Ships placed successfully! Waiting for opponent...");
+
+        if (state->net.server_requested_board) {
+            send_board_to_server(state);
+        }
+    } else {
+        // Invalid!
+        LOG_ERROR("%s", "Invalid placement: ships overlap or are out of bounds!");
+
+        reset_staged_ships();
+
+        free_board(state->game.my_board);
+        state->game.my_board = create_empty_board();
     }
 }
 
 static void handle_state_my_turn(ClientState *state, InputData input) {
     // Check if we got an input
-    if (input.type == INPUT_FIRE) {
-        if (valid_attack_pos(state->game.target_board,
-                                (Position){.x = input.grid_pos.x,
-                                        .y = input.grid_pos.y})) {
-            FirePayload fire_req;
-            fire_req.x = input.grid_pos.x;
-            fire_req.y = input.grid_pos.y;
+    if (input.type != INPUT_FIRE) {
+        return;
+    }
+    if (valid_attack_pos(
+            state->game.target_board,
+            (Position){.x = input.grid_pos.x, .y = input.grid_pos.y})) {
+        FirePayload fire_req;
+        fire_req.x = input.grid_pos.x;
+        fire_req.y = input.grid_pos.y;
 
-            send_packet(state->net.connection_fd, MSG_FIRE, &fire_req,
+        send_packet(state->net.connection_fd, MSG_FIRE, &fire_req,
                         sizeof(fire_req));
-            LOG_DEBUG("Fired at %d, %d!", input.grid_pos.x, input.grid_pos.y);
-        } else {
-            LOG_DEBUG("%s", "Invalid coordinate!");
-        }
+        LOG_DEBUG("Fired at %d, %d!", input.grid_pos.x, input.grid_pos.y);
+    } else {
+        LOG_DEBUG("%s", "Invalid coordinate!");
     }
 }
 
 void client_loop(ClientState *state) {
     while (state->is_running && is_window_open()) {
-        // Server shuts down after game over, so we must check this to avoid exiting
-            if (state->current_state != UI_STATE_GAME_OVER) {
+        // Server shuts down after game over, so we must check this to avoid
+        // exiting
+        if (state->current_state != UI_STATE_GAME_OVER) {
             // Receive data from server
             PacketHeader header;
             void *payload = NULL;
             int recv_status;
-            while ((recv_status = receive_packet(state->net.connection_fd, &header,
-                                                &payload)) == 1) {
+            while ((recv_status = receive_packet(state->net.connection_fd,
+                                                 &header, &payload)) == 1) {
                 handle_incoming_packet(state, header, payload);
                 if (payload) {
                     free(payload);
@@ -197,18 +208,18 @@ void client_loop(ClientState *state) {
         }
 
         switch (state->current_state) {
-            case UI_STATE_PLACING_SHIPS:
-                handle_state_placing_ships(state, input);
-                break;
-            case UI_STATE_MY_TURN:
-                handle_state_my_turn(state, input);
-                break;
-            case UI_STATE_GAME_OVER:
-            case UI_STATE_OPPONENT_TURN:
-            case UI_STATE_WAITING_FOR_OPPONENT:
-            case UI_STATE_CONNECTING:
-                // Do nothing, just sit tight
-                break;
+        case UI_STATE_PLACING_SHIPS:
+            handle_state_placing_ships(state, input);
+            break;
+        case UI_STATE_MY_TURN:
+            handle_state_my_turn(state, input);
+            break;
+        case UI_STATE_GAME_OVER:
+        case UI_STATE_OPPONENT_TURN:
+        case UI_STATE_WAITING_FOR_OPPONENT:
+        case UI_STATE_CONNECTING:
+            // Do nothing, just sit tight
+            break;
         }
 
         render_frame(state);

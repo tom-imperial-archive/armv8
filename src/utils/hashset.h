@@ -1,5 +1,6 @@
 #ifndef HASHSET_H
 #define HASHSET_H
+
 #include "utils/types.h"
 
 typedef struct {
@@ -8,7 +9,7 @@ typedef struct {
     int size;
 } AddressSet;
 
-extern AddressSet *create_set();
+extern AddressSet *create_set(void);
 extern void insert_address(AddressSet *set, uint8 *address);
 extern void free_set(AddressSet *set);
 extern uint8 **get_all_addresses(AddressSet *set);

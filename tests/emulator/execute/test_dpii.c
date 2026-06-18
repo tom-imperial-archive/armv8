@@ -1,7 +1,6 @@
 #include "common/instruction.h"
 #include "emulator/execute/execute.h"
 #include "emulator/state/state.h"
-#include "utils/hashset.h"
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -28,7 +27,7 @@ Instruction create_wide_move_inst(OpType op, bool sf, Register rd,
     return i;
 }
 
-void test_add_imm_standard() {
+void test_add_imm_standard(void) {
     State *state = init_state();
     uint64 val1 = 0xFFF;
     write_reg_64(state, R0, val1);
@@ -43,7 +42,7 @@ void test_add_imm_standard() {
     destroy_state(state);
 }
 
-void test_adds_imm_flags_shifted() {
+void test_adds_imm_flags_shifted(void) {
     State *state = init_state();
     uint64 val1 = 0xFFF;
     uint64 val2 = 0xFFFFFFFFFFFFFFFFULL;
@@ -63,7 +62,7 @@ void test_adds_imm_flags_shifted() {
     destroy_state(state);
 }
 
-void test_subs_imm_standard() {
+void test_subs_imm_standard(void) {
     State *state = init_state();
     uint64 val1 = 0xFFF;
     uint64 val2 = 0xFFFFFFFFFFFFFFFFULL;
@@ -83,7 +82,7 @@ void test_subs_imm_standard() {
     destroy_state(state);
 }
 
-void test_wide_move_movk() {
+void test_wide_move_movk(void) {
     State *state = init_state();
     write_reg_32(state, R0, 0x12345678UL);
 
@@ -100,7 +99,7 @@ void test_wide_move_movk() {
     destroy_state(state);
 }
 
-void test_subs_imm_carry_flag_no_borrow() {
+void test_subs_imm_carry_flag_no_borrow(void) {
     State *state = init_state();
     write_reg_64(state, R0, 5);
 
@@ -114,7 +113,7 @@ void test_subs_imm_carry_flag_no_borrow() {
     destroy_state(state);
 }
 
-void test_subs_imm_overflow_flag_underflow() {
+void test_subs_imm_overflow_flag_underflow(void) {
     State *state = init_state();
     write_reg_64(state, R0, 0x8000000000000000ULL);
 
@@ -129,7 +128,7 @@ void test_subs_imm_overflow_flag_underflow() {
     destroy_state(state);
 }
 
-void test_movz_applies_shift_correctly() {
+void test_movz_applies_shift_correctly(void) {
     State *state = init_state();
 
     Instruction i = create_wide_move_inst(OP_TYPE_MOVZ, true, R0, 0xABCD, 1);
@@ -141,7 +140,7 @@ void test_movz_applies_shift_correctly() {
     destroy_state(state);
 }
 
-void test_movn_64bit_shift_prevents_truncation() {
+void test_movn_64bit_shift_prevents_truncation(void) {
     State *state = init_state();
 
     Instruction i = create_wide_move_inst(OP_TYPE_MOVN, true, R0, 0xFFFF, 3);

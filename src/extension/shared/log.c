@@ -1,4 +1,6 @@
 #include "shared/log.h"
+#include <stdbool.h>
+#include <stdio.h>
 
 FILE *log_out = NULL;
 FILE *log_err = NULL;
@@ -17,7 +19,9 @@ bool init_logger(const char *filepath) {
             return true;
         } else {
             // If file fails to open, we can just use the terminal
-            fprintf(stderr, "[ERROR] Failed to open log file, using terminal instead.\n");
+            fprintf(
+                stderr,
+                "[ERROR] Failed to open log file, using terminal instead.\n");
         }
     }
 

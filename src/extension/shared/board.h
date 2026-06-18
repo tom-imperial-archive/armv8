@@ -4,9 +4,14 @@
 #include "types.h"
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
 
-typedef enum { CELL_WATER, CELL_SHIP, CELL_MISS, CELL_HIT, CELL_SUNK } CellState;
+typedef enum {
+    CELL_WATER,
+    CELL_SHIP,
+    CELL_MISS,
+    CELL_HIT,
+    CELL_SUNK
+} CellState;
 
 // 0, 0 is the top left
 struct Board;
@@ -57,7 +62,8 @@ extern void free_board(Board board);
 
 extern void board_mark_strike(Board board, Position pos, bool success);
 
-extern void board_mark_sunk_ship(Board board, ShipType type, PositionWithDirection pwd);
+extern void board_mark_sunk_ship(Board board, ShipType type,
+                                 PositionWithDirection pwd);
 
 extern ShipState board_get_ship(Board board, int index);
 

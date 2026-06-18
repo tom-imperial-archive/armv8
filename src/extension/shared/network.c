@@ -1,9 +1,12 @@
+#include "protocol.h"
+#include "types.h"
+#include <errno.h>
+#include <fcntl.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
@@ -17,7 +20,8 @@
    a pointer to the payload being sent (which can be NULL) and the
    payload lenght in bytes.
    Returns 0 on successful transmission, -1 on failure. */
-int send_packet(int sockfd, MessageType type, const void *payload, uint32 payload_length) {
+int send_packet(int sockfd, MessageType type, const void *payload,
+                uint32 payload_length) {
     PacketHeader header;
     header.type = type;
 
@@ -84,8 +88,10 @@ int receive_packet(int sockfd, PacketHeader *out_header, void **out_payload) {
         // Read the entire payload
         int total_read = 0;
         while (total_read < out_header->payload_length) {
-            int payload_bytes = recv(sockfd, (char*)*out_payload + total_read, out_header->payload_length - total_read, 0);
-            if (payload_bytes  > 0) {
+            int payload_bytes =
+                recv(sockfd, (char *)*out_payload + total_read,
+                     out_header->payload_length - total_read, 0);
+            if (payload_bytes > 0) {
                 total_read += payload_bytes;
             } else if (payload_bytes < 0 && errno != EWOULDBLOCK && errno != EAGAIN) {
                 LOG_ERROR("%s", "Failed to read complete payload");

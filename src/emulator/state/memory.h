@@ -38,7 +38,7 @@ The caller is responsible for freeing the returned array.
 */
 extern NonZeroMemory *get_non_zero_memory(Memory m, int *out_size);
 
-extern Memory init_mem();
+extern Memory init_mem(void);
 extern void destroy_mem(Memory m);
 
 #endif

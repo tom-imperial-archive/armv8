@@ -1,16 +1,9 @@
 #ifndef GAME_STATE_H
 #define GAME_STATE_H
 
-#include <unistd.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <time.h>
-#include "shared/protocol.h"
-#include "shared/network.h"
-#include "server/network.h"
-#include "server/game.h"
-#include "shared/types.h"
 #include "shared/board.h"
+#include <stdbool.h>
+#include <unistd.h>
 
 struct PlayerState {
     int socket_fd;

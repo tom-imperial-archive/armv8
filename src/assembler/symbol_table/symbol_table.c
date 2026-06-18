@@ -12,8 +12,6 @@ Since there will be a very low number of labels, it suffices to implement this
     using an array, similarly to [(Label, Address)] in Haskell.
 */
 
-// PLACEHOLDERS TO BE IMPLEMENTED
-
 // Allocates memory and initialises
 SymbolTable *create_symbol_table(void) {
     SymbolTable *table = malloc(sizeof(SymbolTable));

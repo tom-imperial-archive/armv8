@@ -1,5 +1,4 @@
 #include "common/instruction.h"
-#include "emulator/decode/decode.h"
 #include "emulator/execute/execute.h"
 #include "emulator/state/state.h"
 #include <assert.h>
@@ -31,7 +30,7 @@ Instruction create_multiply_inst(OpType op, bool sf, Register rd, Register rn,
     return i;
 }
 
-void test_standard_add() {
+void test_standard_add(void) {
     State state = {0};
 
     // Set initial values: X1 = 15, X2 = 25
@@ -50,7 +49,7 @@ void test_standard_add() {
     printf("test_standard_add: OK\n");
 }
 
-void test_edge_case_32bit_asr() {
+void test_edge_case_32bit_asr(void) {
     State state = {0};
 
     // Set initial values: W1 = 10, W2 = -4 (as a 32-bit unsigned hex)
@@ -73,7 +72,7 @@ void test_edge_case_32bit_asr() {
     printf("test_edge_case_32bit_asr: OK\n");
 }
 
-void test_flags_subs_borrow() {
+void test_flags_subs_borrow(void) {
     State state = {0};
 
     // Set initial values: X1 = 5, X2 = 10
@@ -98,7 +97,7 @@ void test_flags_subs_borrow() {
     printf("test_flags_subs_borrow: OK\n");
 }
 
-void test_flags_unsigned_overflow() {
+void test_flags_unsigned_overflow(void) {
     State state = {0};
 
     // Set initial values: X1 = Max uint64, X2 = 5
@@ -121,7 +120,7 @@ void test_flags_unsigned_overflow() {
     printf("test_flags_unsigned_overflow: OK\n");
 }
 
-void test_flags_signed_overflow_add() {
+void test_flags_signed_overflow_add(void) {
     State state = {0};
 
     // Set initial values: X1 = Max int64, X2 = 1
@@ -145,7 +144,7 @@ void test_flags_signed_overflow_add() {
     printf("test_flags_signed_overflow_add: OK\n");
 }
 
-void test_flags_signed_underflow_sub() {
+void test_flags_signed_underflow_sub(void) {
     State state = {0};
 
     // Set initial values: X1 = Min int64 (Most negative number), X2 = 1
@@ -169,7 +168,7 @@ void test_flags_signed_underflow_sub() {
     printf("test_flags_signed_underflow_sub: OK\n");
 }
 
-void test_logical_orr() {
+void test_logical_orr(void) {
     State state = {0};
 
     // X1 = 10101010, X2 = 01010101
@@ -187,7 +186,7 @@ void test_logical_orr() {
     printf("test_logical_orr: OK\n");
 }
 
-void test_logical_bic_32bit() {
+void test_logical_bic_32bit(void) {
     State state = {0};
 
     // W1 = All 1s, W2 = Bottom half 1s, Top half 0s
@@ -210,7 +209,7 @@ void test_logical_bic_32bit() {
     printf("test_logical_bic_32bit: OK\n");
 }
 
-void test_logical_ands_flags() {
+void test_logical_ands_flags(void) {
     State state = {0};
 
     // Set both to just the 64-bit sign bit
@@ -235,7 +234,7 @@ void test_logical_ands_flags() {
     printf("test_logical_ands_flags: OK\n");
 }
 
-void test_multiply_madd() {
+void test_multiply_madd(void) {
     State state = {0};
 
     // Set initial values: X1 (rn) = 5, X2 (rm) = 6, X3 (ra) = 10
@@ -254,7 +253,7 @@ void test_multiply_madd() {
     printf("test_multiply_madd: OK\n");
 }
 
-void test_multiply_msub_32bit() {
+void test_multiply_msub_32bit(void) {
     State state = {0};
 
     // Set initial values: W1 (rn) = 3, W2 (rm) = 4, W3 (ra) = 20
