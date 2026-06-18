@@ -1,4 +1,4 @@
-zz#include "client/input.h"
+#include "client/input.h"
 #include "client/network.h"
 #include "client/render.h"
 #include "client/state.h"
@@ -19,14 +19,14 @@ bool start_client_systems(ClientState *state, char *hostname, int port) {
     LOG_INFO("%s", "Attempting to connect to server...");
     state->net.connection_fd = connect_to_server(hostname, port);
 
-    if (state->net.connection_fd == -1) {
+    if (state->net.connection_fd != -1) {
+        LOG_INFO("%s", "Connected successfully!");
+        state->current_state = UI_STATE_PLACING_SHIPS;
+        return true;
+    } else {
         LOG_ERROR("%s", "Failed to connect to server!");
         return false;
     }
-    
-    fprintf(stdout, "%s\n", "[DEBUG] Connected successfully!");
-    state->current_state = UI_STATE_PLACING_SHIPS;
-    return true;
 }
 
 static void send_board_to_server(ClientState *state) {

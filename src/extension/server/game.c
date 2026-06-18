@@ -1,4 +1,8 @@
 #include "game.h"
+#include "shared/network.h"
+#include "shared/protocol.h"
+#include <stdlib.h>
+#include <time.h>
 #include "shared/log.h"
 
 /*
@@ -71,12 +75,10 @@ void end_game(GameState state, PlayerState winner, PlayerState loser) {
     GameOverPayload winnerData = {.you_won = true};
     GameOverPayload loserData = {.you_won = false};
 
-    while (send_packet(winner->socket_fd, MSG_GAME_OVER, &winnerData,
-                       sizeof(GameOverPayload)) != 0)
-        ;
-    while (send_packet(loser->socket_fd, MSG_GAME_OVER, &loserData,
-                       sizeof(GameOverPayload)) != 0)
-        ;
+    send_packet(winner->socket_fd, MSG_GAME_OVER, &winnerData,
+                       sizeof(GameOverPayload));
+    send_packet(loser->socket_fd, MSG_GAME_OVER, &loserData,
+                       sizeof(GameOverPayload));
 }
 
 /*
@@ -106,6 +108,10 @@ bool populate_ships(GameState state, PlayerState player) {
             free_game_state(state);
             exit(EXIT_FAILURE);
         }
+
+        if (res == 1 && defs != NULL) {
+            free(defs);
+        }
     }
 
     bool res = board_add_placement_set(*defs, player->board);
@@ -131,8 +137,8 @@ static void send_start_packets(GameState state) {
         player1_payload = &your_turn;
         player2_payload = &not_your_turn;
     } else {
-        player1_payload = &your_turn;
-        player2_payload = &not_your_turn;
+        player1_payload = &not_your_turn;
+        player2_payload = &your_turn;
     }
 
     send_packet(state->player1->socket_fd, MSG_GAME_START, player1_payload,
@@ -189,6 +195,9 @@ void play(GameState state) {
         }
         // Received packet
         if (res != 1 || header.type != MSG_FIRE) {
+            if (res == 1 && fire_payload != NULL) {
+                free(fire_payload);
+            }
             continue;
         }
 

@@ -1,4 +1,7 @@
 #include "server/game.h"
+#include "server/network.h"
+#include "shared/network.h"
+#include "shared/protocol.h"
 #include "shared/log.h"
 #include <stdio.h>
 #include <string.h>
