@@ -1,8 +1,5 @@
 #include "game.h"
-#include "shared/network.h"
-#include "shared/protocol.h"
-#include <stdlib.h>
-#include <time.h>
+#include "shared/log.h"
 
 /*
 Processes actions, overwrites grid cells, and checks for win conditions
@@ -157,8 +154,7 @@ void populate_turn_players(GameState state, PlayerState *turn_taker,
 
 void play(GameState state) {
     // Keep requesting a ship placement until we get a valid one
-    fprintf(stdout, "%s\n",
-            "[DEBUG] Requesting ship positions from the clients.");
+    LOG_DEBUG("%s", "Requesting ship positions from the clients.");
 
     // Populate ships
     while (!populate_ships(state, state->player1)) {

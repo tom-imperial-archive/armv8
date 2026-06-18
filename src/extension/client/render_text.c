@@ -56,7 +56,7 @@ void render_frame(const ClientState *state) {
         break;
     }
     case UI_STATE_WAITING_FOR_OPPONENT:
-        printf("=== Waiting for opponent to join ===\n");
+        printf("=== Waiting for opponent ===\n");
         break;
     case UI_STATE_MY_TURN:
         printf("=== YOUR TURN ===\n");

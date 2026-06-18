@@ -22,6 +22,7 @@ SERVER_SRCS = \
 	server/main.c \
 	server/game.c \
 	server/network.c \
+	shared/log.c \
 	shared/network.c
 
 CLIENT_CORE_SRCS = \
@@ -29,6 +30,7 @@ CLIENT_CORE_SRCS = \
 	client/state.c \
 	client/network.c \
 	client/game.c \
+	shared/log.c \
 	shared/network.c
 
 CLIENT_GUI_SRCS = \
@@ -53,9 +55,9 @@ CLIENT_CLI_OBJS = $(CLIENT_CLI_SRCS:.c=.o)
 TEST_OBJS = $(TEST_SRCS:.c=.o)
 
 # BUILD TARGETS AND RULES
-.PHONY: all clean format server client-gui client-client demo
+.PHONY: all clean format server client-gui client-client
 
-all: bin/server bin/client-gui bin/client-cli
+all: prepare bin/server bin/client-gui bin/client-cli
 
 bin/server: $(SHARED_OBJS) $(SERVER_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
@@ -69,13 +71,12 @@ bin/client-cli: $(SHARED_OBJS) $(CLIENT_CORE_OBJS) $(CLIENT_CLI_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
 client-cli: bin/client-cli
 
-bin/demo: main.o
-	$(CC) $(CFLAGS) $^ -o $@ $(LDLIBS)
-demo: bin/demo
-
 bin/test: $(TEST_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
 test: bin/test
+
+prepare:
+	mkdir -p logs
 
 # Compiles any missing .o file, and places next to its .c counterpart
 %.o: %.c

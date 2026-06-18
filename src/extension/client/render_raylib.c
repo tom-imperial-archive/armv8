@@ -2,6 +2,7 @@
 #include "raylib.h"
 #include "shared/board.h"
 #include "shared/types.h"
+#include "shared/log.h"
 #include <assert.h>
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
@@ -67,6 +68,8 @@ void reset_ui_ships(void) {
 }
 
 bool init_graphics(void) {
+    SetTraceLogLevel(LOG_WARNING);
+
     // Ensure window can be resized
     SetConfigFlags(FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_ALWAYS_RUN);
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Battleship");
@@ -99,12 +102,18 @@ bool init_graphics(void) {
         assets.rotated_textures[i] = LoadTextureFromImage(image);
         UnloadImage(image);
 
-        if (!IsTextureValid(assets.textures[i])) {
+        if (!IsTextureValid(assets.textures[i]) || !IsTextureValid(assets.rotated_textures[i])) {
             // Unload all the textures that have already been loaded.
             for (int j = 0; j < i; j++) {
                 UnloadTexture(assets.textures[j]);
+                UnloadTexture(assets.rotated_textures[j]);
             }
-            TraceLog(LOG_ERROR, "Failed to load texture!");
+
+            // Also check if base loaded but rotated one failed
+            if (IsTextureValid(assets.textures[i])) {
+                UnloadTexture(assets.textures[i]);
+            }
+            LOG_ERROR("%s", "Failed to load texture!");
             return false;
         }
     }
@@ -115,7 +124,9 @@ bool init_graphics(void) {
     return true;
 }
 
-bool is_window_open(void) { return !WindowShouldClose(); }
+bool is_window_open(void) {
+    return !WindowShouldClose();
+}
 
 void cleanup_graphics(void) {
     for (int i = 0; i < NUM_SHIPS; i++) {
@@ -250,7 +261,7 @@ static void update_ship_dragging(void) {
             ui_state.is_dragging[i] = false;
             // Look at centre of top-left cell
             snap_to_grid(i);
-            // TraceLog(LOG_INFO, "stopped dragging");
+            LOG_DEBUG("%s", "Stopped dragging");
         }
         break; // stop looping, since at this stage we only check currently
                // dragging ship
@@ -316,11 +327,9 @@ static void draw_peg(Rectangle bounds, CellState cell) {
         DrawCircleLines(center_x, center_y, radius, BLACK);
         float offset = radius * 0.5f;
         DrawLineEx((Vector2){center_x - offset, center_y - offset},
-                   (Vector2){center_x + offset, center_y + offset}, 3.0f,
-                   WHITE);
+                   (Vector2){center_x + offset, center_y + offset}, 3.0f, WHITE);
         DrawLineEx((Vector2){center_x + offset, center_y - offset},
-                   (Vector2){center_x - offset, center_y + offset}, 3.0f,
-                   WHITE);
+                   (Vector2){center_x - offset, center_y + offset}, 3.0f, WHITE);
     }
 }
 
@@ -423,7 +432,7 @@ static void draw_confirm_button(void) {
     }
     if (GuiButton(confirm_rectangle, "Confirm")) {
         ui_state.is_confirmed = true;
-        TraceLog(LOG_INFO, "Confirmed!");
+        LOG_INFO("%s", "Confirmed!");
         input_state = (InputData){
             .type = INPUT_PLACED_SHIPS,
         };
@@ -559,7 +568,7 @@ static void draw_game_over(const ClientState *state) {
                              .height = button_height};
     if (GuiButton(quit_bounds, "QUIT GAME")) {
         input_state = (InputData){.type = INPUT_QUIT};
-        TraceLog(LOG_INFO, "Player pressed Quit from game over screen.");
+        LOG_INFO("%s", "Player pressed Quit from game over screen.");
     }
 }
 
