@@ -4,6 +4,7 @@
 #include "server/game.h"
 #include "shared/log.h"
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -12,13 +13,32 @@ Server executable:
     Connects to players, and boots up the state machine
 */
 
-int main(void) {
-    // Setup logging - TO BE IMPROVED
-    if (!init_logger(NULL)) {
+int main(int argc, char **argv) {
+    // Defaults
+    char *log_path = NULL;
+    int port = 8080;
+
+    // Parse command line arguments
+    for (int i = 1; i < argc; i++) {
+        if ((strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--log") == 0) && i + 1 < argc) {
+            log_path = argv[i + 1];
+            i++;
+        }
+        else if ((strcmp(argv[i], "-p") == 0 || strcmp(argv[i], "--port") == 0) && i + 1 < argc) {
+            port = atoi(argv[i + 1]);
+            i++;
+        } else {
+            printf("Usage: %s [-l | --log filepath] [-p | --port port]\n", argv[0]);
+            return EXIT_FAILURE;
+        }
+    }
+
+    // Setup logging
+    if (!init_logger(log_path)) {
         return EXIT_FAILURE;
     }
 
-    int port = 8080;
+    // Start server
     int server_fd = start_server(port);
 
     LOG_INFO("%s", "Waiting for Player 1...");
