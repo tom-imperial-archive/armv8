@@ -1,21 +1,138 @@
 \documentclass[11pt]{article}
-
-\usepackage{fullpage}
-
+\usepackage[margin=2.35cm]{geometry}
 \begin{document}
 
-\title{Our Extension...}
-\author{TODO}
+\section{Structure \& Implementation of the Assembler}
+We chose to use a two-pass approach for several reasons. Firstly, it allowed us to simplify each of the two pass steps and leads to a more maintainable and more modularised codebase. Secondly, it allowed us to more effectively divide up tasks in the assembler as we could assign different inviduals to each pass without a risk of conflicts or interference in Git with each other's work.
 
-\maketitle
+First, we call the first pass to populate the symbol table. Then we process the input file line-by-line, calling the second pass to parse the line of assembly into the Instruction data structures that we used for the emulator. We then use our encoding logic to turn this instruction into a 32-bit integer which we write to the output file. The details of each step are described below.
 
-\section{Introduction}
+We re-used our existing Instruction struct as an intermediate state: we parse the assembly to this struct and later encode the struct into binary.
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor
-incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
-nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
-fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-culpa qui officia deserunt mollit anim id est laborum.
+\subsubsection{Symbol Table ADT}
+
+This ADT, defined in assembler/symbol\_table/symbol\_table.[ch] is used to store the location of labels. It is a resizing array-based map between labels (char *) and the corresponding address (uint64). We store the data memory block, capacity and size. We double the data block size every time the table becomes full.
+
+\subsection{First Pass}
+
+The objective of the first pass is to populate the symbol table with the address of all labels. The module assembler/pass1/scanner.[ch] reads the file line-by-line, removing all preceeding whitespace. If the line is then empty, then there is nothing on the line, we have nothing to do. If the line is non-empty and starts with a valid label character, we search the line until we find a non-label character. If this is a colon, then we have a label and populate the system table with the current address, if not, we must have something else (a directive or an instruction). Each of these corresponds to 4 bytes in the output, so we increment the current address by 4.
+
+\subsection{Second Pass}
+
+The second pass reads file and replaces references to a label with the address of the corresponding label from the symbol table. It must then convert each assembly instruction into the corresponding Instruction struct representation. The code responsible for performing this logic is found in assembler/pass2/parser.[ch] with the logic for decoding each operand found in assembler/pass2/operands.[ch].
+
+For instructions, the optype of instruction is found first. Then, we can use the correct order of operands parsing functions to construct the Instruction struct.
+
+\subsection{Intruction Encoding}
+
+Instruction encoding takes place in assembler/encode/encode.[ch]. Each type of instruction has its own encode function which produces the required bit output. The functions in this module are called by the second pass once the \texttt{Instruction} has been parsed, matching OP\_TYPE (the method of identiftying the type of a generic Instruction) with the correct encoding logic, returning the binary representation of the instruction, which can then be written to the output file.
+
+\section{Part III Implementation}
+
+\subsection{Selecting an Output Pin}
+
+The base address for all the GPIO registers is 0x3f20 0000, so the first instruction is to load this address into a register (x0). We can then use an offset from this base address to select the desired pin as an output. For ease, since it is physically located on the end of the pins on the Raspberry Pi, we will use pin 21.
+The select bits for GPIO pins 29-20 start at 0x3f20 0008, so we offset 8 bits from the base address in x0. For pin 21, the select bits start at bit 3 (21 \% 10) * 3 = 3, so we must set bits 5:3 from base 0x3520 0008 to 001 to configure pin 21 as an output.
+
+\subsection{Setting the Pin High and Low}
+
+To set the pin high, we must use the GPSET registers, for pin 21, we use GPSET0, offset at 0x1c from the base address of 0x3f20 0000. To set pin 21 to high, we must set bit 21 of GPSET0 to 1. Therefore we need to write $1 << 21$ to GPSET0. To do these we first load $1 << 21$ into a register (x0) using the hex value 0x20. Then we store this value in GPSET0. Now pin 21 is signalling high.
+
+To set the pin low, we do exactly the same, except we use the GPCLR0 register, setting bit 21 to 1. The only thing that changes is the offset from the base address 0x3f200 0000, we can still use the same value of $1 << 21$ stored in x0 to set the pin high, we just write it to a different register. Now pin 21 is signalling low.
+
+\subsection{Sleep Loop}
+
+The basic concept for the sleep loop is as follows:
+\begin{itemize}
+    \vspace{-0.3cm}\item Load a very large value into a register (0x0067 0000) - this is done before the loop starts.
+    \vspace{-0.3cm}\item Decrement the register value and check if it is equal to 0,
+    \vspace{-0.3cm}\item If it is not equal to 0 (b.ne), we use a branch instruction to jump back to the start of the loop.
+    \vspace{-0.3cm}\item The loop ends when the register value is eventually decremented to 0, hence the actual time delay created is dependent on the clock speed of the processor and the number stored in the register.
+\end{itemize}
+\noindent There are two occurrences of this pattern, once after setting the pin high, and once after setting it low, to make the LED blink.
+\vspace{-0.3cm}
+\section{Extension}
+
+Our extension is an implementation of the popular board game Battleships, written in C. This includes a server which can support two players connecting and is the source of truth, handling the game logic and management. We made two clients, both capable of connecting to our server and playing: a CLI-client which can play from only the terminal, and a GUI-client which renders the game state using Raylib and OpenGL and takes mouse and keyboard inputs. The server is run with \texttt{./server [-p PORT | -l LOGFILE]}, defaulting to port 8080. There must be a server running when the client is started. The client is started using \texttt{./client-[gui | cli] [-p PORT | -h HOST | -l LOGFILE]}. The client will default to localhost if no host is provided.
+
+\subsection{Design}
+
+We decided that a modular client/server structure was the best option as it would allow users to host their games on any machine of their choosing. It also allowed independent development to take place on the client and server portions of the extension simultaneously, allowing for more effective division of work between group members. The client contains common code which covers the game state and networking, while all input and rendering is delegated to the client type. We provide two types of client: the CLI client and GUI client. The CLI client allows the user to play from the terminal while the GUI client provides a GUI which the user can interact with. This architecture allowed us to test the game with the CLI client before the GUI was completed. We could then be assured that the state logic behaved correctly when we started testing the GUI.
+
+\subsubsection{Networking Protocol}
+To standardize communication over TCP/IP sockets between the authoritative server and the clients, we designed a custom binary protocol. Every transmission begins with a universal \\\texttt{PacketHeader} containing a \texttt{MessageType} enum (such as \texttt{MSG\_FIRE} or \texttt{MSG\_ATTACKED}) and a \\\texttt{payload\_length}. This header is immediately followed by a message-specific payload struct, such as a \texttt{FirePayload} containing $x$ and $y$ coordinates, or a \texttt{HitResultPayload}. This allows the receiving socket to buffer incoming bytes until an entire packet of the expected size is accumulated, preventing the application from reading fragmented structs, or bleeding into the next message.
+
+\subsubsection{Server}
+
+The server is the single source of truth. We validate all information sent from the clients to ensure that all moves are legal and do not reveal any information to the client that the corresponding player should not know. The board.[ch] module stores a player's board, including the starting positions of all their ships, while game.[ch] stores the two players' boards and controls the packets
+
+\subsubsection{Client Common}
+
+Most client code is shared. This relates to networking and the game state, as well as the rules and behaviour of the game. Each type of client provides an implementation of input.h and render.h, which together cover all user interface between the client and the UI.
+
+\subsubsection{GUI client}
+
+The GUI client utilizes the Raylib and Raygui libraries to provide an interactive user interface. It renders two distinct grids: one representing the player's board and the other for targeting the opponent. For the placement phase, we implemented a drag-and-drop system that allows players to seamlessly position and rotate their ships, automatically snapping them to the grid boundaries. During gameplay, mouse clicks on the opponent's board are translated into input events that interface with the shared client logic, visually updating the UI with hits and misses based on the server's response.
+
+\subsubsection{Board Encapsulation}
+To ensure strict separation of concerns and prevent unintended state corruption, the game board is fully encapsulated using an opaque pointer (\texttt{typedef struct Board *Board}). The internal memory layout of the grid, cell states, and ship orientations are completely hidden from both the networking and UI rendering layers. The clients and the server interact with the board strictly through a defined public interface, using functions such as \texttt{board\_try\_hit()} and \texttt{board\_add\_placement\_set()}. This guarantees that all state transitions are safe and validated.
+
+\subsection{Challenges}
+
+The first major challenge became apparent at the very start of the networking phase. Tom \& Hugo had to produce a set of packet types and contents that could completely describe every possible action in the game. After creating what we thought was a convincing specification, we found that our initial protocol had a flaw: that when a player took a shot it was on their client to store the position of the hit, for the server to then return the result of that hit, excluding the position. This would have complicated the client state logic so we decided to return the position of the hit to the shooter's client - sending more data than necessary to simplify the client state logic.
+
+Another challenge faced during the extension was testing. While parts of the codebase could be exercised by unit tests, notably board.[ch], because of the inherently multiplayer nature of the game we could not unit test other parts of the codebase easily. We therefore tested the remainder of the code by playtesting.
+
+\section{Testing}
+\subsection{Assembler}
+To test the assembler, we adapted the unit testing framework originally developed for our emulator. This allowed us to write targeted unit tests for the symbol table ADT, both parsing passes, and the encoding logic. While exhaustively testing Pass 2 and the encoder via unit tests alone is impractical, this foundation gave us a highly stable executable ready for integration testing. Furthermore, upon analyzing the provided test suite, we identified a lack of coverage for specific alias instructions, namely \texttt{neg}, \texttt{negs}, and \texttt{mvn}. We specifically targeted these instructions in our unit tests.
+
+This testing strategy proved highly effective, culminating in our assembler successfully passing all 592 integration tests in the provided test suite.
+
+\subsection{Extension}
+
+Although much of the extension was not suitable for unit testing because of the inherent multiplayer nature of Battleships, we were able to write unit tests for our board logic. Because the board.[ch] module did not rely on any networking code, we were able to unit test it in isolation. We opted against unit-testing the CLI client because the rendering (printing to stdout) logic was in the board module and assumed to be correct, and because any issues in the client would become apparent during playtesting.
+
+Because the networked multiplayer architecture introduced a high risk of failure, we adopted an incremental testing strategy. Before attempting to synchronize the complex Battleships game state, we initially wrote a pair of lightweight standalone scripts (\texttt{test\_server.c} and \texttt{test\_client.c}). These scripts stripped away the game loop and UI, simply opening a TCP socket, connecting, and bouncing a single \texttt{MSG\_JOIN} packet and \texttt{MSG\_GAME\_START} response back and forth. This allowed us to isolate and test the non-blocking socket polling logic and the dynamic memory allocation inside our \texttt{receive\_packet()} function. Verifying that the transport layer and binary protocol were completely stable in isolation made playtesting and debugging the actual game logic significantly easier.
+\section{Group Reflection}
+
+\subsection{Git}
+
+While we generally followed the DocSoc guidance around Git usage, we had one point during the emulator where two people were working on the same branch at the same time and we managed to break our Git tree enough that we had merge conflicts with every single commit and push, even when there was no conflict. We were fortunately most of the way through the emulator at that point and we merged all our work into the master branch, resolved the conflicts and re-branched where necessary. Git discipline was much better thoughout the rest of the project despite the arguably more complicated Git tree for the extension, and we had no further issues relating to Git.
+
+\subsection{Allocating Tasks}
+
+Once Hari had completed the task he had been initially allocated for the assembler, he was given the Raspberry Pi box and completed Part III of the project that afternoon. This was particularly well timed because we were reaching the final stages of the assembler where having all four people working simultaneously on it would have been detrimental to individual productivity. We tried to find more tasks outside of programming which could be done while we waited for features on the extension to be completed.
+
+The GUI client was a particularly time-consuming area of the extension, so the remainder of the game code had been written by the time this was ready. For group members who worked on other areas of the extension and who had already finished their tasks, we used them to write the final report, as well as cleanup the emulator and assembler. This meant that we did not have to scramble to complete the final report and had it finished and well in advance of the deadline. In future projects, we agreed that we should try to identify "side tasks" early on that people can complete if their code is complete, and that we should look to put more than one person on particularly difficult tasks to help get these finished more quickly.
+\subsection{Ideas for Extension}
+
+At the start of the project, we were unsure of what we wanted to do for our extension, so began work on the other parts of the project and did not really consider what we wanted to do until the start of week 3, after the C final. We had discussed in week 2 and decided that we wanted to make a board game, but were unable to decide on a game, mostly because we were unsure of how much work the GUI would require for these games. We decided on Battleships because of the relative ease of representing it over the CLI, which meant that even in the event of a major delay finishing the GUI, we still had a playable game. We collectively agree that, in future, we should try to brainstorm for tasks like this earlier on in the project to allow us to better plan ahead and split off development tasks.
+
+\section{Individual Reflection}
+\noindent
+\subsection{Hari}
+As this was one of my first times working collaboratively on a codebase, I was somewhat unfamiliar with best Git practices. However, over the course of the first few days, thanks to the aid of my teammates, I definitely became far more confident and developed my skills in this area.
+
+I think we divided the work effectively and clearly, and we were well coordinated as a group, both when working in person and otherwise due to the extensive use of our WhatsApp chat. I think this was one of the main reasons we were able to complete the first few sections of the project in such good time, allowing for plenty of time for an ambitious and interesting extension.
+
+Reflecting the extension, I think we could arguably have opted for a slightly more complex game to implement, given the time-frame we completed it in. However, I think that it was sensible to choose something a little more simple, as we were unsure how long it would take, and Battleships provided the fallback option of a CLI implementation should the graphics prove infeasible, whilst still giving us the chance to experiment with both graphics rendering and networking.
+\subsection{Hugo}
+I came into the project feeling relatively confident with Git having used it previously in small-group software development. I liked how we coordinated the rough plan beforehand but would definitely push in the future for a skeleton set of data structures to be programmed against for where areas of the program interact. In future projects, I would make better use of internal deadlines and start reallocating people to tasks that are at risk of missing those deadlines to ensure everyone has a task at all times.
+
+I was surprised by just how much of a problem our git tree became during the emulator stage of the project. We had endless merge conflicts on every branch for seemingly no reason after we had people simultaneously working the same branch. In the future, I will definitely make sure that no two people are ever committing independently on the same branch and encouraging branching off and merging in all but a very small number of cases.
+
+\subsection{Tom}
+I enjoyed expanding my foundational C skills into complex systems integration. Building the assembler's symbol table and Pass 2 parser honed my memory management and string handling. For the extension, I architected the networking and final graphics polish. Designing a custom binary protocol over non-blocking TCP sockets and integrating it with the Raylib rendering loop was highly challenging. Because my systems interacted with the entire project, I naturally adopted an overarching debugging role.
+
+This broad view highlighted a personal weakness: I often silently fixed cross-module bugs myself instead of alerting the original authors. While fast, this occasionally caused branch confusion for teammates. In future collaborative projects, I will actively flag issues and encourage pair-debugging. Furthermore, as Hugo noted, defining strict module interfaces earlier will make delegating these fixes much easier.
+
+\subsection{Virgile}
+
+This project was one of my first experiences working on a large codebase as a team. I struggled a bit with Git for the first week, in particular managing different branches, naming commits, and navigating merge conflicts. However, thanks to help and guidance from my teammates, I feel comfortable using Git in a collaborative environment.
+
+Regarding the pacing of the project, I feel like we underestimated how fast we were able to work together. Because we progressed through the emulator and assembler stages at a good pace, we found ourselves with plenty of time for the extension. In hindsight, we could have gone for a slightly more ambitious idea for the extension, although I'm very happy with what we accomplished.
+
+That being said, we did an excellent job anticipating where we might run into bottlenecks. We identified that the GUI client would be a big time sink, and by planning a CLI fallback and isolating the board logic, we mitigated a lot of risk. This foresight allowed us to set realistic goals and complete a polished, functioning project within the given timeframe.
 
 \end{document}
