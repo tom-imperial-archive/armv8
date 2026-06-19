@@ -29,8 +29,7 @@ ASSEMBLE_SRCS = \
 	src/assembler/pass2/operands.c \
 	src/assembler/symbol_table/symbol_table.c \
 	src/common/instruction.c \
-	src/common/error.c \
-	src/utils/parseutils.c
+	src/common/error.c 
 
 TEST_UTILS_SRCS = \
 	tests/utils/test_hashset.c \
@@ -73,16 +72,14 @@ TEST_PASS1_SRCS = \
 	tests/assembler/pass1/test_scanner.c \
 	src/assembler/pass1/scanner.c \
 	src/assembler/symbol_table/symbol_table.c \
-	src/common/error.c \
-	src/utils/parseutils.c
+	src/common/error.c 
 
 TEST_PARSER_SRCS = \
     tests/assembler/pass2/test_parser.c \
     src/assembler/pass2/parser.c \
     src/assembler/pass2/operands.c \
 	src/assembler/symbol_table/symbol_table.c \
-	src/common/error.c \
-	src/utils/parseutils.c
+	src/common/error.c 
 
 TEST_OPERANDS_SRCS = \
     tests/assembler/pass2/test_operands.c \
@@ -92,8 +89,7 @@ TEST_OPERANDS_SRCS = \
 TEST_SYMBOL_TABLE_SRCS = \
 	tests/assembler/symbol_table/test_symbol_table.c \
 	src/assembler/symbol_table/symbol_table.c \
-	src/common/error.c \
-	src/utils/parseutils.c
+	src/common/error.c 
 
 # RAYLIB FILES
 RAYLIB_INCLUDE = raylib/src
@@ -129,12 +125,6 @@ emulate: bin/emulate
 bin/assemble: $(ASSEMBLE_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
 assemble: bin/assemble
-
-# To compile raylib:
-# cd raylib/src
-# make
-# OPTIONALLY: make PLATFORM=UBUNTU_DESKTOP
-# or replace UBUNTU with whatever you need to do
 
 # Compiles any missing .o file, and places next to its .c counterpart
 %.o: %.c
