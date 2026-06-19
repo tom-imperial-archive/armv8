@@ -1,3 +1,4 @@
+#include "parser.h"
 #include "assembler/symbol_table/symbol_table.h"
 #include "common/error.h"
 #include "common/instruction.h"

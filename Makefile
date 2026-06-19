@@ -81,7 +81,8 @@ TEST_PARSER_SRCS = \
     src/assembler/pass2/parser.c \
     src/assembler/pass2/operands.c \
 	src/assembler/symbol_table/symbol_table.c \
-	src/common/error.c
+	src/common/error.c \
+	src/utils/parseutils.c
 
 TEST_OPERANDS_SRCS = \
     tests/assembler/pass2/test_operands.c \
@@ -91,7 +92,8 @@ TEST_OPERANDS_SRCS = \
 TEST_SYMBOL_TABLE_SRCS = \
 	tests/assembler/symbol_table/test_symbol_table.c \
 	src/assembler/symbol_table/symbol_table.c \
-	src/common/error.c
+	src/common/error.c \
+	src/utils/parseutils.c
 
 # RAYLIB FILES
 RAYLIB_INCLUDE = raylib/src
