@@ -94,7 +94,7 @@ a valid placement set before any of the game code has defined behaviour,
 bool board_add_placement_set(InitialShipDefs ship_defs, Board board) {
     // Bit n in declared_types being set to 1 corresponds to having a ship of
     // that type already added
-    uint8 declared_types = 0;
+    int declared_types = 0;
 
     for (int i = 0; i < NUM_SHIPS; i++) {
         // Initialise internal struct

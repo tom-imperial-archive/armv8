@@ -9,7 +9,6 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include "shared/types.h"
 #include "shared/protocol.h"
 #include "shared/log.h"
 

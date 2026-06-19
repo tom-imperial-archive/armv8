@@ -2,8 +2,8 @@
 #define PROTOCOL_H
 
 #include "board.h"
-#include "types.h"
 #include <stdbool.h>
+#include <stdint.h>
 
 typedef enum {
     MSG_JOIN,
@@ -19,7 +19,7 @@ typedef enum {
 // Universal header for every packet
 typedef struct {
     MessageType type;
-    uint32 payload_length;
+    uint32_t payload_length;
 } PacketHeader;
 
 // Payloads for specific packets
@@ -28,8 +28,8 @@ typedef struct {
 } InitBoardPayload;
 
 typedef struct {
-    uint8 x;
-    uint8 y;
+    int x;
+    int y;
 } FirePayload;
 
 typedef struct {

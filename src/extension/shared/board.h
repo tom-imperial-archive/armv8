@@ -1,9 +1,20 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#include "types.h"
 #include <stdbool.h>
 #include <stdio.h>
+
+
+#define BOARD_SIZE 10
+#define NUM_SHIPS 5
+
+typedef enum {
+    SHIP_BATTLESHIP,
+    SHIP_CARRIER,
+    SHIP_CRUISER,
+    SHIP_SUBMARINE,
+    SHIP_DESTROYER
+} ShipType;
 
 typedef enum {
     CELL_WATER,

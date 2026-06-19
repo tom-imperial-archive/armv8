@@ -1,5 +1,3 @@
-#include "protocol.h"
-#include "types.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <netdb.h>
@@ -8,10 +6,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <errno.h>
-#include "types.h"
 #include "protocol.h"
 #include "log.h"
 
@@ -21,7 +15,7 @@
    payload lenght in bytes.
    Returns 0 on successful transmission, -1 on failure. */
 int send_packet(int sockfd, MessageType type, const void *payload,
-                uint32 payload_length) {
+                uint32_t payload_length) {
     PacketHeader header;
     header.type = type;
 

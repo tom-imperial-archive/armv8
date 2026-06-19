@@ -1,7 +1,6 @@
 #include "client/input.h"
 #include "raylib.h"
 #include "shared/board.h"
-#include "shared/types.h"
 #include "shared/log.h"
 #include <assert.h>
 #define RAYGUI_IMPLEMENTATION
@@ -29,7 +28,7 @@ typedef struct {
 
     float invalid_board_timer;
 
-    Coordinate ship_coordinates[NUM_SHIPS];
+    Position ship_coordinates[NUM_SHIPS];
     Rectangle ship_rectangles[NUM_SHIPS];
 } UiState;
 
@@ -150,7 +149,7 @@ static bool all_ships_placed(void) {
     return true;
 }
 
-static ScreenCoord cell_coordinates(Coordinate coord, bool is_board_1) {
+static ScreenCoord cell_coordinates(Position coord, bool is_board_1) {
     int left_offset = is_board_1 ? CELL_WIDTH : (BOARD_SIZE + 2) * CELL_WIDTH;
     return (ScreenCoord){
         .x = left_offset + CELL_WIDTH * coord.x,
@@ -163,15 +162,15 @@ static bool in_own_board(ScreenCoord coord) {
            CELL_WIDTH <= coord.y && coord.y < CELL_WIDTH * (BOARD_SIZE + 1);
 }
 
-static Coordinate coordinates_to_cell(ScreenCoord coord) {
+static Position coordinates_to_cell(ScreenCoord coord) {
     assert(in_own_board(coord));
-    return (Coordinate){
+    return (Position){
         .x = (coord.x - CELL_WIDTH) / CELL_WIDTH,
         .y = (coord.y - CELL_WIDTH) / CELL_WIDTH,
     };
 }
 
-static Rectangle cell_bounds(Coordinate coord, bool is_board_1) {
+static Rectangle cell_bounds(Position coord, bool is_board_1) {
     ScreenCoord coords = cell_coordinates(coord, is_board_1);
     Rectangle bounds = {
         .x = (float)coords.x,
@@ -200,7 +199,7 @@ static void snap_to_grid(int ship_index) {
         return;
     }
 
-    Coordinate c = coordinates_to_cell(coords);
+    Position c = coordinates_to_cell(coords);
 
     // Check for tail clipping
     int len = ship_length(ship_index);
@@ -338,7 +337,7 @@ static void draw_boards(const ClientState *state) {
 
     for (int x = 0; x < BOARD_SIZE; x++) {
         for (int y = 0; y < BOARD_SIZE; y++) {
-            Rectangle bounds = cell_bounds((Coordinate){x, y}, true);
+            Rectangle bounds = cell_bounds((Position){x, y}, true);
             DrawRectangleRec(bounds, WHITE);
             DrawRectangleLinesEx(bounds, 2, GRAY);
         }
@@ -352,7 +351,7 @@ static void draw_boards(const ClientState *state) {
 
     for (int x = 0; x < BOARD_SIZE; x++) {
         for (int y = 0; y < BOARD_SIZE; y++) {
-            Rectangle bounds = cell_bounds((Coordinate){.x = x, .y = y}, false);
+            Rectangle bounds = cell_bounds((Position){.x = x, .y = y}, false);
             if (GuiButton(bounds, "")) {
                 input_state = (InputData){
                     .grid_pos = {.x = x, .y = y},
@@ -382,7 +381,7 @@ static void draw_fleets_and_pegs(const ClientState *state) {
             pwd.horizontal ? assets.rotated_textures[i] : assets.textures[i];
 
         ScreenCoord sc =
-            cell_coordinates((Coordinate){pwd.pos.x, pwd.pos.y}, false);
+            cell_coordinates((Position){pwd.pos.x, pwd.pos.y}, false);
         DrawTexture(texture, sc.x, sc.y, WHITE);
     }
 
@@ -404,7 +403,7 @@ static void draw_fleets_and_pegs(const ClientState *state) {
             CellState my_cell = get_cell(state->game.my_board, x, y);
             if (my_cell == CELL_HIT || my_cell == CELL_SUNK ||
                 my_cell == CELL_MISS) {
-                Rectangle bounds = cell_bounds((Coordinate){x, y}, true);
+                Rectangle bounds = cell_bounds((Position){x, y}, true);
                 draw_peg(bounds, my_cell);
             }
 
@@ -412,7 +411,7 @@ static void draw_fleets_and_pegs(const ClientState *state) {
             CellState target_cell = get_cell(state->game.target_board, x, y);
             if (target_cell == CELL_HIT || target_cell == CELL_SUNK ||
                 target_cell == CELL_MISS) {
-                Rectangle bounds = cell_bounds((Coordinate){x, y}, false);
+                Rectangle bounds = cell_bounds((Position){x, y}, false);
                 draw_peg(bounds, target_cell);
             }
         }
