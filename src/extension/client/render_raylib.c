@@ -301,7 +301,6 @@ static void update_ship_dragging(void) {
 
             snap_to_grid(i);
 
-            ui_state.is_placed[i] = false;
             break;
         }
     }
