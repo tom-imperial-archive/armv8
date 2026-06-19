@@ -3,6 +3,10 @@
 
 #include "utils/hashset.h"
 #include "utils/types.h"
+#include "utils/hashset.h"
+#include "common/error.h"
+#include <stdlib.h>
+#include <string.h>
 
 typedef struct {
     uint8 *data;

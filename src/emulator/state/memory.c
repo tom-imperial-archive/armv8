@@ -1,8 +1,4 @@
 #include "memory.h"
-#include "utils/hashset.h"
-#include "utils/types.h"
-#include <stdlib.h>
-#include <string.h>
 
 #define MEM_SIZE (2 << 20)
 
@@ -15,7 +11,7 @@ void check_mem_addr(Memory m, uint64 addr, long n) {
     if (n <= 0 || addr + n >= MEM_SIZE) {
         // Address and size combination invalid
         // This is a fatal error
-        ERROR((Error) {.type = MEMORY_ADDR_OUT_OF_BOUNDS, ·});
+        ERROR((Error) {.type = MEMORY_ADDR_OUT_OF_BOUNDS, .addr = addr});
     }
 }
 
