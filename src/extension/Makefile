@@ -46,6 +46,18 @@ TEST_SRCS = \
 	test/test_board.c \
 	shared/board.c
 
+TEST_CLIENT_SRCS = \
+	test/test_client.c \
+	client/network.c \
+	shared/log.c \
+	shared/network.c
+
+TEST_SERVER_SRCS = \
+	test/test_server.c \
+	server/network.c \
+	shared/log.c \
+	shared/network.c
+
 # OBJECT FILES
 SHARED_OBJS = $(SHARED_SRCS:.c=.o)
 SERVER_OBJS = $(SERVER_SRCS:.c=.o)
@@ -53,9 +65,11 @@ CLIENT_CORE_OBJS = $(CLIENT_CORE_SRCS:.c=.o)
 CLIENT_GUI_OBJS = $(CLIENT_GUI_SRCS:.c=.o)
 CLIENT_CLI_OBJS = $(CLIENT_CLI_SRCS:.c=.o)
 TEST_OBJS = $(TEST_SRCS:.c=.o)
+TEST_CLIENT_OBJS = $(TEST_CLIENT_SRCS:.c=.o)
+TEST_SERVER_OBJS = $(TEST_SERVER_SRCS:.c=.o)
 
 # BUILD TARGETS AND RULES
-.PHONY: all clean format server client-gui client-client
+.PHONY: all clean format prepare test test-client test-server server client-gui client-cli
 
 all: prepare bin/server bin/client-gui bin/client-cli
 
@@ -74,6 +88,14 @@ client-cli: bin/client-cli
 bin/test: $(TEST_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
 test: bin/test
+
+bin/test-client: $(TEST_CLIENT_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@
+test-client: bin/test-client
+
+bin/test-server: $(TEST_SERVER_OBJS)
+	$(CC) $(CFLAGS) $^ -o $@
+test-server: bin/test-server
 
 prepare:
 	mkdir -p logs
