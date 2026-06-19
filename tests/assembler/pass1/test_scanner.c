@@ -5,7 +5,7 @@
 void test_scanfile(void) {
     SymbolTable *table = create_symbol_table();
     FILE *out = fopen("tests/assembler/pass1/test_scanner.txt", "r");
-    assert (out != NULL);
+    assert(out != NULL);
     scan_file(out, table);
     assert(symbol_table_lookup(table, ".label1") == 0);
     assert(symbol_table_lookup(table, "label2") == 12);
