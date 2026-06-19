@@ -8,8 +8,7 @@
 
 #define is_label_char(c)                                                       \
     isalnum(c) || c == '_' || c == '.' || c == '\\' || c == '$'
-#define is_label_start_char(c)                                                 \
-    isalpha(c) || c == '_' || c == '.' || c == '\\'
+#define is_label_start_char(c) isalpha(c) || c == '_' || c == '.' || c == '\\'
 
 #define INSTRUCTION_SIZE 4
 #define MAX_FILE_LINE_LENGTH 120
@@ -26,7 +25,8 @@ This accepts any preceeding whitespace
 
 static void read_line(char *buf, uint64 *address, SymbolTable *table) {
     // Remove whitespace
-    while (isspace(*buf)) buf++;
+    while (isspace(*buf))
+        buf++;
 
     if (*buf == '\0') {
         // Line is just whitespace

@@ -1,10 +1,9 @@
 #ifndef MEMORY_H
 #define MEMORY_H
 
+#include "common/error.h"
 #include "utils/hashset.h"
 #include "utils/types.h"
-#include "utils/hashset.h"
-#include "common/error.h"
 #include <stdlib.h>
 #include <string.h>
 
