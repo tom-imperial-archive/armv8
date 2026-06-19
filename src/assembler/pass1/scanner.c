@@ -1,5 +1,4 @@
 #include "assembler/symbol_table/symbol_table.h"
-#include "utils/parseutils.h"
 #include "utils/types.h"
 #include <assert.h>
 #include <ctype.h>
@@ -27,7 +26,7 @@ This accepts any preceeding whitespace
 
 static void read_line(char *buf, uint64 *address, SymbolTable *table) {
     // Remove whitespace
-    buf = trim_leading_whitespace(buf);
+    while (isspace(*buf)) buf++;
 
     if (*buf == '\0') {
         // Line is just whitespace

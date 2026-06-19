@@ -3,11 +3,12 @@
 #include "common/error.h"
 #include "common/instruction.h"
 #include "operands.h"
-#include "utils/parseutils.h"
 #include "utils/types.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+
 
 #define ZERO_REG 31
 
@@ -308,7 +309,7 @@ void parse_memory(char *operands, Instruction *i, SymbolTable *table,
     int rt = parse_register(rt_str, &sf_rt);
 
     // Strip leading whitespace
-    saveptr = trim_leading_whitespace(saveptr);
+    while (isspace(*saveptr)) saveptr++;
     char *address_str = saveptr;
     // Strip trailing newlines
     address_str[strcspn(address_str, "\n")] = '\0';
