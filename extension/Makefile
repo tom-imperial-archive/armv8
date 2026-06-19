@@ -1,13 +1,13 @@
 CC      ?= gcc
 CFLAGS  ?= -std=c17 -g \
         -D_POSIX_SOURCE -D_DEFAULT_SOURCE \
-        -Wall -Werror -pedantic -I.
+        -Wall -Werror -pedantic -Isrc
 
 # HOW TO COMPILE RAYLIB
 # https://github.com/raysan5/raylib/wiki/Working-on-GNU-Linux
-RAYLIB_INCLUDE = ../../raylib/src
-RAYLIB_LIB = ../../raylib/src
-RAYGUI_INCLUDE = ../../raygui/src
+RAYLIB_INCLUDE = ../raylib/src
+RAYLIB_LIB = ../raylib/src
+RAYGUI_INCLUDE = ../raygui/src
 
 CFLAGS += -I$(RAYLIB_INCLUDE) -I$(RAYGUI_INCLUDE)
 LDLIBS = -L$(RAYLIB_LIB) -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
@@ -16,47 +16,48 @@ $(shell mkdir -p bin)
 
 # SOURCE FILES
 SHARED_SRCS = \
-	shared/board.c
+	src/shared/board.c
 
 SERVER_SRCS = \
-	server/main.c \
-	server/game.c \
-	server/network.c \
-	shared/log.c \
-	shared/network.c
+	src/server/main.c \
+	src/server/game.c \
+	src/server/network.c \
+	src/shared/log.c \
+	src/shared/network.c
 
 CLIENT_CORE_SRCS = \
-	client/main.c \
-	client/state.c \
-	client/network.c \
-	client/game.c \
-	shared/log.c \
-	shared/network.c
+	src/client/main.c \
+	src/client/state.c \
+	src/client/network.c \
+	src/client/game.c \
+	src/shared/log.c \
+	src/shared/network.c
 
 CLIENT_GUI_SRCS = \
-	client/render_raylib.c \
-	client/input_raylib.c \
+	src/client/render_raylib.c \
+	src/client/input_raylib.c \
 
 CLIENT_CLI_SRCS = \
-	client/render_text.c \
-	client/input_text.c
+	src/client/render_text.c \
+	src/client/input_text.c
 
 TEST_SRCS = \
-	test/test_extension.c \
-	test/test_board.c \
-	shared/board.c
+	tests/test_extension.c \
+	tests/test_board.c \
+	src/shared/log.c \
+	src/shared/board.c
 
 TEST_CLIENT_SRCS = \
-	test/test_client.c \
-	client/network.c \
-	shared/log.c \
-	shared/network.c
+	tests/test_client.c \
+	src/client/network.c \
+	src/shared/log.c \
+	src/shared/network.c
 
 TEST_SERVER_SRCS = \
-	test/test_server.c \
-	server/network.c \
-	shared/log.c \
-	shared/network.c
+	tests/test_server.c \
+	src/server/network.c \
+	src/shared/log.c \
+	src/shared/network.c
 
 # OBJECT FILES
 SHARED_OBJS = $(SHARED_SRCS:.c=.o)

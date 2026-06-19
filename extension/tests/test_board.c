@@ -1,4 +1,4 @@
-#include "test/test_board.h"
+#include "test_board.h"
 #include "shared/board.h"
 #include <assert.h>
 
