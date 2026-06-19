@@ -62,6 +62,7 @@ int receive_packet(int sockfd, PacketHeader *out_header, void **out_payload) {
         }
         // If we got some other error, then that's a genuine error
         LOG_ERROR("%s", "Socket error during receive");
+        return -1;
     } else if (n == 0) {
         LOG_ERROR("%s", "Connection was closed");
         return -1;
@@ -87,8 +88,8 @@ int receive_packet(int sockfd, PacketHeader *out_header, void **out_payload) {
                      out_header->payload_length - total_read, 0);
             if (payload_bytes > 0) {
                 total_read += payload_bytes;
-            } else if (payload_bytes < 0 && errno != EWOULDBLOCK && errno != EAGAIN) {
-                LOG_ERROR("%s", "Failed to read complete payload");
+            } else if (payload_bytes == 0 || (payload_bytes < 0 && errno != EWOULDBLOCK && errno != EAGAIN)) {
+                LOG_ERROR("%s", "Connection closed or failed while reading payload");
                 free(*out_payload);
                 *out_payload = NULL;
                 return -1;
