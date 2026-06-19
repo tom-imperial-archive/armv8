@@ -1,5 +1,4 @@
 #include "instruction.h"
-#include "utils/types.h"
 #include <stdbool.h>
 
 bool is_immediate_arithmetic(OpType op_type) {

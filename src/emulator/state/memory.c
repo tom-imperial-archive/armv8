@@ -1,9 +1,9 @@
 #include "memory.h"
 #include "utils/hashset.h"
 #include "utils/types.h"
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #define MEM_SIZE (2 << 20)
 
 /*

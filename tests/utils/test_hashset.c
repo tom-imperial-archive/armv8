@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void test_creation() {
-    AddressSet *set = create_set(1024);
+void test_creation(void) {
+    AddressSet *set = create_set();
 
     assert(set != NULL);
     assert(set->capacity == 1024);
@@ -14,8 +14,8 @@ void test_creation() {
     printf("Test creation: OK\n");
 }
 
-void test_insertion() {
-    AddressSet *set = create_set(10);
+void test_insertion(void) {
+    AddressSet *set = create_set();
 
     // Dummy data
     uint8 var_a = 'A';
@@ -31,8 +31,8 @@ void test_insertion() {
     printf("Test insertion: OK\n");
 }
 
-void test_get_all_addresses() {
-    AddressSet *set = create_set(10);
+void test_get_all_addresses(void) {
+    AddressSet *set = create_set();
 
     // Dummy data
     uint8 var_a = 'A';

@@ -1,5 +1,5 @@
 #ifndef OUTPUT_H
-#define output_h
+#define OUTPUT_H
 
 #include "emulator/state/state.h"
 

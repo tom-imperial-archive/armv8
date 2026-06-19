@@ -487,7 +487,6 @@ uint32 encode_instruction(Instruction *i) {
     } else if (is_directive_int(i->op_type)) {
         return encode_directive_int(i);
     } else {
-        // ERROR: Unrecognized instruction type
         ERROR((Error){.type = UNRECOGNISED_INSTRUCTION_TYPE});
         return 0;
     }

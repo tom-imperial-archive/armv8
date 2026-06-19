@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-void test_scanfile() {
+void test_scanfile(void) {
     SymbolTable *table = create_symbol_table();
     scan_file("tests/assembler/pass1/test_scanner.txt", table);
     assert(symbol_table_lookup(table, ".label1") == 0);

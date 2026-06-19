@@ -2,7 +2,7 @@
 #include "common/error.h"
 #include "common/instruction.h"
 #include "utils/types.h"
-#include <stdlib.h>
+
 #define ERR_UNDEF_OPCODE()                                                     \
     ERROR((Error){.type = UNDEFINED_OPCODE, .instruction = input});
 
@@ -76,7 +76,6 @@ void decode(uint32 input, Instruction *instruction) {
             int hw = (operand & MASK_HW) >> 21;
             int imm16 = (operand & MASK_IMM16) >> 5;
 
-            // TODO: do I shift imm16 by hw straight away or should this be in
             // EXECUTE
             *instruction = (Instruction){.op_type = op_type,
                                          .wide_move = {

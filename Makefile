@@ -3,6 +3,9 @@ CFLAGS  ?= -std=c17 -g\
 	-D_POSIX_SOURCE -D_DEFAULT_SOURCE\
 	-Wall -Werror -pedantic -Isrc
 
+# HOW TO COMPILE RAYLIB
+# https://github.com/raysan5/raylib/wiki/Working-on-GNU-Linux
+LDLIBS = -L$(RAYLIB_LIB) -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
 $(shell mkdir -p bin)
 
 # SOURCE FILES
@@ -90,6 +93,13 @@ TEST_SYMBOL_TABLE_SRCS = \
 	src/assembler/symbol_table/symbol_table.c \
 	src/common/error.c
 
+# RAYLIB FILES
+RAYLIB_INCLUDE = raylib/src
+RAYLIB_LIB = raylib/src
+RAYGUI_INCLUDE = raygui/src
+
+CFLAGS += -I$(RAYLIB_INCLUDE) -I$(RAYGUI_INCLUDE)
+
 # OBJECT FILES (source files with extensions changed)
 EMULATE_OBJS = $(EMULATE_SRCS:.c=.o)
 ASSEMBLE_OBJS = $(ASSEMBLE_SRCS:.c=.o)
@@ -106,7 +116,7 @@ TEST_SYMBOL_TABLE_OBJS = $(TEST_SYMBOL_TABLE_SRCS:.c=.o)
 
 
 # BUILD TARGETS AND RULES
-.PHONY: all clean test format
+.PHONY: all clean test format raylib
 
 all: bin/emulate bin/assemble
 
@@ -117,6 +127,12 @@ emulate: bin/emulate
 bin/assemble: $(ASSEMBLE_OBJS)
 	$(CC) $(CFLAGS) $^ -o $@
 assemble: bin/assemble
+
+# To compile raylib:
+# cd raylib/src
+# make
+# OPTIONALLY: make PLATFORM=UBUNTU_DESKTOP
+# or replace UBUNTU with whatever you need to do
 
 # Compiles any missing .o file, and places next to its .c counterpart
 %.o: %.c
@@ -191,11 +207,10 @@ test-all: test-utils test-emulator test-assembler
 
 # FORMAT
 format:
-	git ls-files '*.c' '*.h' | xargs clang-format -i
+	git ls-files '*.c' '*.h' | grep -v '^src/extension/' | xargs clang-format -i
 
 # CLEAN
 clean:
 	-$(RM) -r bin/*
 	-$(RM) $(EMULATE_OBJS) $(ASSEMBLE_OBJS)
 	-$(RM) $(TEST_UTILS_OBJS) $(TEST_STATE_OBJS) $(TEST_DECODE_OBJS) $(TEST_EXECUTE_OBJS) $(TEST_ENCODE_OBJS) $(TEST_PASS1_OBJS) $(TEST_PARSER_OBJS) $(TEST_OPERANDS_OBJS) $(TEST_SYMBOL_TABLE_OBJS)
-
